@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="96" fill="#172554"/>
+  <path d="M256 96c-64 0-112 40-112 96 0 35.2 19.2 64 48 83.2V352h128v-76.8c28.8-19.2 48-48 48-83.2 0-56-48-96-112-96z" fill="#4d9eff"/>
+  <circle cx="208" cy="208" r="20" fill="#fff"/>
+  <circle cx="304" cy="208" r="20" fill="#fff"/>
+  <path d="M208 264c16 16 32 24 48 24s32-8 48-24" stroke="#fff" stroke-width="20" stroke-linecap="round"/>
+  <text x="256" y="420" text-anchor="middle" fill="#a78bfa" font-family="system-ui,sans-serif" font-size="48" font-weight="700">Edu-AI</text>
+</svg>

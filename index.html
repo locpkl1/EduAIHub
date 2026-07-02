@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>EduAI-Hub - Học tập thông minh cùng AI</title>
+    <meta name="description" content="Nền tảng giáo dục hỗ trợ học sinh Việt Nam sử dụng trí tuệ nhân tạo hiệu quả, có trách nhiệm." />
+    <meta name="keywords" content="AI học tập, giáo dục Việt Nam, học sinh, sách giáo khoa, Pomodoro" />
+    <meta name="author" content="EduAI-Hub" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#172554" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="EduAI-Hub" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="EduAI-Hub - Học tập thông minh cùng AI" />
+    <meta property="og:description" content="Nền tảng giáo dục hỗ trợ học sinh Việt Nam sử dụng trí tuệ nhân tạo hiệu quả." />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="vi_VN" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="EduAI-Hub - Học tập thông minh cùng AI" />
+    <meta name="twitter:description" content="Nền tảng giáo dục hỗ trợ học sinh Việt Nam sử dụng AI hiệu quả." />
+
+    <!-- Preconnect to external resources -->
+    <link rel="preconnect" href="https://images.pexels.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+  </head>
+  <body class="bg-gray-50">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
+  </body>
+</html>
