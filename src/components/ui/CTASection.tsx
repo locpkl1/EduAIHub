@@ -29,7 +29,7 @@ export default function CTASection({
         style={{ backgroundColor: 'var(--color-primary-light)' }}
       />
       <div className="relative max-w-3xl">
-        <h2 className="font-sans text-3xl font-semibold leading-[1.18] tracking-normal text-text sm:text-4xl">
+        <h2 className="font-display text-3xl font-semibold leading-[1.18] tracking-normal text-text sm:text-4xl">
           {title}
         </h2>
         {description && <p className="mt-4 text-sm leading-7 text-text-muted sm:text-base">{description}</p>}

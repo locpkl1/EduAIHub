@@ -224,7 +224,7 @@ function HeroSection({
             Dành cho học sinh THPT Việt Nam
           </div>
 
-          <h1 className="font-sans text-[clamp(2.55rem,7vw,5.9rem)] font-semibold leading-[1.08] tracking-normal text-text">
+          <h1 className="font-display text-[clamp(2.55rem,7vw,5.9rem)] font-semibold leading-[1.08] tracking-normal text-text">
             Học cùng{' '}
             <span className="font-display font-extrabold text-primary">AI</span>,
             <span className="relative mt-2 block text-text sm:mt-3">
@@ -442,7 +442,7 @@ function CoreValueSection() {
                 interactive
               >
                 <Icon size={24} className="mb-8 text-primary" />
-                <h3 className="font-sans text-2xl font-semibold leading-[1.22] text-text">{card.title}</h3>
+                <h3 className="font-display text-2xl font-semibold leading-[1.22] text-text">{card.title}</h3>
                 <p className="mt-4 text-sm leading-7 text-text-muted">{card.text}</p>
               </EditorialCard>
             );
@@ -459,7 +459,7 @@ function CompanionSection() {
       <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
         <div>
           <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-primary">AI như bạn học</p>
-          <h2 className="font-sans text-4xl font-semibold leading-[1.16] tracking-normal text-text sm:text-5xl">
+          <h2 className="font-display text-4xl font-semibold leading-[1.16] tracking-normal text-text sm:text-5xl">
             Không lạnh lùng.
             <br />
             Không làm thay.
@@ -555,7 +555,7 @@ function ProgressSection({ chartData }: { chartData: ChartPoint[] }) {
         <div className="grid min-w-0 gap-10 lg:grid-cols-[0.9fr_minmax(0,1.1fr)] lg:items-center">
           <div className="min-w-0">
             <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-primary">Theo dõi việc học</p>
-            <h2 className="font-sans text-4xl font-semibold leading-[1.16] tracking-normal text-text sm:text-5xl">
+            <h2 className="font-display text-4xl font-semibold leading-[1.16] tracking-normal text-text sm:text-5xl">
               Học với AI cũng cần nhịp, không chỉ cảm hứng.
             </h2>
             <p className="mt-5 text-base leading-8 text-text-muted">
@@ -621,7 +621,7 @@ function ResourcesSection() {
                   }}
                 />
                 <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary">{lesson.tag}</span>
-                <h3 className="mt-4 font-sans text-xl font-semibold leading-[1.22] text-text">{lesson.title}</h3>
+                <h3 className="mt-4 font-display text-xl font-semibold leading-[1.22] text-text">{lesson.title}</h3>
                 <p className="mt-3 text-sm leading-6 text-text-muted">{lesson.text}</p>
                 <p className="mt-5 text-xs font-bold text-text-light">{lesson.time} đọc</p>
               </Link>
@@ -645,7 +645,7 @@ function ResourcesSection() {
               kiểm chứng
             </span>
             <Library size={28} className="text-primary" />
-            <h3 className="mt-5 font-sans text-3xl font-semibold leading-[1.2] text-text">
+            <h3 className="mt-5 font-display text-3xl font-semibold leading-[1.2] text-text">
               Prompt và SGK nằm gần nhau.
             </h3>
             <p className="mt-4 text-sm leading-7 text-text-muted">
@@ -683,7 +683,7 @@ function MotionPlaceholderSection() {
         <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
           <div>
             <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-primary">Video ngắn sắp tới</p>
-            <h2 className="font-sans text-4xl font-semibold leading-[1.16] tracking-normal text-text">
+            <h2 className="font-display text-4xl font-semibold leading-[1.16] tracking-normal text-text">
               Nhìn một prompt biến thành kế hoạch học.
             </h2>
             <p className="mt-5 text-base leading-8 text-text-muted">
@@ -875,7 +875,7 @@ function PromptBuilderCard() {
       <div className="mb-5 flex items-center justify-between border-b pb-4" style={{ borderColor: 'var(--color-border)' }}>
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-text-light">Công thức prompt</p>
-          <h3 className="mt-1 font-sans text-2xl font-semibold leading-snug text-text">4 mảnh ghép</h3>
+          <h3 className="mt-1 font-display text-2xl font-semibold leading-snug text-text">4 mảnh ghép</h3>
         </div>
         <ClipboardList className="text-primary" size={28} />
       </div>

@@ -214,7 +214,7 @@ export default function Lessons() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <span className="section-label mb-3 inline-flex rounded-full">Bài Học</span>
-          <h1 className="text-3xl sm:text-4xl font-bold mt-3 mb-3 text-balance" style={{ fontFamily: 'Syne, sans-serif', letterSpacing: '-0.03em' }}>
+          <h1 className="font-display text-3xl sm:text-4xl font-bold mt-3 mb-3 text-balance">
             Kho kinh nghiệm
             <br />
             <span style={{ color: 'var(--color-primary)' }}>học cùng AI</span>
@@ -340,7 +340,7 @@ function FeaturedCard({ lesson, onClick }: { lesson: Lesson; onClick: () => void
         </div>
       </div>
       <div>
-        <h3 className="font-bold text-base mb-2 leading-snug text-balance" style={{ color: 'var(--color-text)', fontFamily: 'Syne, sans-serif' }}>
+        <h3 className="font-display font-bold text-base mb-2 leading-snug text-balance" style={{ color: 'var(--color-text)' }}>
           {lesson.title}
         </h3>
         <p className="text-sm leading-relaxed line-clamp-2" style={{ color: 'var(--color-text-muted)' }}>{lesson.desc}</p>
@@ -378,7 +378,7 @@ function LessonCard({ lesson, onClick }: { lesson: Lesson; onClick: () => void }
           {lesson.readTime}
         </span>
       </div>
-      <h3 className="font-semibold leading-snug" style={{ color: 'var(--color-text)', fontFamily: 'Syne, sans-serif', letterSpacing: '-0.01em' }}>
+      <h3 className="font-display font-semibold leading-snug" style={{ color: 'var(--color-text)' }}>
         {lesson.title}
       </h3>
       <p className="text-sm leading-relaxed flex-1 line-clamp-3" style={{ color: 'var(--color-text-muted)' }}>{lesson.desc}</p>

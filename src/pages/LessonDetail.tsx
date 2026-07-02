@@ -72,10 +72,7 @@ export default function LessonDetail() {
             </div>
           </div>
 
-          <h1
-            className="text-2xl sm:text-3xl font-bold leading-snug text-balance"
-            style={{ fontFamily: 'Syne, sans-serif', letterSpacing: '-0.03em', color: 'var(--color-text)' }}
-          >
+          <h1 className="font-display text-2xl sm:text-3xl font-bold leading-snug text-balance text-text">
             {lesson.title}
           </h1>
           <p className="mt-3 text-base leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{lesson.desc}</p>
@@ -99,10 +96,7 @@ export default function LessonDetail() {
         <div className="space-y-10">
           {lesson.content.sections.map((section, i) => (
             <article key={i} className="space-y-4">
-              <h2
-                className="text-lg font-bold"
-                style={{ fontFamily: 'Syne, sans-serif', letterSpacing: '-0.02em', color: 'var(--color-text)' }}
-              >
+              <h2 className="font-display text-lg font-bold text-text">
                 {section.heading}
               </h2>
               <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
@@ -136,10 +130,7 @@ export default function LessonDetail() {
         {/* Related lessons */}
         {related.length > 0 && (
           <section>
-            <h3
-              className="text-base font-bold mb-5"
-              style={{ fontFamily: 'Syne, sans-serif', letterSpacing: '-0.02em', color: 'var(--color-text)' }}
-            >
+            <h3 className="font-display text-base font-bold mb-5 text-text">
               Bài học gợi ý tiếp theo
             </h3>
             <div className="space-y-3">
@@ -169,7 +160,7 @@ export default function LessonDetail() {
                         </span>
                         <span className="text-[11px]" style={{ color: 'var(--color-text-light)' }}>{rel.readTime}</span>
                       </div>
-                      <p className="text-sm font-semibold truncate" style={{ color: 'var(--color-text)', fontFamily: 'Syne, sans-serif' }}>
+                      <p className="font-display text-sm font-semibold truncate" style={{ color: 'var(--color-text)' }}>
                         {rel.title}
                       </p>
                     </div>

@@ -77,7 +77,7 @@ export default function AiTools() {
                 <Route size={14} className="text-primary" />
                 Chọn lối học
               </div>
-              <h1 className="max-w-4xl font-sans text-[clamp(2.35rem,5.8vw,4.8rem)] font-semibold leading-[1.1] tracking-normal text-text">
+              <h1 className="max-w-4xl font-display text-[clamp(2.35rem,5.8vw,4.8rem)] font-semibold leading-[1.1] tracking-normal text-text">
                 Chọn đúng lối học trước khi hỏi AI.
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-8 text-text-muted sm:text-lg">
@@ -166,7 +166,7 @@ export default function AiTools() {
                     </span>
                   </div>
 
-                  <h2 className="mt-8 font-sans text-2xl font-semibold leading-[1.2] text-text">
+                  <h2 className="mt-8 font-display text-2xl font-semibold leading-[1.2] text-text">
                     {path.title}
                   </h2>
 
