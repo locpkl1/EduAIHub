@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, supabaseConfigError } from '../lib/supabase';
 import ProfileCompletionModal from '../components/ProfileCompletionModal';
 import type { Profile, ProfileUpdateData } from '../types/database';
 
@@ -208,7 +208,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signInWithGoogle() {
     if (!isSupabaseConfigured) {
-      console.warn('Supabase chưa được cấu hình. Vui lòng thêm VITE_SUPABASE_URL và VITE_SUPABASE_ANON_KEY.');
+      console.warn(supabaseConfigError);
+      window.alert(
+        'Google login is not configured yet. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY from the current Supabase project, then configure Google OAuth in Supabase.'
+      );
       return;
     }
     const { error } = await supabase.auth.signInWithOAuth({

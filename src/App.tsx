@@ -13,6 +13,15 @@ import Profile from './pages/Profile';
 import AiGuideChatbot from './pages/chatbots/AiGuideChatbot';
 import StudyPromptChatbot from './pages/chatbots/StudyPromptChatbot';
 import GeneralPromptChatbot from './pages/chatbots/GeneralPromptChatbot';
+import AdminRouteGuard from './components/admin/AdminRouteGuard';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminPosts from './pages/admin/AdminPosts';
+import AdminPrompts from './pages/admin/AdminPrompts';
+import AdminCurriculum from './pages/admin/AdminCurriculum';
+import AdminResources from './pages/admin/AdminResources';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminSettings from './pages/admin/AdminSettings';
 
 function App() {
   return (
@@ -33,6 +42,23 @@ function App() {
             <Route path="/prompts" element={<PromptLibrary />} />
             <Route path="/textbooks" element={<Textbooks />} />
             <Route path="/profile" element={<Profile />} />
+          </Route>
+          <Route
+            path="/admin"
+            element={
+              <AdminRouteGuard>
+                <AdminLayout />
+              </AdminRouteGuard>
+            }
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="posts" element={<AdminPosts />} />
+            <Route path="prompts" element={<AdminPrompts />} />
+            <Route path="curriculum" element={<AdminCurriculum />} />
+            <Route path="resources" element={<AdminResources />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="settings" element={<AdminSettings />} />
+            <Route path="*" element={<Navigate to="/admin" replace />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

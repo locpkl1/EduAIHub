@@ -11,6 +11,10 @@ export default defineConfig(({ mode }) => {
       react(),
       cozeApiPlugin(() => ({
         COZE_API_KEY: env.COZE_API_KEY,
+        COZE_API_BASE_URL: env.COZE_API_BASE_URL,
+        COZE_AI_GUIDE_BOT_ID: env.COZE_AI_GUIDE_BOT_ID,
+        COZE_STUDY_PROMPT_BOT_ID: env.COZE_STUDY_PROMPT_BOT_ID,
+        COZE_GENERAL_PROMPT_BOT_ID: env.COZE_GENERAL_PROMPT_BOT_ID,
         COZE_BOT_ID: env.COZE_BOT_ID,
         COZE_BOT_ID_AI_GUIDE: env.COZE_BOT_ID_AI_GUIDE,
         COZE_BOT_ID_STUDY_PROMPT: env.COZE_BOT_ID_STUDY_PROMPT,
