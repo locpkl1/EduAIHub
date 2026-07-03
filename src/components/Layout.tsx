@@ -7,6 +7,7 @@ import {
   ExternalLink,
   GraduationCap,
   Home,
+  LayoutDashboard,
   Library,
   LogOut,
   Menu,
@@ -274,12 +275,34 @@ export default function Layout() {
                         type="button"
                         onClick={() => {
                           setUserMenuOpen(false);
+                          navigate('/dashboard');
+                        }}
+                        className="flex w-full items-center gap-2.5 px-3 py-3 text-left text-sm font-bold text-text transition-colors hover:bg-bg-muted"
+                      >
+                        <LayoutDashboard size={15} />
+                        Bảng điều khiển
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserMenuOpen(false);
                           navigate('/profile');
                         }}
                         className="flex w-full items-center gap-2.5 px-3 py-3 text-left text-sm font-bold text-text transition-colors hover:bg-bg-muted"
                       >
                         <User size={15} />
-                        Thông Tin Cá Nhân
+                        Hồ sơ cá nhân
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          navigate('/prompts');
+                        }}
+                        className="flex w-full items-center gap-2.5 px-3 py-3 text-left text-sm font-bold text-text transition-colors hover:bg-bg-muted"
+                      >
+                        <Library size={15} />
+                        Thư viện Prompt
                       </button>
                       <button
                         type="button"
@@ -378,12 +401,34 @@ export default function Layout() {
                       type="button"
                       onClick={() => {
                         setMobileOpen(false);
+                        navigate('/dashboard');
+                      }}
+                      className="flex w-full items-center gap-3 bg-bg-muted px-3 py-3 text-left text-sm font-bold text-text"
+                    >
+                      <LayoutDashboard size={16} />
+                      Bảng điều khiển
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileOpen(false);
                         navigate('/profile');
                       }}
                       className="flex w-full items-center gap-3 bg-bg-muted px-3 py-3 text-left text-sm font-bold text-text"
                     >
                       <User size={16} />
-                      Thông Tin Cá Nhân
+                      Hồ sơ cá nhân
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileOpen(false);
+                        navigate('/prompts');
+                      }}
+                      className="flex w-full items-center gap-3 bg-bg-muted px-3 py-3 text-left text-sm font-bold text-text"
+                    >
+                      <Library size={16} />
+                      Thư viện Prompt
                     </button>
                     <button
                       type="button"

@@ -412,19 +412,26 @@ export default function ChatbotPage({
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header
-          className="shrink-0 border-b px-3 py-2 sm:px-4 sm:py-2.5"
+          className="shrink-0 border-b px-2.5 py-2 sm:px-4"
           style={{
-            backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 88%, transparent)',
-            borderColor: 'var(--color-border)',
-            backdropFilter: 'blur(12px)',
+            backgroundColor: 'color-mix(in srgb, var(--color-bg) 82%, transparent)',
+            borderColor: 'color-mix(in srgb, var(--color-border) 62%, transparent)',
+            backdropFilter: 'blur(14px)',
           }}
         >
-          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <div
+            className="flex min-w-0 items-center gap-2 rounded-[24px] border px-2 py-2 sm:gap-3 sm:px-3"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 88%, transparent)',
+              borderColor: 'color-mix(in srgb, var(--color-border) 72%, transparent)',
+              boxShadow: '0 14px 34px -32px rgba(0,0,0,0.5)',
+            }}
+          >
             <button
               type="button"
               onClick={() => setSidebarOpen((v) => !v)}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-text-muted transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              style={{ borderColor: 'var(--color-border)' }}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:h-10 sm:w-10"
+              style={{ backgroundColor: 'color-mix(in srgb, var(--color-bg-muted) 72%, transparent)' }}
               aria-expanded={sidebarOpen}
               aria-label={sidebarToggleLabel}
               title={sidebarToggleLabel}
@@ -435,21 +442,20 @@ export default function ChatbotPage({
             <button
               type="button"
               onClick={() => navigate('/ai-tools')}
-              className="inline-flex h-10 shrink-0 items-center gap-1.5 border px-2.5 text-sm font-bold text-text-muted transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:border-0 sm:px-0"
-              style={{ borderColor: 'var(--color-border)' }}
+              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-sm font-bold text-text-muted transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:h-10"
               aria-label="Quay lại trang Công Cụ AI"
             >
               <ArrowLeft size={14} />
               <span className="hidden sm:inline">Công Cụ AI</span>
             </button>
 
-            <div className="hidden h-6 w-px shrink-0 bg-border sm:block" />
+            <div className="hidden h-6 w-px shrink-0 bg-border/70 sm:block" />
 
             <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center shadow-[3px_3px_0_color-mix(in_srgb,var(--color-border)_60%,transparent)]"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl"
               style={{
                 backgroundColor: `color-mix(in srgb, ${primaryColor} 13%, var(--color-bg-card))`,
-                borderLeft: `3px solid ${primaryColor}`,
+                border: `1px solid color-mix(in srgb, ${primaryColor} 28%, var(--color-border))`,
               }}
             >
               {icon}
@@ -460,14 +466,14 @@ export default function ChatbotPage({
             </div>
 
             <div
-              className="ml-auto hidden min-h-9 items-center gap-2 border px-3 sm:flex"
+              className="ml-auto inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border px-2.5 sm:px-3"
               style={{
-                backgroundColor: 'var(--color-bg-muted)',
-                borderColor: 'var(--color-border)',
+                backgroundColor: 'color-mix(in srgb, var(--color-bg-muted) 70%, transparent)',
+                borderColor: 'color-mix(in srgb, var(--color-border) 74%, transparent)',
               }}
             >
               <span className="h-2 w-2 rounded-full animate-pulse-dot" style={{ backgroundColor: 'var(--color-success)' }} />
-              <span className="text-xs font-bold uppercase tracking-[0.14em] text-text-light">Sẵn sàng</span>
+              <span className="hidden text-[10px] font-bold uppercase tracking-[0.14em] text-text-light sm:inline">Sẵn sàng</span>
             </div>
           </div>
         </header>
@@ -496,9 +502,9 @@ export default function ChatbotPage({
               className="min-h-0 flex-1 overflow-y-auto"
               style={{
                 backgroundImage:
-                  'radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--color-bg-card) 72%, transparent), transparent 46%)',
-                backgroundSize: '100% 100%',
-                backgroundPosition: 'center top',
+                  'radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--color-bg-card) 76%, transparent), transparent 42%), linear-gradient(180deg, color-mix(in srgb, var(--color-bg-muted) 34%, transparent), transparent 28%)',
+                backgroundSize: '100% 100%, 100% 100%',
+                backgroundPosition: 'center top, center top',
                 backgroundColor: 'var(--color-bg)',
               }}
             >
@@ -531,21 +537,21 @@ export default function ChatbotPage({
                       )}
 
                       <div
-                        className={`group min-w-0 max-w-[calc(100%-2.5rem)] px-4 py-3 text-sm leading-7 [overflow-wrap:anywhere] sm:max-w-[82%] lg:max-w-[76%] ${
+                        className={`group min-w-0 max-w-[calc(100%-2.25rem)] px-4 py-3 text-sm leading-7 [overflow-wrap:anywhere] sm:px-5 sm:py-3.5 sm:max-w-[80%] lg:max-w-[74%] ${
                           msg.role === 'user' ? 'text-white' : 'text-text'
                         }`}
                         style={
                           msg.role === 'user'
                             ? {
                                 background: `linear-gradient(135deg, ${primaryColor}, color-mix(in srgb, ${primaryColor} 82%, var(--color-text)))`,
-                                borderRadius: '18px 18px 7px 18px',
-                                boxShadow: '0 14px 28px -24px rgba(0,0,0,0.48)',
+                                borderRadius: '22px 22px 8px 22px',
+                                boxShadow: '0 16px 30px -25px rgba(0,0,0,0.46)',
                               }
                             : {
-                                backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 94%, transparent)',
-                                border: '1px solid color-mix(in srgb, var(--color-border) 72%, transparent)',
-                                borderRadius: '18px',
-                                boxShadow: '0 14px 34px -30px rgba(0,0,0,0.46)',
+                                backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 88%, transparent)',
+                                border: '1px solid color-mix(in srgb, var(--color-border) 54%, transparent)',
+                                borderRadius: '24px 24px 24px 10px',
+                                boxShadow: '0 18px 38px -34px rgba(0,0,0,0.44)',
                               }
                         }
                       >
@@ -554,7 +560,7 @@ export default function ChatbotPage({
                           <button
                             type="button"
                             onClick={() => handleCopy(msg.text, msg.id)}
-                            className="mt-3 ml-auto flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-[11px] font-bold opacity-90 transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:opacity-70 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+                            className="mt-3 ml-auto flex min-h-8 items-center gap-1.5 rounded-full border px-3 text-[11px] font-bold opacity-85 transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:opacity-65 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
                             style={{
                               backgroundColor: 'var(--color-bg-card)',
                               borderColor: 'var(--color-border)',
@@ -569,7 +575,7 @@ export default function ChatbotPage({
 
                       {msg.role === 'user' && (
                         <div
-                          className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white sm:h-8 sm:w-8"
+                          className="mt-1 hidden h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white sm:flex sm:h-8 sm:w-8"
                           style={{ backgroundColor: primaryColor }}
                         >
                           {userInitials}
@@ -585,11 +591,11 @@ export default function ChatbotPage({
             </div>
 
             <div
-              className="shrink-0 border-t px-3 pb-[calc(0.85rem+env(safe-area-inset-bottom))] pt-3 sm:px-4"
+              className="shrink-0 border-t px-3 pb-[calc(0.9rem+env(safe-area-inset-bottom))] pt-3 sm:px-4"
               style={{
                 borderColor: 'color-mix(in srgb, var(--color-border) 68%, transparent)',
-                backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 78%, transparent)',
-                backdropFilter: 'blur(12px)',
+                backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 74%, transparent)',
+                backdropFilter: 'blur(16px)',
               }}
             >
               <div className="mx-auto w-full max-w-4xl">
@@ -597,13 +603,13 @@ export default function ChatbotPage({
                   className="flex min-w-0 items-end gap-2 p-2.5 sm:gap-3 sm:p-3"
                   style={{
                     backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 96%, transparent)',
-                    border: '1px solid color-mix(in srgb, var(--color-border) 78%, transparent)',
-                    borderRadius: '28px',
-                    boxShadow: '0 18px 44px -34px rgba(0,0,0,0.5)',
+                    border: '1px solid color-mix(in srgb, var(--color-border) 66%, transparent)',
+                    borderRadius: '30px',
+                    boxShadow: '0 20px 52px -38px rgba(0,0,0,0.52)',
                   }}
                   onFocusCapture={(e) => {
                     (e.currentTarget as HTMLElement).style.borderColor = primaryColor;
-                    (e.currentTarget as HTMLElement).style.boxShadow = `0 0 0 3px color-mix(in srgb, ${primaryColor} 12%, transparent)`;
+                    (e.currentTarget as HTMLElement).style.boxShadow = `0 0 0 3px color-mix(in srgb, ${primaryColor} 14%, transparent), 0 22px 56px -40px rgba(0,0,0,0.52)`;
                   }}
                   onBlurCapture={(e) => {
                     (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)';
@@ -617,7 +623,7 @@ export default function ChatbotPage({
                     onKeyDown={handleKeyDown}
                     placeholder="Nhắn tin... Enter để gửi, Shift+Enter xuống dòng"
                     rows={1}
-                    className="min-w-0 flex-1 resize-none bg-transparent px-2 py-2 text-sm outline-none sm:px-3"
+                    className="min-w-0 flex-1 resize-none bg-transparent px-2.5 py-2 text-sm outline-none sm:px-3"
                     style={{
                       color: 'var(--color-text)',
                       minHeight: '48px',

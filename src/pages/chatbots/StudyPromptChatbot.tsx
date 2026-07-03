@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { BookOpen, Sparkles } from 'lucide-react';
 import ChatbotPage from '../../components/ChatbotPage';
 import { useAuth } from '../../contexts/AuthContext';
@@ -17,6 +17,7 @@ const CURRENT_LEVEL_OPTIONS = [
 function StudySidebar({
   selectedGrade,
   setSelectedGrade,
+  setHasUserChangedGrade,
   selectedBook,
   setSelectedBook,
   selectedSubject,
@@ -32,6 +33,7 @@ function StudySidebar({
 }: {
   selectedGrade: string;
   setSelectedGrade: (v: string) => void;
+  setHasUserChangedGrade: (v: boolean) => void;
   selectedBook: string;
   setSelectedBook: (v: string) => void;
   selectedSubject: string;
@@ -79,7 +81,10 @@ function StudySidebar({
               <button
                 key={g.value}
                 type="button"
-                onClick={() => setSelectedGrade(g.value)}
+                onClick={() => {
+                  setHasUserChangedGrade(true);
+                  setSelectedGrade(g.value);
+                }}
                 className="py-2 text-xs font-bold transition-colors"
                 style={
                   selectedGrade === g.value
@@ -244,13 +249,20 @@ export default function StudyPromptMentorChatbot() {
   const { profile, displayName } = useAuth();
   const userContext = buildUserLearningContext(profile, displayName);
 
-  const [selectedGrade, setSelectedGrade] = useState('10');
+  const [selectedGrade, setSelectedGrade] = useState(() => userContext.grade || '10');
+  const [hasUserChangedGrade, setHasUserChangedGrade] = useState(false);
   const [selectedBook, setSelectedBook] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedChapter, setSelectedChapter] = useState('');
   const [selectedLesson, setSelectedLesson] = useState('');
   const [learningGoal, setLearningGoal] = useState('');
   const [currentLevel, setCurrentLevel] = useState('');
+
+  useEffect(() => {
+    if (!hasUserChangedGrade && userContext.grade) {
+      setSelectedGrade(userContext.grade);
+    }
+  }, [hasUserChangedGrade, userContext.grade]);
 
   const subjectLabel = subjects.find((s) => s.value === selectedSubject)?.label || selectedSubject;
   const bookLabel = bookSeries.find((b) => b.value === selectedBook)?.label || '';
@@ -269,6 +281,7 @@ export default function StudyPromptMentorChatbot() {
     <StudySidebar
       selectedGrade={selectedGrade}
       setSelectedGrade={setSelectedGrade}
+      setHasUserChangedGrade={setHasUserChangedGrade}
       selectedBook={selectedBook}
       setSelectedBook={setSelectedBook}
       selectedSubject={selectedSubject}
