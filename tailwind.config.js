@@ -34,13 +34,13 @@ export default {
         theme: 'var(--radius)',
       },
       boxShadow: {
-        card: '0 1px 4px 0 rgba(0,0,0,0.06), 0 4px 16px -4px rgba(0,0,0,0.08)',
-        'card-hover': '0 4px 32px -4px rgba(0,0,0,0.16)',
+        card: '0 1px 0 0 var(--color-border), 0 12px 28px -24px color-mix(in srgb, var(--color-text) 42%, transparent)',
+        'card-hover': '0 16px 36px -26px color-mix(in srgb, var(--color-primary) 52%, var(--color-text))',
         glow: '0 0 32px -8px var(--color-primary)',
       },
       letterSpacing: {
-        display: '-0.03em',
-        tight: '-0.02em',
+        display: '0',
+        tight: '0',
       },
     },
   },

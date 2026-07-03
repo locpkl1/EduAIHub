@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Brain,
@@ -12,7 +12,9 @@ import {
   Shield,
   Target,
   ExternalLink,
+  FileText,
 } from 'lucide-react';
+import { fetchPublishedContentPosts, type PublishedContentPost } from '../lib/publicContentApi';
 
 const steps = [
   {
@@ -109,6 +111,31 @@ const bgColorMap: Record<string, string> = {
 
 export default function Guides() {
   const [openStep, setOpenStep] = useState<string | null>('01');
+  const [publishedPosts, setPublishedPosts] = useState<PublishedContentPost[]>([]);
+  const [postsLoading, setPostsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadPublishedPosts() {
+      setPostsLoading(true);
+      try {
+        const posts = await fetchPublishedContentPosts();
+        if (!cancelled) setPublishedPosts(posts.slice(0, 3));
+      } catch (error) {
+        console.error('Error fetching guide posts:', error);
+        if (!cancelled) setPublishedPosts([]);
+      } finally {
+        if (!cancelled) setPostsLoading(false);
+      }
+    }
+
+    loadPublishedPosts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
@@ -292,6 +319,57 @@ export default function Guides() {
         </div>
 
         {/* 5 Nguyên Tắc Vàng */}
+        {(postsLoading || publishedPosts.length > 0) && (
+          <section className="mt-14">
+            <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <span className="section-label mb-3 inline-flex">Bài viết mới</span>
+                <h2 className="text-2xl font-bold mt-3" style={{ color: 'var(--color-text)' }}>
+                  Hướng dẫn từ EduAI-Hub
+                </h2>
+              </div>
+              <Link to="/lessons" className="text-sm font-semibold" style={{ color: 'var(--color-primary)' }}>
+                Xem tất cả →
+              </Link>
+            </div>
+
+            {postsLoading ? (
+              <div className="text-sm" style={{ color: 'var(--color-text-light)' }}>
+                Đang tải bài viết mới...
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {publishedPosts.map((post) => (
+                  <Link
+                    key={post.id}
+                    to={`/lessons/${post.slug}`}
+                    className="card-soft-hover p-5 flex flex-col gap-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full"
+                        style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
+                      >
+                        <FileText size={11} />
+                        {post.category || 'Bài viết'}
+                      </span>
+                      <span className="text-xs" style={{ color: 'var(--color-text-light)' }}>
+                        {post.reading_minutes || 5} phút
+                      </span>
+                    </div>
+                    <h3 className="font-display font-semibold leading-snug" style={{ color: 'var(--color-text)' }}>
+                      {post.title}
+                    </h3>
+                    <p className="text-sm leading-relaxed line-clamp-3" style={{ color: 'var(--color-text-muted)' }}>
+                      {post.excerpt || 'Bài viết từ EduAI-Hub giúp bạn học chủ động hơn với AI.'}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
         <section className="mt-16">
           <div className="mb-8 text-center">
             <span className="section-label mb-3 inline-flex">Nguyên Tắc Cốt Lõi</span>

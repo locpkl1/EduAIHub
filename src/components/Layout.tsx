@@ -115,7 +115,7 @@ export default function Layout() {
 
   return (
     <div
-      className="min-h-screen text-text"
+      className="min-h-screen min-h-dvh overflow-x-hidden text-text"
       style={{
         backgroundColor: 'var(--color-bg)',
         backgroundImage:
@@ -418,17 +418,18 @@ export default function Layout() {
         </div>
       </header>
 
-      <main className={isChatbotRoute ? 'relative overflow-hidden' : 'relative'}>
+      <main className={isChatbotRoute ? 'relative min-w-0 overflow-hidden' : 'relative min-w-0'}>
         <Outlet />
       </main>
 
       {!isChatbotRoute && (
-        <footer className="relative mt-20 px-3 pb-6 sm:px-4">
+        <footer className="relative mt-10 px-3 pb-5 pt-4 sm:mt-14 sm:px-4 sm:pb-6 lg:mt-16">
         <div
-          className="mx-auto max-w-7xl overflow-hidden border px-5 py-7 sm:px-6"
+          className="mx-auto max-w-7xl overflow-hidden border px-5 py-7 shadow-card sm:px-6"
           style={{
             backgroundColor: 'var(--color-bg-card)',
             borderColor: 'var(--color-border-strong)',
+            boxShadow: '6px 6px 0 color-mix(in srgb, var(--color-accent) 12%, transparent)',
           }}
         >
           <ShapeAccent variant="line" color="orange" className="mb-5" />
@@ -462,7 +463,7 @@ export default function Layout() {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 border px-2.5 py-1.5 font-bold text-text-muted transition-colors hover:border-primary hover:text-primary"
+                  className="inline-flex min-h-10 items-center gap-1 border px-2.5 py-1.5 font-bold text-text-muted transition-colors hover:border-primary hover:text-primary"
                   style={{ borderColor: 'var(--color-border)' }}
                 >
                   {name} <ExternalLink size={11} />

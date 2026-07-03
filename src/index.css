@@ -59,6 +59,12 @@
     background-color: var(--color-bg);
   }
 
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
   body {
     font-family: 'Be Vietnam Pro', system-ui, sans-serif;
     background-color: var(--color-bg);
@@ -66,6 +72,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.55;
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -79,6 +86,24 @@
     background-position: right 0.75rem center;
     background-repeat: no-repeat;
     background-size: 1.5em 1.5em;
+  }
+
+  :where(a, button, input, select, textarea, [role='button'], [tabindex]:not([tabindex='-1'])) {
+    -webkit-tap-highlight-color: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  }
+
+  :where(a, button, input, select, textarea, [role='button'], [tabindex]:not([tabindex='-1'])):focus {
+    outline: none;
+  }
+
+  :where(a, button, input, select, textarea, [role='button'], [tabindex]:not([tabindex='-1'])):focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 72%, var(--color-bg-card));
+    outline-offset: 3px;
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-primary) 14%, transparent);
+  }
+
+  :where(button, [role='button']) {
+    touch-action: manipulation;
   }
 }
 
@@ -143,6 +168,14 @@
     box-shadow: 0 0 32px -8px var(--color-accent);
   }
 
+  .paper-surface {
+    background-color: var(--color-bg-card);
+    background-image:
+      linear-gradient(to bottom, transparent 31px, color-mix(in srgb, var(--color-border) 34%, transparent) 32px),
+      radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--color-border) 36%, transparent) 1px, transparent 0);
+    background-size: 100% 32px, 22px 22px;
+  }
+
   /* Skewed section divider */
   .skew-right {
     transform: skewX(-2deg);
@@ -155,7 +188,7 @@
 @layer components {
   /* ── Buttons ── */
   .btn-primary {
-    @apply inline-flex items-center justify-center px-5 py-2.5 font-semibold text-sm transition-all duration-150;
+    @apply inline-flex min-h-11 items-center justify-center px-5 py-2.5 font-semibold text-sm transition-all duration-150;
     background-color: var(--color-primary);
     color: #ffffff;
     clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
@@ -166,7 +199,7 @@
   }
 
   .btn-accent {
-    @apply inline-flex items-center justify-center px-5 py-2.5 font-semibold text-sm transition-all duration-150;
+    @apply inline-flex min-h-11 items-center justify-center px-5 py-2.5 font-semibold text-sm transition-all duration-150;
     background-color: var(--color-accent);
     color: #ffffff;
     clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
@@ -177,7 +210,7 @@
   }
 
   .btn-outline {
-    @apply inline-flex items-center justify-center px-5 py-2.5 font-semibold text-sm transition-all duration-150;
+    @apply inline-flex min-h-11 items-center justify-center px-5 py-2.5 font-semibold text-sm transition-all duration-150;
     border: 1.5px solid var(--color-border-strong);
     color: var(--color-text);
     background: transparent;
@@ -189,7 +222,7 @@
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-all duration-150;
+    @apply inline-flex min-h-10 items-center justify-center px-4 py-2 text-sm font-medium transition-all duration-150;
     color: var(--color-text-muted);
     background: transparent;
     border: 1px solid transparent;
@@ -203,6 +236,7 @@
   .card {
     background-color: var(--color-bg-card);
     border: 1px solid var(--color-border);
+    box-shadow: 0 10px 26px -24px color-mix(in srgb, var(--color-text) 45%, transparent);
   }
 
   .card-hover {
@@ -213,7 +247,12 @@
   .card-hover:hover {
     border-color: var(--color-primary);
     transform: translateY(-3px);
-    box-shadow: 0 12px 32px -8px rgba(0,0,0,0.12);
+    box-shadow: 0 16px 34px -26px color-mix(in srgb, var(--color-primary) 55%, var(--color-text));
+  }
+  .card-hover:focus-visible,
+  .card-soft-hover:focus-visible {
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
   }
 
   /* ── Tags / Badges ── */
@@ -283,6 +322,7 @@
   .input-field:focus {
     border-color: var(--color-primary);
     background-color: var(--color-bg-card);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
   }
 
   /* ── Divider line ── */
@@ -348,6 +388,7 @@
     background-color: var(--color-bg-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
+    box-shadow: 0 10px 26px -24px color-mix(in srgb, var(--color-text) 45%, transparent);
   }
 
   .card-soft-hover {
@@ -361,6 +402,21 @@
     border-color: var(--color-primary);
     box-shadow: 0 4px 20px -4px color-mix(in srgb, var(--color-primary) 20%, transparent);
     transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
   }
 }
 

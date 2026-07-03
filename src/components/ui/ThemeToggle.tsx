@@ -36,13 +36,13 @@ interface ThemeToggleProps {
 
 export default function ThemeToggle({ className = '', showLabel = false }: ThemeToggleProps) {
   const { isDark, toggleTheme } = useThemeMode();
-  const label = isDark ? 'Chuyen sang che do sang' : 'Chuyen sang che do toi';
+  const label = isDark ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối';
 
   return (
     <button
       type="button"
       onClick={toggleTheme}
-      className={`inline-flex h-9 items-center gap-2 rounded-full border px-2.5 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${className}`}
+      className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 ${className}`}
       style={{
         backgroundColor: 'var(--color-bg-muted)',
         borderColor: 'var(--color-border)',
@@ -61,7 +61,7 @@ export default function ThemeToggle({ className = '', showLabel = false }: Theme
       >
         {isDark ? <Sun size={13} /> : <Moon size={13} />}
       </span>
-      {showLabel && <span className="hidden sm:inline">{isDark ? 'Sang' : 'Toi'}</span>}
+      {showLabel && <span className="hidden sm:inline">{isDark ? 'Sáng' : 'Tối'}</span>}
     </button>
   );
 }

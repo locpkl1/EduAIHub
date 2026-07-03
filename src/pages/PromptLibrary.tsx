@@ -4,8 +4,15 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { SavedPrompt } from '../types/database';
 import { referencePrompts } from '../data/educationData';
 import { Copy, Check, LogIn, BookOpen, Sparkles, Loader2, Trash2 } from 'lucide-react';
+import { fetchPublishedPromptTemplates, type PublishedPromptTemplate } from '../lib/publicContentApi';
 
 type Tab = 'mine' | 'reference';
+
+const difficultyLabels: Record<string, string> = {
+  basic: 'Cơ bản',
+  intermediate: 'Trung bình',
+  advanced: 'Nâng cao',
+};
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -98,12 +105,115 @@ function PromptCard({
   );
 }
 
+function PromptTemplateCard({ template }: { template: PublishedPromptTemplate }) {
+  const meta = [
+    template.purpose,
+    template.subject,
+    template.grade ? `Lớp ${template.grade}` : null,
+    template.book_series,
+    template.difficulty ? difficultyLabels[template.difficulty] : null,
+  ].filter(Boolean);
+
+  const preview =
+    template.prompt_content.length > 190
+      ? `${template.prompt_content.slice(0, 190).trim()}...`
+      : template.prompt_content;
+
+  return (
+    <div
+      className="card-hover flex flex-col h-full p-5"
+      style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+    >
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="min-w-0">
+          <h3
+            className="font-display font-bold text-sm"
+            style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}
+          >
+            {template.title}
+          </h3>
+          {meta.length > 0 && (
+            <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+              {meta.join(' · ')}
+            </p>
+          )}
+        </div>
+        {template.featured && <span className="tag-primary tag flex-shrink-0">Nổi bật</span>}
+      </div>
+
+      <p
+        className="text-sm flex-1 whitespace-pre-line leading-relaxed line-clamp-4"
+        style={{ color: 'var(--color-text-muted)' }}
+      >
+        {preview}
+      </p>
+
+      {template.usage_note && (
+        <p
+          className="mt-4 rounded-lg px-3 py-2 text-xs leading-relaxed"
+          style={{ backgroundColor: 'var(--color-bg-muted)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}
+        >
+          {template.usage_note}
+        </p>
+      )}
+
+      {template.tags.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {template.tags.slice(0, 4).map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full px-2 py-0.5 text-[11px] font-medium"
+              style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--color-border)' }}>
+        <CopyButton text={template.prompt_content} />
+      </div>
+    </div>
+  );
+}
+
 export default function PromptLibrary() {
   const { profile, isGuest, loading: authLoading, signInWithGoogle } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('mine');
   const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>([]);
+  const [publicTemplates, setPublicTemplates] = useState<PublishedPromptTemplate[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(true);
+  const [templatesError, setTemplatesError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadPublicTemplates() {
+      setTemplatesLoading(true);
+      setTemplatesError(false);
+      try {
+        const templates = await fetchPublishedPromptTemplates();
+        if (!cancelled) setPublicTemplates(templates);
+      } catch (error) {
+        console.error('Error fetching public prompt templates:', error);
+        if (!cancelled) {
+          setPublicTemplates([]);
+          setTemplatesError(true);
+        }
+      } finally {
+        if (!cancelled) setTemplatesLoading(false);
+      }
+    }
+
+    loadPublicTemplates();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (authLoading || isGuest || !profile || !isSupabaseConfigured) return;
@@ -262,16 +372,60 @@ export default function PromptLibrary() {
         )}
 
         {activeTab === 'reference' && (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {referencePrompts.map((prompt) => (
-              <PromptCard
-                key={prompt.id}
-                title={prompt.title}
-                subtitle={prompt.description}
-                content={prompt.content}
-                badge={prompt.category}
-              />
-            ))}
+          <div className="space-y-6">
+            <div
+              className="border p-5"
+              style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className="w-10 h-10 flex items-center justify-center flex-shrink-0"
+                  style={{
+                    backgroundColor: 'var(--color-primary-light)',
+                    clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))',
+                  }}
+                >
+                  <BookOpen size={18} style={{ color: 'var(--color-primary)' }} />
+                </div>
+                <div>
+                  <h2 className="font-display font-bold text-lg" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
+                    Kho prompt mẫu từ EduAI-Hub
+                  </h2>
+                  <p className="text-sm mt-1 max-w-2xl" style={{ color: 'var(--color-text-muted)' }}>
+                    Các prompt mẫu giúp học sinh hỏi AI đúng cách, học chủ động và không chỉ chép đáp án.
+                  </p>
+                  {!templatesLoading && (templatesError || publicTemplates.length === 0) && (
+                    <p className="text-xs mt-3" style={{ color: 'var(--color-text-light)' }}>
+                      Đang hiển thị bộ prompt tham khảo sẵn có trong khi chờ nội dung xuất bản từ EduAI-Hub.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {templatesLoading ? (
+              <div className="flex justify-center py-16">
+                <Loader2 className="w-7 h-7 animate-spin" style={{ color: 'var(--color-primary)' }} />
+              </div>
+            ) : publicTemplates.length > 0 ? (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {publicTemplates.map((template) => (
+                  <PromptTemplateCard key={template.id} template={template} />
+                ))}
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {referencePrompts.map((prompt) => (
+                  <PromptCard
+                    key={prompt.id}
+                    title={prompt.title}
+                    subtitle={prompt.description}
+                    content={prompt.content}
+                    badge={prompt.category}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
