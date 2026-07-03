@@ -25,7 +25,7 @@ function profileDismissKey(userId: string) {
 
 export function isProfileIncomplete(profile: Profile | null): boolean {
   if (!profile) return false;
-  return profile.grade == null || !profile.school?.trim();
+  return !profile.onboarding_completed || profile.grade == null || !profile.school?.trim();
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,8 +56,51 @@ function buildProfileFromAuth(authUser: User): Profile {
     avatar_url: avatarUrl,
     grade: null,
     school: null,
+    personal_background: '',
+    strengths: [],
+    weaknesses: [],
+    common_problems: [],
+    learning_goals: [],
+    preferred_learning_style: '',
+    ai_experience_level: '',
+    onboarding_completed: false,
     created_at: now,
     updated_at: now,
+  };
+}
+
+function normalizeProfile(data: Partial<Profile>, authUser?: User): Profile {
+  const fallback = authUser ? buildProfileFromAuth(authUser) : {
+    id: data.id ?? '',
+    full_name: '',
+    avatar_url: '',
+    grade: null,
+    school: null,
+    personal_background: '',
+    strengths: [],
+    weaknesses: [],
+    common_problems: [],
+    learning_goals: [],
+    preferred_learning_style: '',
+    ai_experience_level: '',
+    onboarding_completed: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  return {
+    ...fallback,
+    ...data,
+    grade: data.grade ?? fallback.grade,
+    school: data.school ?? fallback.school,
+    personal_background: data.personal_background ?? '',
+    strengths: Array.isArray(data.strengths) ? data.strengths : [],
+    weaknesses: Array.isArray(data.weaknesses) ? data.weaknesses : [],
+    common_problems: Array.isArray(data.common_problems) ? data.common_problems : [],
+    learning_goals: Array.isArray(data.learning_goals) ? data.learning_goals : [],
+    preferred_learning_style: data.preferred_learning_style ?? '',
+    ai_experience_level: data.ai_experience_level ?? '',
+    onboarding_completed: Boolean(data.onboarding_completed),
   };
 }
 
@@ -173,16 +216,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .single();
 
           if (!updateError && updated) {
-            setProfile(updated);
+            setProfile(normalizeProfile(updated, authUser));
           } else {
-            setProfile({
+            setProfile(normalizeProfile({
               ...data,
               full_name: data.full_name?.trim() || metaName,
               avatar_url: data.avatar_url?.trim() || metaAvatar,
-            });
+            }, authUser));
           }
         } else {
-          setProfile(data);
+          setProfile(normalizeProfile(data, authUser));
         }
       } else {
         const { data: newProfile, error: createError } = await supabase
@@ -196,7 +239,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .single();
 
         if (createError) throw createError;
-        setProfile(newProfile);
+        setProfile(normalizeProfile(newProfile, authUser));
       }
     } catch (error) {
       console.error('Error fetching/creating profile:', error);
@@ -246,20 +289,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error('Không thể cập nhật hồ sơ');
     }
 
+    const updatePayload: Partial<ProfileUpdateData> & { updated_at: string } = {
+      full_name: data.full_name,
+      grade: data.grade,
+      school: data.school,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (data.personal_background !== undefined) updatePayload.personal_background = data.personal_background;
+    if (data.strengths !== undefined) updatePayload.strengths = data.strengths;
+    if (data.weaknesses !== undefined) updatePayload.weaknesses = data.weaknesses;
+    if (data.common_problems !== undefined) updatePayload.common_problems = data.common_problems;
+    if (data.learning_goals !== undefined) updatePayload.learning_goals = data.learning_goals;
+    if (data.preferred_learning_style !== undefined) {
+      updatePayload.preferred_learning_style = data.preferred_learning_style;
+    }
+    if (data.ai_experience_level !== undefined) updatePayload.ai_experience_level = data.ai_experience_level;
+    if (data.onboarding_completed !== undefined) updatePayload.onboarding_completed = data.onboarding_completed;
+
     const { data: updated, error } = await supabase
       .from('profiles')
-      .update({
-        full_name: data.full_name,
-        grade: data.grade,
-        school: data.school,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq('id', user.id)
       .select()
       .single();
 
     if (error) throw error;
-    setProfile(updated);
+    setProfile(normalizeProfile(updated, user));
     localStorage.removeItem(profileDismissKey(user.id));
     setProfileDismissed(false);
   }

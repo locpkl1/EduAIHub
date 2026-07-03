@@ -646,7 +646,7 @@ function ResourcesSection() {
             </span>
             <Library size={28} className="text-primary" />
             <h3 className="mt-5 font-display text-3xl font-semibold leading-[1.2] text-text">
-              Prompt và SGK nằm gần nhau.
+              Prompt và ngữ cảnh học tập nằm gần nhau.
             </h3>
             <p className="mt-4 text-sm leading-7 text-text-muted">
               Khi AI đưa ra ý tưởng, bạn vẫn có thể quay lại tài liệu chính thống để kiểm chứng.
@@ -657,7 +657,7 @@ function ResourcesSection() {
                 Kho Prompt <ArrowRight size={15} />
               </Link>
               <Link to="/textbooks" className="btn-outline gap-2">
-                Sách Giáo Khoa <BookOpen size={15} />
+                Bản đồ chương trình <BookOpen size={15} />
               </Link>
             </div>
           </div>

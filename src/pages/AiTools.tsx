@@ -2,52 +2,51 @@ import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   BookOpen,
+  ClipboardCheck,
   ExternalLink,
   Lightbulb,
-  MessageSquare,
   NotebookPen,
   Route,
-  ShieldCheck,
 } from 'lucide-react';
 import { SectionHeading, ShapeAccent } from '../components/ui';
 
 const learningPaths = [
   {
-    id: 'ai-guide',
-    href: '/ai-tools/huong-dan-ai',
-    icon: ShieldCheck,
+    id: 'prompt-thinking',
+    href: '/ai-tools/hoc-tu-duy-prompt',
+    icon: Lightbulb,
     number: '01',
-    title: 'Hỏi cho rõ',
-    situation: 'Khi bạn chưa chắc AI làm được gì, sai ở đâu, hoặc dùng thế nào cho có trách nhiệm.',
-    helps: 'Giải thích cách dùng AI, đặt giới hạn, kiểm chứng câu trả lời và giữ vai trò người học chủ động.',
-    example: 'AI có thể sai ở đâu khi em học Lý lớp 12?',
-    tags: ['Hiểu AI', 'Kiểm chứng', 'Học có trách nhiệm'],
+    title: 'Học tư duy prompt',
+    situation: 'Khi bạn chưa biết cách hỏi AI sao cho rõ, đúng mục tiêu và không bị phụ thuộc.',
+    helps: 'Dạy cấu trúc prompt tốt, cách đặt bối cảnh, mục tiêu, ràng buộc và cách kiểm chứng.',
+    example: 'Prompt tốt cần có những phần nào?',
+    tags: ['Tư duy prompt', 'Học chủ động', 'Kiểm chứng'],
     color: 'var(--color-primary)',
     bg: 'var(--color-primary-light)',
   },
   {
-    id: 'prompt-study',
-    href: '/ai-tools/prompt-hoc-tap',
+    id: 'study-prompt',
+    href: '/ai-tools/goi-y-prompt-hoc-tap',
     icon: NotebookPen,
     number: '02',
-    title: 'Biến bài học thành prompt',
-    situation: 'Khi bạn đã có lớp, môn, bộ sách hoặc bài học cụ thể và muốn học sâu hơn.',
-    helps: 'Tạo prompt theo đúng ngữ cảnh học tập: ôn bài, luyện kỹ năng, chia nhỏ kiến thức hoặc tự kiểm tra.',
-    example: 'Tạo prompt ôn tích phân lớp 12 theo từng bước.',
-    tags: ['Theo lớp', 'Theo môn', 'Theo bài học'],
+    title: 'Gợi ý prompt học tập',
+    situation: 'Khi bạn có lớp, môn, bộ sách, bài học hoặc vấn đề học tập cụ thể.',
+    helps: 'Góp ý và tạo prompt học tập sát chương trình, có hướng dẫn từng bước và tự kiểm tra.',
+    example: 'Gợi ý prompt học Toán 11 bài phương trình lượng giác.',
+    tags: ['Theo lớp', 'Theo bài', 'Tự kiểm tra'],
     color: 'var(--color-accent)',
     bg: 'var(--color-accent-light)',
   },
   {
-    id: 'prompt-general',
-    href: '/ai-tools/prompt-da-dung',
-    icon: MessageSquare,
+    id: 'prompt-evaluator',
+    href: '/ai-tools/danh-gia-prompt',
+    icon: ClipboardCheck,
     number: '03',
-    title: 'Việc gì cũng có cách hỏi',
-    situation: 'Khi bạn cần viết, lên ý tưởng, sửa câu hỏi, luyện tiếng Anh hoặc làm một việc ngoài bài học.',
-    helps: 'Biến mục tiêu tự do thành prompt rõ ràng để AI trả lời đúng trọng tâm, có bước làm và tiêu chí kiểm tra.',
-    example: 'Sửa prompt viết email xin tham gia câu lạc bộ.',
-    tags: ['Tự do', 'Sáng tạo', 'Rõ mục tiêu'],
+    title: 'Đánh giá prompt của bạn',
+    situation: 'Khi bạn đã tự viết prompt nhưng chưa biết nó đủ rõ hay chưa.',
+    helps: 'Chấm điểm, chỉ lỗi, viết lại bản tốt hơn và giải thích vì sao.',
+    example: 'Đánh giá prompt: "Dạy em bài này".',
+    tags: ['Chấm điểm', 'Sửa prompt', 'Nâng cấp'],
     color: 'var(--color-secondary)',
     bg: 'var(--color-secondary-light)',
   },
@@ -75,14 +74,13 @@ export default function AiTools() {
                 }}
               >
                 <Route size={14} className="text-primary" />
-                Chọn lối học
+                Xưởng prompt
               </div>
               <h1 className="max-w-4xl font-display text-[clamp(2.35rem,5.8vw,4.8rem)] font-semibold leading-[1.1] tracking-normal text-text">
-                Chọn đúng lối học trước khi hỏi AI.
+                Học cách hỏi AI trước khi nhờ AI trả lời.
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-8 text-text-muted sm:text-lg">
-                Mỗi lối vào là một kiểu bàn học khác nhau: hỏi cho hiểu, biến bài học thành prompt,
-                hoặc luyện cách hỏi cho những việc tự do hơn.
+                Ba lối vào mới giúp bạn hiểu tư duy prompt, tạo prompt học tập theo ngữ cảnh và tự kiểm tra prompt mình viết.
               </p>
             </div>
 
@@ -98,8 +96,7 @@ export default function AiTools() {
               <ShapeAccent variant="line" color="orange" className="mb-5" />
               <p className="text-sm font-bold text-text">Nếu chưa biết bắt đầu từ đâu</p>
               <p className="mt-2 text-sm leading-7 text-text-muted">
-                Hãy bắt đầu bằng <strong className="text-text">Hỏi cho rõ</strong> để hiểu cách dùng AI an toàn,
-                rồi chuyển sang lối học theo bài khi bạn đã có môn hoặc chủ đề cụ thể.
+                Bắt đầu với <strong className="text-text">Học tư duy prompt</strong>, sau đó chuyển sang gợi ý prompt học tập hoặc đánh giá prompt của bạn.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 {practiceLinks.map(([name, href]) => (
@@ -124,9 +121,9 @@ export default function AiTools() {
       <section className="px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
         <div className="mx-auto max-w-7xl">
           <SectionHeading
-            eyebrow="Ba điểm bắt đầu"
-            title="Đừng chọn công cụ. Hãy chọn tình huống học của bạn."
-            description="Mỗi thẻ là một lối vào học tập rõ ràng: bạn đang bối rối, đang có bài học cụ thể, hay đang cần hỏi cho một việc khác?"
+            eyebrow="Ba lối luyện prompt"
+            title="Chọn đúng kiểu hỗ trợ cho câu hỏi bạn đang có."
+            description="Bạn muốn hiểu cách hỏi, tạo prompt theo bài học, hay kiểm tra prompt đã viết? Mỗi bot giữ một vai trò riêng để phản hồi sắc hơn."
           />
 
           <div className="mt-10 grid gap-5 lg:grid-cols-3">
@@ -194,7 +191,7 @@ export default function AiTools() {
                   </div>
 
                   <div className="mt-7 inline-flex items-center gap-2 text-sm font-bold" style={{ color: path.color }}>
-                    Bắt đầu lối học này
+                    Bắt đầu
                     <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
                   </div>
                 </Link>
@@ -215,8 +212,7 @@ export default function AiTools() {
           <div className="flex items-start gap-3">
             <Lightbulb className="mt-0.5 shrink-0 text-primary" size={20} />
             <p className="text-sm leading-7 text-text-muted">
-              <strong className="text-text">Mẹo nhỏ:</strong> Một câu hỏi tốt nên nói rõ mục tiêu, bối cảnh,
-              mức độ lớp học và yêu cầu AI giải thích cách làm, không chỉ đưa đáp án.
+              <strong className="text-text">Mẹo nhỏ:</strong> Một prompt tốt nên nói rõ mục tiêu, bối cảnh, tiêu chí câu trả lời và cách bạn muốn AI giúp mình tự học.
             </p>
           </div>
           <Link to="/guides" className="btn-outline shrink-0 gap-2">

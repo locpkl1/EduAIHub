@@ -1,7 +1,18 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { BookOpen, Sparkles } from 'lucide-react';
 import ChatbotPage from '../../components/ChatbotPage';
+import { useAuth } from '../../contexts/AuthContext';
 import { bookSeries, grades, lessons, subjects } from '../../data/educationData';
+import { buildUserLearningContext } from '../../lib/userContext';
+import type { StudyContext } from '../../lib/cozeClient';
+
+const CURRENT_LEVEL_OPTIONS = [
+  'Mới bắt đầu',
+  'Đang hiểu một phần',
+  'Cần củng cố nền tảng',
+  'Đã khá vững',
+  'Muốn luyện nâng cao',
+];
 
 function StudySidebar({
   selectedGrade,
@@ -10,8 +21,14 @@ function StudySidebar({
   setSelectedBook,
   selectedSubject,
   setSelectedSubject,
+  selectedChapter,
+  setSelectedChapter,
   selectedLesson,
   setSelectedLesson,
+  learningGoal,
+  setLearningGoal,
+  currentLevel,
+  setCurrentLevel,
 }: {
   selectedGrade: string;
   setSelectedGrade: (v: string) => void;
@@ -19,8 +36,14 @@ function StudySidebar({
   setSelectedBook: (v: string) => void;
   selectedSubject: string;
   setSelectedSubject: (v: string) => void;
+  selectedChapter: string;
+  setSelectedChapter: (v: string) => void;
   selectedLesson: string;
   setSelectedLesson: (v: string) => void;
+  learningGoal: string;
+  setLearningGoal: (v: string) => void;
+  currentLevel: string;
+  setCurrentLevel: (v: string) => void;
 }) {
   const availableLessons = selectedGrade && selectedSubject
     ? lessons[selectedGrade]?.[selectedSubject] || []
@@ -42,7 +65,7 @@ function StudySidebar({
           </span>
         </div>
         <p className="mt-2 text-xs leading-5 text-text-muted">
-          Chọn lớp, sách, môn và bài để chatbot tạo prompt sát với việc học của bạn.
+          Chọn lớp, sách, môn, chương, bài và mục tiêu để chatbot gợi ý prompt sát với việc học của bạn.
         </p>
       </div>
 
@@ -103,6 +126,16 @@ function StudySidebar({
           </select>
         </FieldLabel>
 
+        <FieldLabel label="Chương / chủ đề">
+          <input
+            type="text"
+            value={selectedChapter}
+            onChange={(e) => setSelectedChapter(e.target.value)}
+            placeholder="VD: Hàm số lượng giác"
+            className="input-field py-2 text-xs"
+          />
+        </FieldLabel>
+
         <FieldLabel label="Bài học">
           <select
             value={selectedLesson}
@@ -114,6 +147,31 @@ function StudySidebar({
             {availableLessons.map((lesson) => (
               <option key={lesson} value={lesson}>
                 {lesson}
+              </option>
+            ))}
+          </select>
+        </FieldLabel>
+
+        <FieldLabel label="Mục tiêu học tập">
+          <textarea
+            value={learningGoal}
+            onChange={(e) => setLearningGoal(e.target.value)}
+            placeholder="VD: Hiểu bản chất, ôn kiểm tra, tự luyện bài tập..."
+            rows={3}
+            className="input-field resize-none py-2 text-xs"
+          />
+        </FieldLabel>
+
+        <FieldLabel label="Trình độ hiện tại">
+          <select
+            value={currentLevel}
+            onChange={(e) => setCurrentLevel(e.target.value)}
+            className="input-field py-2 text-xs"
+          >
+            <option value="">Chọn trình độ</option>
+            {CURRENT_LEVEL_OPTIONS.map((level) => (
+              <option key={level} value={level}>
+                {level}
               </option>
             ))}
           </select>
@@ -148,9 +206,19 @@ function StudySidebar({
                   {subjects.find((s) => s.value === selectedSubject)?.label}
                 </span>
               </li>
+              {selectedChapter && (
+                <li>
+                  Chương: <span className="font-bold text-text">{selectedChapter}</span>
+                </li>
+              )}
               {selectedLesson && (
                 <li>
                   Bài: <span className="font-bold text-text">{selectedLesson}</span>
+                </li>
+              )}
+              {currentLevel && (
+                <li>
+                  Trình độ: <span className="font-bold text-text">{currentLevel}</span>
                 </li>
               )}
             </ul>
@@ -161,7 +229,7 @@ function StudySidebar({
   );
 }
 
-function FieldLabel({ label, children }: { label: string; children: React.ReactNode }) {
+function FieldLabel({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
       <label className="mb-2 block text-xs font-bold uppercase tracking-[0.14em] text-text-light">
@@ -172,20 +240,30 @@ function FieldLabel({ label, children }: { label: string; children: React.ReactN
   );
 }
 
-export default function StudyPromptChatbot() {
+export default function StudyPromptMentorChatbot() {
+  const { profile, displayName } = useAuth();
+  const userContext = buildUserLearningContext(profile, displayName);
+
   const [selectedGrade, setSelectedGrade] = useState('10');
   const [selectedBook, setSelectedBook] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
+  const [selectedChapter, setSelectedChapter] = useState('');
   const [selectedLesson, setSelectedLesson] = useState('');
+  const [learningGoal, setLearningGoal] = useState('');
+  const [currentLevel, setCurrentLevel] = useState('');
 
   const subjectLabel = subjects.find((s) => s.value === selectedSubject)?.label || selectedSubject;
   const bookLabel = bookSeries.find((b) => b.value === selectedBook)?.label || '';
 
-  const systemContext = [
-    `Bạn là chatbot hướng dẫn tạo prompt học tập cho học sinh THPT Việt Nam.`,
-    `Ngữ cảnh: Lớp ${selectedGrade}${bookLabel ? `, Bộ sách ${bookLabel}` : ''}${subjectLabel ? `, Môn ${subjectLabel}` : ''}${selectedLesson ? `, Bài: ${selectedLesson}` : ''}.`,
-    `Nhiệm vụ: Tạo prompt học tập tối ưu theo đúng môn, lớp, bài. Giải thích tại sao prompt đó hiệu quả. Nếu người dùng cung cấp prompt yếu, hãy sửa và cải thiện nó.`,
-  ].join('\n');
+  const studyContext: StudyContext = {
+    grade: selectedGrade,
+    subject: subjectLabel,
+    textbookSeries: bookLabel,
+    chapter: selectedChapter,
+    lesson: selectedLesson,
+    learningGoal,
+    currentLevel,
+  };
 
   const sidebar = (
     <StudySidebar
@@ -195,31 +273,38 @@ export default function StudyPromptChatbot() {
       setSelectedBook={setSelectedBook}
       selectedSubject={selectedSubject}
       setSelectedSubject={setSelectedSubject}
+      selectedChapter={selectedChapter}
+      setSelectedChapter={setSelectedChapter}
       selectedLesson={selectedLesson}
       setSelectedLesson={setSelectedLesson}
+      learningGoal={learningGoal}
+      setLearningGoal={setLearningGoal}
+      currentLevel={currentLevel}
+      setCurrentLevel={setCurrentLevel}
     />
   );
 
   const starters = [
-    'Tạo prompt giải thích tích phân lớp 12',
-    'Hãy sửa prompt này: "Giải thích quang hợp"',
-    'Tạo prompt ôn thi Văn theo chủ đề nghị luận',
-    'Tạo prompt học từ vựng tiếng Anh Unit 5',
+    'Gợi ý prompt giúp em hiểu bài này theo từng bước',
+    'Em có prompt này, hãy góp ý và sửa cho tốt hơn',
+    'Tạo prompt ôn kiểm tra nhưng không cho đáp án ngay',
+    'Tạo prompt giúp em tự kiểm tra xem mình đã hiểu bài chưa',
   ];
 
   return (
     <ChatbotPage
-      title="Tạo Prompt Học Tập"
-      subtitle="Tạo và cải thiện prompt theo môn học, lớp và bài học cụ thể"
+      title="Gợi Ý Prompt Học Tập"
+      subtitle="Góp ý và tạo prompt học tập theo lớp, môn, bộ sách, trình độ và mục tiêu"
       icon={<Sparkles size={20} style={{ color: 'var(--color-primary)' }} />}
       botKey="study-prompt"
       autoSavePrompts
-      systemContext={systemContext}
+      userContext={userContext}
+      studyContext={studyContext}
       starterPrompts={starters}
       sidebar={sidebar}
       saveSubject={subjectLabel}
       saveBookSeries={bookLabel}
-      saveChapter={selectedLesson || `Lớp ${selectedGrade}`}
+      saveChapter={selectedLesson || selectedChapter || `Lớp ${selectedGrade}`}
     />
   );
 }

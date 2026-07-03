@@ -360,8 +360,8 @@ export default function Dashboard() {
         >
           <BookOpenIcon className="w-8 h-8" style={{ color: 'var(--color-primary)' }} />
           <div>
-            <p className="font-semibold" style={{ color: 'var(--color-text)' }}>Sách giáo khoa</p>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Xem tài liệu các khối</p>
+            <p className="font-semibold" style={{ color: 'var(--color-text)' }}>Bản đồ chương trình</p>
+            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Xem ngữ cảnh học tập</p>
           </div>
         </Link>
 

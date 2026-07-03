@@ -53,8 +53,10 @@ export function cozeApiPlugin(getEnv: () => CozeEnv): Plugin {
         } catch (error: unknown) {
           const err = error as { statusCode?: number };
           console.error('Coze dev middleware error:', error);
-          sendJson(res, err.statusCode ?? 500, {
-            error: error instanceof Error ? error.message : 'Unknown Coze API error.',
+          sendJson(res, error instanceof SyntaxError ? 400 : err.statusCode ?? 500, {
+            error: error instanceof SyntaxError
+              ? 'Invalid JSON body.'
+              : error instanceof Error ? error.message : 'Unknown Coze API error.',
           });
         } finally {
           for (const key of Object.keys(prev)) {

@@ -12,11 +12,19 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { callCoze, type CozeBotKey } from '../lib/cozeClient';
+import {
+  callCoze,
+  type CozeBotKey,
+  type StudyContext,
+  type UserLearningContext,
+} from '../lib/cozeClient';
 import { formatAiText, looksLikePrompt, userRequestedSave } from '../lib/formatAiText';
 
 type Message = { id: string; role: 'user' | 'ai'; text: string };
 type ChatSession = { id: string; title: string; messages: Message[]; convId: string | null; createdAt: number };
+
+const MAX_SESSIONS = 20;
+const MAX_MESSAGES_PER_SESSION = 80;
 
 function genId() {
   return Math.random().toString(36).slice(2, 11);
@@ -26,12 +34,61 @@ function getInitials(name: string) {
   return name.split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? '').join('') || '?';
 }
 
+function trimSession(session: ChatSession): ChatSession {
+  return {
+    ...session,
+    messages: session.messages.slice(-MAX_MESSAGES_PER_SESSION),
+  };
+}
+
+function trimSessions(sessions: ChatSession[]): ChatSession[] {
+  return sessions.slice(0, MAX_SESSIONS).map(trimSession);
+}
+
+function loadStoredSessions(raw: unknown): ChatSession[] {
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .slice(0, MAX_SESSIONS)
+    .map((item): ChatSession | null => {
+      if (!item || typeof item !== 'object') return null;
+      const source = item as Partial<ChatSession>;
+      const messages = Array.isArray(source.messages)
+        ? source.messages
+            .filter((msg) => msg && (msg.role === 'user' || msg.role === 'ai') && typeof msg.text === 'string')
+            .slice(-MAX_MESSAGES_PER_SESSION)
+            .map((msg) => ({ id: genId(), role: msg.role, text: msg.text }))
+        : [];
+
+      return {
+        id: genId(),
+        title: typeof source.title === 'string' && source.title.trim() ? source.title : 'Cuộc trò chuyện',
+        messages,
+        convId: typeof source.convId === 'string' && source.convId.trim() ? source.convId : null,
+        createdAt: typeof source.createdAt === 'number' ? source.createdAt : Date.now(),
+      };
+    })
+    .filter((session): session is ChatSession => Boolean(session));
+}
+
+function serializeSessions(sessions: ChatSession[]) {
+  return trimSessions(sessions).map((session) => ({
+    title: session.title,
+    messages: session.messages.map((message) => ({
+      role: message.role,
+      text: message.text,
+    })),
+    convId: session.convId,
+    createdAt: session.createdAt,
+  }));
+}
+
 export interface ChatbotPageProps {
   title: string;
   subtitle: string;
   icon: ReactNode;
   accentColor?: string;
-  systemContext: string;
+  systemContext?: string;
   starterPrompts: string[];
   sidebar?: ReactNode;
   botKey: CozeBotKey;
@@ -39,6 +96,8 @@ export interface ChatbotPageProps {
   saveSubject?: string;
   saveBookSeries?: string;
   saveChapter?: string;
+  userContext?: UserLearningContext;
+  studyContext?: StudyContext;
 }
 
 export default function ChatbotPage({
@@ -46,7 +105,6 @@ export default function ChatbotPage({
   subtitle,
   icon,
   accentColor,
-  systemContext,
   starterPrompts,
   sidebar,
   botKey,
@@ -54,6 +112,8 @@ export default function ChatbotPage({
   saveSubject = '',
   saveBookSeries = '',
   saveChapter = '',
+  userContext,
+  studyContext,
 }: ChatbotPageProps) {
   const { user, isGuest, displayName } = useAuth();
   const navigate = useNavigate();
@@ -63,6 +123,7 @@ export default function ChatbotPage({
 
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [sessionsLoaded, setSessionsLoaded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window === 'undefined') return true;
     return window.innerWidth >= 768;
@@ -79,6 +140,34 @@ export default function ChatbotPage({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const sessionsRef = useRef(sessions);
   sessionsRef.current = sessions;
+  const storageKey = `eduaihub_chat_sessions_${botKey}_${user?.id || 'guest'}`;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    setSessionsLoaded(false);
+    try {
+      const raw = window.localStorage.getItem(storageKey);
+      const stored = raw ? loadStoredSessions(JSON.parse(raw)) : [];
+      setSessions(stored);
+      setActiveSessionId(stored[0]?.id ?? null);
+    } catch {
+      setSessions([]);
+      setActiveSessionId(null);
+    } finally {
+      setSessionsLoaded(true);
+    }
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (!sessionsLoaded || typeof window === 'undefined') return;
+
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(serializeSessions(sessions)));
+    } catch {
+      /* localStorage can be unavailable or full; chat still works in memory. */
+    }
+  }, [sessions, sessionsLoaded, storageKey]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -99,7 +188,7 @@ export default function ChatbotPage({
       convId: null,
       createdAt: Date.now(),
     };
-    setSessions((prev) => [session, ...prev]);
+    setSessions((prev) => trimSessions([session, ...prev]));
     setActiveSessionId(id);
     setInput('');
   }
@@ -122,9 +211,9 @@ export default function ChatbotPage({
       user_id: user.id,
       purpose: userText.substring(0, 80),
       prompt_content: aiContent,
-      subject: saveSubject,
-      book_series: saveBookSeries,
-      chapter: saveChapter,
+      subject: saveSubject || studyContext?.subject || '',
+      book_series: saveBookSeries || studyContext?.textbookSeries || '',
+      chapter: saveChapter || studyContext?.lesson || studyContext?.chapter || '',
     });
 
     if (error) console.error('Error saving prompt:', error);
@@ -144,7 +233,7 @@ export default function ChatbotPage({
         convId: null,
         createdAt: Date.now(),
       };
-      setSessions((prev) => [session, ...prev]);
+      setSessions((prev) => trimSessions([session, ...prev]));
       sessionId = id;
       setActiveSessionId(id);
     }
@@ -157,7 +246,7 @@ export default function ChatbotPage({
         const isNewTitle = s.title === 'Cuộc trò chuyện mới' || s.messages.length === 0;
         return {
           ...s,
-          messages: [...s.messages, userMsg],
+          messages: [...s.messages, userMsg].slice(-MAX_MESSAGES_PER_SESSION),
           title: isNewTitle ? text.slice(0, 40) : s.title,
         };
       })
@@ -168,20 +257,27 @@ export default function ChatbotPage({
 
     const currentSession = sessionsRef.current.find((s) => s.id === sessionId);
     const currentConvId = currentSession?.convId ?? null;
-    const query = [systemContext, `User_Message: ${text}`].join('\n');
-
     try {
-      const { content, conversation_id } = await callCoze(query, {
+      const { content, conversation_id } = await callCoze({
+        message: text,
         conversationId: currentConvId,
         botKey,
         userId: user?.id ?? null,
+        userContext,
+        studyContext,
+        metaData: {
+          app: 'eduaihub',
+          bot_key: botKey,
+          session_id: sessionId,
+          source: 'web',
+        },
       });
 
       const aiMsg: Message = { id: genId(), role: 'ai', text: content };
       setSessions((prev) =>
         prev.map((s) =>
           s.id === sessionId
-            ? { ...s, convId: conversation_id, messages: [...s.messages, aiMsg] }
+            ? { ...s, convId: conversation_id, messages: [...s.messages, aiMsg].slice(-MAX_MESSAGES_PER_SESSION) }
             : s
         )
       );
@@ -192,7 +288,7 @@ export default function ChatbotPage({
       const aiMsg: Message = { id: genId(), role: 'ai', text: errMsg };
       setSessions((prev) =>
         prev.map((s) =>
-          s.id === sessionId ? { ...s, messages: [...s.messages, aiMsg] } : s
+          s.id === sessionId ? { ...s, messages: [...s.messages, aiMsg].slice(-MAX_MESSAGES_PER_SESSION) } : s
         )
       );
     } finally {
@@ -215,20 +311,25 @@ export default function ChatbotPage({
 
   return (
     <div
-      className="relative flex h-[calc(100vh-92px)] h-[calc(100dvh-92px)] max-h-[calc(100vh-92px)] max-h-[calc(100dvh-92px)] overflow-hidden text-text"
-      style={{ backgroundColor: 'var(--color-bg)' }}
+      className="relative flex min-h-[calc(100svh-92px)] min-h-[calc(100dvh-92px)] overflow-hidden text-text"
+      style={{
+        backgroundColor: 'var(--color-bg)',
+        backgroundImage:
+          'radial-gradient(circle at 18px 18px, color-mix(in srgb, var(--color-secondary) 16%, transparent) 0 2px, transparent 2px)',
+        backgroundSize: '36px 36px',
+      }}
     >
       {sidebarOpen && (
         <button
           type="button"
           aria-label="Đóng lịch sử"
-          className="absolute inset-0 z-30 bg-black/20 sm:hidden"
+          className="absolute inset-0 z-30 bg-text/25 backdrop-blur-[2px] sm:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       <aside
-        className={`absolute bottom-3 left-3 top-3 z-40 flex w-[min(290px,calc(100vw-24px))] shrink-0 flex-col overflow-hidden transition-transform duration-200 sm:static sm:z-auto sm:h-auto sm:w-[280px] ${
+        className={`absolute bottom-3 left-3 top-3 z-40 flex w-[min(292px,calc(100vw-24px))] shrink-0 flex-col overflow-hidden transition-transform duration-200 sm:static sm:z-auto sm:h-auto sm:w-[264px] lg:w-[280px] ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-[calc(100%+24px)] sm:w-0 sm:translate-x-0'
         }`}
         style={{
@@ -262,8 +363,11 @@ export default function ChatbotPage({
         <div className="flex-1 space-y-2 overflow-y-auto p-3">
           {sessions.length === 0 && (
             <div
-              className="p-4 text-center text-xs leading-5 text-text-muted"
-              style={{ backgroundColor: 'var(--color-bg-muted)' }}
+              className="p-4 text-left text-xs leading-5 text-text-muted"
+              style={{
+                backgroundColor: 'var(--color-bg-muted)',
+                borderLeft: `3px solid ${primaryColor}`,
+              }}
             >
               Chưa có cuộc trò chuyện nào. Bắt đầu bằng một câu hỏi nhỏ.
             </div>
@@ -292,7 +396,7 @@ export default function ChatbotPage({
                     e.stopPropagation();
                     deleteSession(s.id);
                   }}
-                  className="p-1 text-text-light opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center text-text-light opacity-100 transition-opacity hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
                   aria-label="Xóa phiên"
                 >
                   <Trash2 size={12} />
@@ -305,15 +409,20 @@ export default function ChatbotPage({
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header
-          className="shrink-0 border-b px-3 py-2.5 sm:px-4"
-          style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+          className="shrink-0 border-b px-3 py-2 sm:px-4 sm:py-2.5"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 88%, transparent)',
+            borderColor: 'var(--color-border)',
+            backdropFilter: 'blur(12px)',
+          }}
         >
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <button
               type="button"
               onClick={() => setSidebarOpen((v) => !v)}
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center border text-text-muted transition-colors hover:bg-bg-muted hover:text-text"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center border text-text-muted transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               style={{ borderColor: 'var(--color-border)' }}
+              aria-label="Mở/đóng lịch sử trò chuyện"
               title="Mở/đóng lịch sử"
             >
               <PanelLeft size={16} />
@@ -322,8 +431,9 @@ export default function ChatbotPage({
             <button
               type="button"
               onClick={() => navigate('/ai-tools')}
-              className="inline-flex h-9 shrink-0 items-center gap-1.5 border px-2 text-sm font-bold text-text-muted transition-colors hover:bg-bg-muted hover:text-text sm:border-0 sm:px-0"
+              className="inline-flex h-10 shrink-0 items-center gap-1.5 border px-2.5 text-sm font-bold text-text-muted transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:border-0 sm:px-0"
               style={{ borderColor: 'var(--color-border)' }}
+              aria-label="Quay lại trang Công Cụ AI"
             >
               <ArrowLeft size={14} />
               <span className="hidden sm:inline">Công Cụ AI</span>
@@ -332,7 +442,7 @@ export default function ChatbotPage({
             <div className="hidden h-6 w-px shrink-0 bg-border sm:block" />
 
             <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center"
+              className="flex h-10 w-10 shrink-0 items-center justify-center shadow-[3px_3px_0_color-mix(in_srgb,var(--color-border)_60%,transparent)]"
               style={{
                 backgroundColor: `color-mix(in srgb, ${primaryColor} 13%, var(--color-bg-card))`,
                 borderLeft: `3px solid ${primaryColor}`,
@@ -341,11 +451,17 @@ export default function ChatbotPage({
               {icon}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-sans text-sm font-semibold text-text sm:text-base">{title}</p>
-              <p className="hidden truncate text-xs text-text-muted md:block">{subtitle}</p>
+              <p className="truncate font-display text-sm font-bold leading-tight text-text sm:text-base">{title}</p>
+              <p className="hidden truncate text-xs leading-5 text-text-muted md:block">{subtitle}</p>
             </div>
 
-            <div className="ml-auto hidden items-center gap-2 sm:flex">
+            <div
+              className="ml-auto hidden min-h-9 items-center gap-2 border px-3 sm:flex"
+              style={{
+                backgroundColor: 'var(--color-bg-muted)',
+                borderColor: 'var(--color-border)',
+              }}
+            >
               <span className="h-2 w-2 rounded-full animate-pulse-dot" style={{ backgroundColor: 'var(--color-success)' }} />
               <span className="text-xs font-bold uppercase tracking-[0.14em] text-text-light">Sẵn sàng</span>
             </div>
@@ -376,8 +492,9 @@ export default function ChatbotPage({
               className="min-h-0 flex-1 overflow-y-auto"
               style={{
                 backgroundImage:
-                  'linear-gradient(var(--color-border) 1px, transparent 1px)',
-                backgroundSize: '100% 32px',
+                  'linear-gradient(color-mix(in srgb, var(--color-border) 72%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 16%, transparent) 1px, transparent 1px)',
+                backgroundSize: '100% 32px, 72px 100%',
+                backgroundPosition: '0 18px, 18px 0',
                 backgroundColor: 'var(--color-bg)',
               }}
             >
@@ -391,15 +508,15 @@ export default function ChatbotPage({
                   onPick={setInput}
                 />
               ) : (
-                <div className="mx-auto max-w-3xl space-y-6 px-3 py-6 sm:px-5">
+                <div className="mx-auto w-full max-w-4xl space-y-7 px-3 py-5 sm:px-5 sm:py-6">
                   {messages.map((msg) => (
                     <div
                       key={msg.id}
-                      className={`flex min-w-0 gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                      className={`flex min-w-0 gap-2 sm:gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                       {msg.role === 'ai' && (
                         <div
-                          className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center"
+                          className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center sm:h-8 sm:w-8"
                           style={{
                             backgroundColor: `color-mix(in srgb, ${primaryColor} 13%, var(--color-bg-card))`,
                             borderLeft: `3px solid ${primaryColor}`,
@@ -410,7 +527,7 @@ export default function ChatbotPage({
                       )}
 
                       <div
-                        className={`group relative min-w-0 max-w-[84%] px-4 py-3 text-sm leading-7 [overflow-wrap:anywhere] sm:max-w-[78%] ${
+                        className={`group min-w-0 max-w-[calc(100%-2.5rem)] px-4 py-3 text-sm leading-7 [overflow-wrap:anywhere] sm:max-w-[78%] lg:max-w-[70%] ${
                           msg.role === 'user' ? 'text-white' : 'text-text'
                         }`}
                         style={
@@ -418,11 +535,13 @@ export default function ChatbotPage({
                             ? {
                                 backgroundColor: primaryColor,
                                 borderRadius: '16px 16px 4px 16px',
+                                boxShadow: '0 12px 26px -22px rgba(0,0,0,0.5)',
                               }
                             : {
                                 backgroundColor: 'var(--color-bg-card)',
                                 borderLeft: `3px solid ${primaryColor}`,
-                                boxShadow: '0 14px 28px -24px rgba(0,0,0,0.45)',
+                                borderTop: '1px solid var(--color-border)',
+                                boxShadow: '0 16px 32px -26px rgba(0,0,0,0.5)',
                               }
                         }
                       >
@@ -431,12 +550,13 @@ export default function ChatbotPage({
                           <button
                             type="button"
                             onClick={() => handleCopy(msg.text, msg.id)}
-                            className="absolute -bottom-8 right-0 flex items-center gap-1 border px-2 py-1 text-[11px] font-bold opacity-0 transition-opacity group-hover:opacity-100"
+                            className="mt-3 ml-auto flex min-h-9 items-center gap-1.5 border px-2.5 text-[11px] font-bold opacity-90 transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:opacity-70 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
                             style={{
                               backgroundColor: 'var(--color-bg-card)',
                               borderColor: 'var(--color-border)',
                               color: 'var(--color-text-muted)',
                             }}
+                            aria-label="Sao chép phản hồi AI"
                           >
                             {copiedId === msg.id ? <><Check size={10} /> Đã sao chép</> : <><Copy size={10} /> Sao chép</>}
                           </button>
@@ -445,7 +565,7 @@ export default function ChatbotPage({
 
                       {msg.role === 'user' && (
                         <div
-                          className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                          className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white sm:h-8 sm:w-8"
                           style={{ backgroundColor: primaryColor }}
                         >
                           {userInitials}
@@ -461,16 +581,21 @@ export default function ChatbotPage({
             </div>
 
             <div
-              className="shrink-0 border-t px-3 py-3 sm:px-4"
-              style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-card)' }}
+              className="shrink-0 border-t px-3 pb-[calc(0.85rem+env(safe-area-inset-bottom))] pt-3 sm:px-4"
+              style={{
+                borderColor: 'var(--color-border)',
+                backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 92%, transparent)',
+                backdropFilter: 'blur(12px)',
+              }}
             >
-              <div className="mx-auto max-w-3xl">
+              <div className="mx-auto w-full max-w-4xl">
                 <div
-                  className="flex min-w-0 items-end gap-2 p-2 sm:gap-3"
+                  className="flex min-w-0 items-end gap-2 p-2.5 sm:gap-3 sm:p-3"
                   style={{
-                    backgroundColor: 'var(--color-bg-muted)',
+                    backgroundColor: 'var(--color-bg-card)',
                     border: '1px solid var(--color-border)',
                     borderRadius: '18px',
+                    boxShadow: '0 18px 40px -30px rgba(0,0,0,0.55)',
                   }}
                   onFocusCapture={(e) => {
                     (e.currentTarget as HTMLElement).style.borderColor = primaryColor;
@@ -488,23 +613,25 @@ export default function ChatbotPage({
                     onKeyDown={handleKeyDown}
                     placeholder="Nhắn tin... Enter để gửi, Shift+Enter xuống dòng"
                     rows={1}
-                    className="min-w-0 flex-1 resize-none bg-transparent px-2 py-2 text-sm outline-none"
+                    className="min-w-0 flex-1 resize-none bg-transparent px-2 py-2 text-sm outline-none sm:px-3"
                     style={{
                       color: 'var(--color-text)',
-                      minHeight: '40px',
+                      minHeight: '48px',
                       maxHeight: '160px',
                       lineHeight: '1.55',
                     }}
+                    aria-label="Nội dung tin nhắn gửi chatbot"
                   />
                   <button
                     type="button"
                     onClick={handleSend}
                     disabled={!input.trim() || loading}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40"
                     style={{ backgroundColor: input.trim() && !loading ? primaryColor : 'var(--color-border-strong)' }}
+                    aria-label="Gửi tin nhắn"
                     title="Gửi"
                   >
-                    <Send size={15} />
+                    <Send size={17} />
                   </button>
                 </div>
                 <p className="mt-2 text-center text-[11px] leading-5 text-text-light">
@@ -535,31 +662,42 @@ function EmptyChatState({
   onPick: (prompt: string) => void;
 }) {
   return (
-    <div className="flex min-h-full items-center justify-center px-4 py-10">
-      <div className="w-full max-w-3xl">
+    <div className="flex min-h-full items-center justify-center px-3 py-6 sm:px-5 sm:py-10">
+      <div className="w-full max-w-4xl">
         <div
-          className="relative overflow-hidden p-6 sm:p-8"
+          className="relative overflow-hidden border p-5 sm:p-7"
           style={{
-            backgroundColor: 'var(--color-bg-card)',
+            backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 96%, transparent)',
+            borderColor: 'var(--color-border)',
             borderLeft: `4px solid ${primaryColor}`,
-            borderTop: '1px solid var(--color-border)',
+            boxShadow: '10px 10px 0 color-mix(in srgb, var(--color-secondary) 18%, transparent)',
             clipPath: 'polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%)',
           }}
         >
           <span
             aria-hidden="true"
-            className="absolute right-5 top-0 h-2 w-16 -translate-y-1/2"
+            className="absolute right-5 top-0 h-2 w-20 -translate-y-1/2"
             style={{ backgroundColor: `color-mix(in srgb, ${primaryColor} 24%, transparent)` }}
           />
           <div
-            className="mb-5 flex h-12 w-12 items-center justify-center"
+            className="mb-5 flex h-12 w-12 items-center justify-center shadow-[3px_3px_0_color-mix(in_srgb,var(--color-border)_70%,transparent)]"
             style={{ backgroundColor: `color-mix(in srgb, ${primaryColor} 13%, var(--color-bg-card))` }}
           >
             {icon}
           </div>
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-text-light">Bàn học đang trống</p>
-          <h2 className="mt-3 font-sans text-2xl font-semibold leading-[1.18] text-text sm:text-3xl">{title}</h2>
+          <h2 className="mt-3 font-display text-2xl font-bold leading-[1.12] text-text sm:text-3xl">{title}</h2>
           <p className="mt-3 max-w-xl text-sm leading-7 text-text-muted">{subtitle}</p>
+
+          <div
+            className="mt-5 border-l-4 px-4 py-3 text-xs leading-6 text-text-muted"
+            style={{
+              backgroundColor: 'var(--color-bg-muted)',
+              borderColor: primaryColor,
+            }}
+          >
+            Chọn một gợi ý hoặc viết câu hỏi của riêng bạn. Mục tiêu là hiểu cách học, không chỉ lấy đáp án.
+          </div>
 
           <div className="mt-7 grid gap-3 sm:grid-cols-2">
             {starterPrompts.map((prompt, index) => (
@@ -567,11 +705,12 @@ function EmptyChatState({
                 key={prompt}
                 type="button"
                 onClick={() => onPick(prompt)}
-                className="group relative min-w-0 p-4 text-left text-sm leading-6 transition-transform hover:-translate-y-1"
+                className="group relative min-h-[96px] min-w-0 border p-4 text-left text-sm leading-6 transition-transform hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 style={{
                   backgroundColor: index % 2 === 0 ? 'var(--color-bg)' : 'var(--color-bg-muted)',
+                  borderColor: 'var(--color-border)',
                   borderLeft: `3px solid ${primaryColor}`,
-                  borderTop: '1px solid color-mix(in srgb, var(--color-border) 62%, transparent)',
+                  boxShadow: index === 1 ? '4px 4px 0 color-mix(in srgb, var(--color-accent) 18%, transparent)' : 'none',
                 }}
               >
                 <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-text-light">

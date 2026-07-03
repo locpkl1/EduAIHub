@@ -40,7 +40,7 @@ export default function Textbooks() {
     { value: '3', label: 'khối lớp THPT' },
     { value: '3', label: 'bộ sách chính' },
     { value: `${subjectCount}+`, label: `môn học ${selectedGradeLabel}` },
-    { value: 'PDF', label: 'mở nhanh tài liệu' },
+    { value: 'AI', label: 'ngữ cảnh học tập' },
   ];
   const filteredCurriculumItems = useMemo(
     () =>
@@ -179,14 +179,14 @@ export default function Textbooks() {
         />
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_0.72fr] lg:items-end">
           <div className="max-w-3xl">
-            <span className="section-label mb-4 inline-flex">Tủ sách học cùng AI</span>
+            <span className="section-label mb-4 inline-flex">Bản đồ chương trình học</span>
             <h1 className="font-display text-4xl font-bold leading-tight text-text sm:text-5xl lg:text-6xl">
-              Tủ sách học tập số
+              Ngữ cảnh học tập số
               <span className="block text-primary">cho học sinh THPT</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-8 text-text-muted sm:text-lg">
-              Sách giáo khoa, bản đồ chương trình và tài nguyên học tập cho lớp 10, 11, 12.
-              Chọn bộ sách, mở PDF, rồi dùng AI với ngữ cảnh học tập rõ ràng hơn.
+              Bản đồ chương trình, tài nguyên học tập và ngữ cảnh theo lớp, bộ sách, môn học cho lớp 10, 11, 12.
+              Chọn chủ đề học tập rồi dùng AI với bối cảnh rõ ràng hơn.
             </p>
 
             <div className="mt-7 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
@@ -346,7 +346,7 @@ export default function Textbooks() {
                       <div className="mt-4 flex min-h-10 items-center justify-between gap-3 border-t pt-3" style={{ borderColor: 'var(--color-border)' }}>
                         <span className="text-xs font-semibold text-text-light">{selectedGradeLabel}</span>
                         <span className="inline-flex items-center gap-1 text-xs font-bold text-primary">
-                          Mở PDF
+                          Xem tài liệu hỗ trợ
                           <ChevronRight size={13} />
                         </span>
                       </div>
@@ -442,7 +442,7 @@ export default function Textbooks() {
                   <BookOpen size={18} />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-text-light">Tài liệu PDF</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-text-light">Tài liệu hỗ trợ</p>
                   <h2 className="mt-1 font-display text-xl font-bold leading-tight text-text sm:text-2xl">
                     {selectedBook.subject}
                   </h2>
@@ -463,7 +463,7 @@ export default function Textbooks() {
             >
               <iframe
                 src={selectedBook.pdfUrl}
-                title={`PDF ${selectedBook.subject}`}
+                title={`Tài liệu hỗ trợ ${selectedBook.subject}`}
                 className="h-[62dvh] min-h-[18rem] w-full border-0 sm:h-[70dvh]"
                 style={{ backgroundColor: 'var(--color-bg-muted)' }}
               />
@@ -731,16 +731,19 @@ function LearningResourcesSection({
                   <span className="border px-2.5 py-1 text-xs font-semibold" style={{ backgroundColor: 'var(--color-bg-muted)', borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}>
                     {resourceTypeLabels[resource.resource_type]}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => onOpenResource(resource)}
-                    disabled={!hasLink}
-                    className="inline-flex min-h-10 items-center justify-center gap-2 border px-3 text-xs font-bold transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                  {hasLink ? (
+                    <button
+                      type="button"
+                      onClick={() => onOpenResource(resource)}
+                    className="inline-flex min-h-10 items-center justify-center gap-2 border px-3 text-xs font-bold transition-all"
                     style={{ backgroundColor: 'var(--color-primary)', borderColor: 'var(--color-primary)', color: '#ffffff' }}
                   >
                     Mở tài nguyên
                     <ExternalLink size={12} />
-                  </button>
+                    </button>
+                  ) : (
+                    <span className="text-xs font-semibold text-text-light">Chưa có tài nguyên đính kèm</span>
+                  )}
                 </div>
               </article>
             );
@@ -848,7 +851,7 @@ function FallbackBookCover({
           className="border px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em]"
           style={{ borderColor: 'var(--color-border-strong)', color: 'var(--color-primary)' }}
         >
-          PDF
+          Tài liệu
         </span>
         <Book size={24} style={{ color: 'var(--color-primary)' }} />
       </div>

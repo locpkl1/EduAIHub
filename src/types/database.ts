@@ -10,6 +10,14 @@ export interface Profile {
   avatar_url: string;
   grade: Grade | null;
   school: string | null;
+  personal_background: string;
+  strengths: string[];
+  weaknesses: string[];
+  common_problems: string[];
+  learning_goals: string[];
+  preferred_learning_style: string;
+  ai_experience_level: string;
+  onboarding_completed: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -18,6 +26,14 @@ export interface ProfileUpdateData {
   full_name: string;
   grade: Grade;
   school: string;
+  personal_background?: string;
+  strengths?: string[];
+  weaknesses?: string[];
+  common_problems?: string[];
+  learning_goals?: string[];
+  preferred_learning_style?: string;
+  ai_experience_level?: string;
+  onboarding_completed?: boolean;
 }
 
 export interface SavedPrompt {

@@ -10,9 +10,9 @@ import LessonDetail from './pages/LessonDetail';
 import PromptLibrary from './pages/PromptLibrary';
 import Textbooks from './pages/Textbooks';
 import Profile from './pages/Profile';
-import AiGuideChatbot from './pages/chatbots/AiGuideChatbot';
-import StudyPromptChatbot from './pages/chatbots/StudyPromptChatbot';
-import GeneralPromptChatbot from './pages/chatbots/GeneralPromptChatbot';
+import PromptThinkingChatbot from './pages/chatbots/AiGuideChatbot';
+import StudyPromptMentorChatbot from './pages/chatbots/StudyPromptChatbot';
+import PromptEvaluatorChatbot from './pages/chatbots/GeneralPromptChatbot';
 import AdminRouteGuard from './components/admin/AdminRouteGuard';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -33,9 +33,12 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/guides" element={<Guides />} />
             <Route path="/ai-tools" element={<AiTools />} />
-            <Route path="/ai-tools/huong-dan-ai" element={<AiGuideChatbot />} />
-            <Route path="/ai-tools/prompt-hoc-tap" element={<StudyPromptChatbot />} />
-            <Route path="/ai-tools/prompt-da-dung" element={<GeneralPromptChatbot />} />
+            <Route path="/ai-tools/hoc-tu-duy-prompt" element={<PromptThinkingChatbot />} />
+            <Route path="/ai-tools/goi-y-prompt-hoc-tap" element={<StudyPromptMentorChatbot />} />
+            <Route path="/ai-tools/danh-gia-prompt" element={<PromptEvaluatorChatbot />} />
+            <Route path="/ai-tools/huong-dan-ai" element={<PromptThinkingChatbot />} />
+            <Route path="/ai-tools/prompt-hoc-tap" element={<StudyPromptMentorChatbot />} />
+            <Route path="/ai-tools/prompt-da-dung" element={<PromptEvaluatorChatbot />} />
             <Route path="/lessons" element={<Lessons />} />
             <Route path="/lessons/:id" element={<LessonDetail />} />
             <Route path="/prompt-creator" element={<Navigate to="/ai-tools/prompt-hoc-tap" replace />} />

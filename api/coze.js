@@ -25,9 +25,11 @@ export default async function handler(req, res) {
     res.status(200).json(result);
   } catch (error) {
     console.error('Coze function error:', error);
-    const statusCode = error?.statusCode ?? 500;
+    const statusCode = error instanceof SyntaxError ? 400 : error?.statusCode ?? 500;
     res.status(statusCode).json({
-      error: error instanceof Error ? error.message : 'Unknown Coze API error.',
+      error: error instanceof SyntaxError
+        ? 'Invalid JSON body.'
+        : error instanceof Error ? error.message : 'Unknown Coze API error.',
     });
   }
 }

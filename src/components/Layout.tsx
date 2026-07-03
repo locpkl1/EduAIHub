@@ -68,7 +68,7 @@ const navItems = [
 
 const resourceItems = [
   { to: '/prompts', label: 'Kho Prompt', description: 'Lưu và dùng lại ý tưởng học', icon: Library },
-  { to: '/textbooks', label: 'Sách Giáo Khoa', description: 'Tài liệu lớp 10-12', icon: BookOpen },
+  { to: '/textbooks', label: 'Bản đồ chương trình', description: 'Ngữ cảnh học tập lớp 10-12', icon: BookOpen },
 ];
 
 function GoogleIcon() {

@@ -1,30 +1,28 @@
-import { MessageSquare } from 'lucide-react';
+import { ClipboardCheck } from 'lucide-react';
 import ChatbotPage from '../../components/ChatbotPage';
-
-const SYSTEM_CONTEXT = `Bạn là chatbot hướng dẫn tạo prompt đa dụng với AI.
-Nhiệm vụ:
-- Hướng dẫn cách viết prompt hiệu quả cho bất kỳ mục đích nào
-- Giải thích các kỹ thuật prompt: few-shot, role prompting, cấu trúc ngữ cảnh, định dạng đầu ra
-- Sửa và cải thiện prompt của người dùng nếu được yêu cầu
-- Chia sẻ ví dụ prompt thực tế và giải thích tại sao chúng hoạt động
-- Không giới hạn chủ đề — từ học thuật, sáng tạo, công việc, đến cuộc sống hằng ngày`;
+import { useAuth } from '../../contexts/AuthContext';
+import { buildUserLearningContext } from '../../lib/userContext';
 
 const STARTERS = [
-  'Cách viết prompt để AI giải thích rõ hơn?',
-  'Sửa prompt này: "Viết một email"',
-  'Few-shot prompting là gì? Cho ví dụ',
-  'Tạo prompt để AI đóng vai giáo viên dạy tôi',
+  'Đánh giá prompt này: "Giải thích bài này cho tôi"',
+  'Chấm prompt của em theo thang 10 và chỉ ra cách sửa',
+  'Prompt của em thiếu gì để AI trả lời tốt hơn?',
+  'Hãy viết lại prompt này thành phiên bản rõ ràng hơn',
 ];
 
-export default function GeneralPromptChatbot() {
+export default function PromptEvaluatorChatbot() {
+  const { profile, displayName } = useAuth();
+  const userContext = buildUserLearningContext(profile, displayName);
+
   return (
     <ChatbotPage
-      title="Tạo Prompt Đa Dụng"
-      subtitle="Chat tự do để luyện cách tạo prompt cho nhiều mục đích khác nhau"
-      icon={<MessageSquare size={20} style={{ color: 'var(--color-accent)' }} />}
+      title="Đánh Giá Prompt Của Bạn"
+      subtitle="Chấm điểm, góp ý và nâng cấp prompt bạn tự viết"
+      icon={<ClipboardCheck size={20} style={{ color: 'var(--color-accent)' }} />}
       accentColor="var(--color-accent)"
-      botKey="general-prompt"
-      systemContext={SYSTEM_CONTEXT}
+      botKey="prompt-evaluator"
+      autoSavePrompts
+      userContext={userContext}
       starterPrompts={STARTERS}
     />
   );
