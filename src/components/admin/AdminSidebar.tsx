@@ -5,8 +5,6 @@ import {
   Home,
   Library,
   MessageSquareText,
-  Settings,
-  Users,
   X,
 } from 'lucide-react';
 
@@ -21,8 +19,6 @@ const navItems = [
   { to: '/admin/prompts', label: 'Prompt mẫu', icon: MessageSquareText },
   { to: '/admin/curriculum', label: 'Chương trình học', icon: BookMarked },
   { to: '/admin/resources', label: 'Tài nguyên', icon: Library },
-  { to: '/admin/users', label: 'Người dùng', icon: Users },
-  { to: '/admin/settings', label: 'Cài đặt', icon: Settings },
 ];
 
 function SidebarContent({ onClose }: { onClose: () => void }) {
@@ -70,9 +66,11 @@ function SidebarContent({ onClose }: { onClose: () => void }) {
 
       <div className="border-t p-4" style={{ borderColor: 'var(--color-border)' }}>
         <div className="rounded-xl border p-3" style={{ backgroundColor: 'var(--color-bg-muted)', borderColor: 'var(--color-border)' }}>
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-light">Phase 3</p>
-          <p className="mt-1 text-sm font-bold text-text">Khung quản trị</p>
-          <p className="mt-1 text-xs leading-relaxed text-text-muted">CRUD và phân quyền admin sẽ được nối ở các phase tiếp theo.</p>
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-light">EduAI-Hub CMS</p>
+          <p className="mt-1 text-sm font-bold text-text">Quản lý nội dung học AI</p>
+          <p className="mt-1 text-xs leading-relaxed text-text-muted">
+            Quản lý bài viết, prompt mẫu, chương trình học và tài nguyên học tập.
+          </p>
         </div>
       </div>
     </div>

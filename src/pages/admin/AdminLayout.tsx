@@ -10,8 +10,6 @@ const pageTitles: Record<string, string> = {
   '/admin/prompts': 'Prompt mẫu',
   '/admin/curriculum': 'Chương trình học',
   '/admin/resources': 'Tài nguyên',
-  '/admin/users': 'Người dùng',
-  '/admin/settings': 'Cài đặt',
 };
 
 export default function AdminLayout() {

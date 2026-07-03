@@ -20,8 +20,6 @@ import AdminPosts from './pages/admin/AdminPosts';
 import AdminPrompts from './pages/admin/AdminPrompts';
 import AdminCurriculum from './pages/admin/AdminCurriculum';
 import AdminResources from './pages/admin/AdminResources';
-import AdminUsers from './pages/admin/AdminUsers';
-import AdminSettings from './pages/admin/AdminSettings';
 
 function App() {
   return (
@@ -59,8 +57,8 @@ function App() {
             <Route path="prompts" element={<AdminPrompts />} />
             <Route path="curriculum" element={<AdminCurriculum />} />
             <Route path="resources" element={<AdminResources />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="settings" element={<AdminSettings />} />
+            <Route path="users" element={<Navigate to="/admin" replace />} />
+            <Route path="settings" element={<Navigate to="/admin" replace />} />
             <Route path="*" element={<Navigate to="/admin" replace />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

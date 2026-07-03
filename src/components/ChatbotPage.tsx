@@ -141,6 +141,7 @@ export default function ChatbotPage({
   const sessionsRef = useRef(sessions);
   sessionsRef.current = sessions;
   const storageKey = `eduaihub_chat_sessions_${botKey}_${user?.id || 'guest'}`;
+  const sidebarToggleLabel = sidebarOpen ? 'Ẩn lịch sử trò chuyện' : 'Hiện lịch sử trò chuyện';
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -315,8 +316,7 @@ export default function ChatbotPage({
       style={{
         backgroundColor: 'var(--color-bg)',
         backgroundImage:
-          'radial-gradient(circle at 18px 18px, color-mix(in srgb, var(--color-secondary) 16%, transparent) 0 2px, transparent 2px)',
-        backgroundSize: '36px 36px',
+          'linear-gradient(180deg, color-mix(in srgb, var(--color-bg-card) 58%, transparent), transparent 34%)',
       }}
     >
       {sidebarOpen && (
@@ -329,13 +329,16 @@ export default function ChatbotPage({
       )}
 
       <aside
-        className={`absolute bottom-3 left-3 top-3 z-40 flex w-[min(292px,calc(100vw-24px))] shrink-0 flex-col overflow-hidden transition-transform duration-200 sm:static sm:z-auto sm:h-auto sm:w-[264px] lg:w-[280px] ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-[calc(100%+24px)] sm:w-0 sm:translate-x-0'
+        aria-hidden={!sidebarOpen}
+        className={`absolute bottom-3 left-3 top-3 z-40 flex w-[min(292px,calc(100vw-24px))] shrink-0 flex-col overflow-hidden transition-[transform,width,opacity] duration-200 sm:static sm:z-auto sm:h-auto ${
+          sidebarOpen
+            ? 'translate-x-0 sm:w-[264px] sm:opacity-100 lg:w-[280px]'
+            : 'pointer-events-none -translate-x-[calc(100%+24px)] sm:w-0 sm:translate-x-0 sm:opacity-0'
         }`}
         style={{
-          backgroundColor: 'var(--color-bg-card)',
+          backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 96%, transparent)',
           borderRight: sidebarOpen ? '1px solid var(--color-border)' : '0',
-          boxShadow: sidebarOpen ? '10px 0 28px -24px rgba(0,0,0,0.35)' : 'none',
+          boxShadow: sidebarOpen ? '10px 0 26px -24px rgba(0,0,0,0.28)' : 'none',
         }}
       >
         <div className="border-b p-4" style={{ borderColor: 'var(--color-border)' }}>
@@ -420,10 +423,11 @@ export default function ChatbotPage({
             <button
               type="button"
               onClick={() => setSidebarOpen((v) => !v)}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center border text-text-muted transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-text-muted transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               style={{ borderColor: 'var(--color-border)' }}
-              aria-label="Mở/đóng lịch sử trò chuyện"
-              title="Mở/đóng lịch sử"
+              aria-expanded={sidebarOpen}
+              aria-label={sidebarToggleLabel}
+              title={sidebarToggleLabel}
             >
               <PanelLeft size={16} />
             </button>
@@ -492,9 +496,9 @@ export default function ChatbotPage({
               className="min-h-0 flex-1 overflow-y-auto"
               style={{
                 backgroundImage:
-                  'linear-gradient(color-mix(in srgb, var(--color-border) 72%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 16%, transparent) 1px, transparent 1px)',
-                backgroundSize: '100% 32px, 72px 100%',
-                backgroundPosition: '0 18px, 18px 0',
+                  'radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--color-bg-card) 72%, transparent), transparent 46%)',
+                backgroundSize: '100% 100%',
+                backgroundPosition: 'center top',
                 backgroundColor: 'var(--color-bg)',
               }}
             >
@@ -516,10 +520,10 @@ export default function ChatbotPage({
                     >
                       {msg.role === 'ai' && (
                         <div
-                          className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center sm:h-8 sm:w-8"
+                          className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full sm:h-8 sm:w-8"
                           style={{
                             backgroundColor: `color-mix(in srgb, ${primaryColor} 13%, var(--color-bg-card))`,
-                            borderLeft: `3px solid ${primaryColor}`,
+                            border: `1px solid color-mix(in srgb, ${primaryColor} 32%, var(--color-border))`,
                           }}
                         >
                           <div style={{ transform: 'scale(0.68)' }}>{icon}</div>
@@ -527,21 +531,21 @@ export default function ChatbotPage({
                       )}
 
                       <div
-                        className={`group min-w-0 max-w-[calc(100%-2.5rem)] px-4 py-3 text-sm leading-7 [overflow-wrap:anywhere] sm:max-w-[78%] lg:max-w-[70%] ${
+                        className={`group min-w-0 max-w-[calc(100%-2.5rem)] px-4 py-3 text-sm leading-7 [overflow-wrap:anywhere] sm:max-w-[82%] lg:max-w-[76%] ${
                           msg.role === 'user' ? 'text-white' : 'text-text'
                         }`}
                         style={
                           msg.role === 'user'
                             ? {
-                                backgroundColor: primaryColor,
-                                borderRadius: '16px 16px 4px 16px',
-                                boxShadow: '0 12px 26px -22px rgba(0,0,0,0.5)',
+                                background: `linear-gradient(135deg, ${primaryColor}, color-mix(in srgb, ${primaryColor} 82%, var(--color-text)))`,
+                                borderRadius: '18px 18px 7px 18px',
+                                boxShadow: '0 14px 28px -24px rgba(0,0,0,0.48)',
                               }
                             : {
-                                backgroundColor: 'var(--color-bg-card)',
-                                borderLeft: `3px solid ${primaryColor}`,
-                                borderTop: '1px solid var(--color-border)',
-                                boxShadow: '0 16px 32px -26px rgba(0,0,0,0.5)',
+                                backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 94%, transparent)',
+                                border: '1px solid color-mix(in srgb, var(--color-border) 72%, transparent)',
+                                borderRadius: '18px',
+                                boxShadow: '0 14px 34px -30px rgba(0,0,0,0.46)',
                               }
                         }
                       >
@@ -550,7 +554,7 @@ export default function ChatbotPage({
                           <button
                             type="button"
                             onClick={() => handleCopy(msg.text, msg.id)}
-                            className="mt-3 ml-auto flex min-h-9 items-center gap-1.5 border px-2.5 text-[11px] font-bold opacity-90 transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:opacity-70 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+                            className="mt-3 ml-auto flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-[11px] font-bold opacity-90 transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:opacity-70 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
                             style={{
                               backgroundColor: 'var(--color-bg-card)',
                               borderColor: 'var(--color-border)',
@@ -583,8 +587,8 @@ export default function ChatbotPage({
             <div
               className="shrink-0 border-t px-3 pb-[calc(0.85rem+env(safe-area-inset-bottom))] pt-3 sm:px-4"
               style={{
-                borderColor: 'var(--color-border)',
-                backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 92%, transparent)',
+                borderColor: 'color-mix(in srgb, var(--color-border) 68%, transparent)',
+                backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 78%, transparent)',
                 backdropFilter: 'blur(12px)',
               }}
             >
@@ -592,10 +596,10 @@ export default function ChatbotPage({
                 <div
                   className="flex min-w-0 items-end gap-2 p-2.5 sm:gap-3 sm:p-3"
                   style={{
-                    backgroundColor: 'var(--color-bg-card)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: '18px',
-                    boxShadow: '0 18px 40px -30px rgba(0,0,0,0.55)',
+                    backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 96%, transparent)',
+                    border: '1px solid color-mix(in srgb, var(--color-border) 78%, transparent)',
+                    borderRadius: '28px',
+                    boxShadow: '0 18px 44px -34px rgba(0,0,0,0.5)',
                   }}
                   onFocusCapture={(e) => {
                     (e.currentTarget as HTMLElement).style.borderColor = primaryColor;
@@ -665,35 +669,34 @@ function EmptyChatState({
     <div className="flex min-h-full items-center justify-center px-3 py-6 sm:px-5 sm:py-10">
       <div className="w-full max-w-4xl">
         <div
-          className="relative overflow-hidden border p-5 sm:p-7"
+          className="relative overflow-hidden rounded-[28px] border p-5 sm:p-7"
           style={{
-            backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 96%, transparent)',
-            borderColor: 'var(--color-border)',
-            borderLeft: `4px solid ${primaryColor}`,
-            boxShadow: '10px 10px 0 color-mix(in srgb, var(--color-secondary) 18%, transparent)',
-            clipPath: 'polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%)',
+            backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 94%, transparent)',
+            borderColor: 'color-mix(in srgb, var(--color-border) 72%, transparent)',
+            boxShadow: '0 24px 70px -52px rgba(0,0,0,0.5)',
           }}
         >
           <span
             aria-hidden="true"
-            className="absolute right-5 top-0 h-2 w-20 -translate-y-1/2"
-            style={{ backgroundColor: `color-mix(in srgb, ${primaryColor} 24%, transparent)` }}
+            className="absolute right-6 top-6 h-20 w-20 rounded-full blur-2xl"
+            style={{ backgroundColor: `color-mix(in srgb, ${primaryColor} 18%, transparent)` }}
           />
           <div
-            className="mb-5 flex h-12 w-12 items-center justify-center shadow-[3px_3px_0_color-mix(in_srgb,var(--color-border)_70%,transparent)]"
+            className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl"
             style={{ backgroundColor: `color-mix(in srgb, ${primaryColor} 13%, var(--color-bg-card))` }}
           >
             {icon}
           </div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-text-light">Bàn học đang trống</p>
-          <h2 className="mt-3 font-display text-2xl font-bold leading-[1.12] text-text sm:text-3xl">{title}</h2>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-text-light">{title}</p>
+          <h2 className="mt-3 font-display text-2xl font-bold leading-[1.12] text-text sm:text-3xl">
+            Hôm nay bạn muốn học gì với AI?
+          </h2>
           <p className="mt-3 max-w-xl text-sm leading-7 text-text-muted">{subtitle}</p>
 
           <div
-            className="mt-5 border-l-4 px-4 py-3 text-xs leading-6 text-text-muted"
+            className="mt-5 rounded-2xl px-4 py-3 text-xs leading-6 text-text-muted"
             style={{
-              backgroundColor: 'var(--color-bg-muted)',
-              borderColor: primaryColor,
+              backgroundColor: 'color-mix(in srgb, var(--color-bg-muted) 78%, transparent)',
             }}
           >
             Chọn một gợi ý hoặc viết câu hỏi của riêng bạn. Mục tiêu là hiểu cách học, không chỉ lấy đáp án.
@@ -705,12 +708,10 @@ function EmptyChatState({
                 key={prompt}
                 type="button"
                 onClick={() => onPick(prompt)}
-                className="group relative min-h-[96px] min-w-0 border p-4 text-left text-sm leading-6 transition-transform hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="group relative min-h-[88px] min-w-0 rounded-2xl border p-4 text-left text-sm leading-6 transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_30px_-26px_rgba(0,0,0,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 style={{
-                  backgroundColor: index % 2 === 0 ? 'var(--color-bg)' : 'var(--color-bg-muted)',
-                  borderColor: 'var(--color-border)',
-                  borderLeft: `3px solid ${primaryColor}`,
-                  boxShadow: index === 1 ? '4px 4px 0 color-mix(in srgb, var(--color-accent) 18%, transparent)' : 'none',
+                  backgroundColor: index % 2 === 0 ? 'var(--color-bg-card)' : 'var(--color-bg-muted)',
+                  borderColor: 'color-mix(in srgb, var(--color-border) 70%, transparent)',
                 }}
               >
                 <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-text-light">
@@ -730,19 +731,19 @@ function TypingIndicator({ icon, primaryColor }: { icon: ReactNode; primaryColor
   return (
     <div className="flex gap-3">
       <div
-        className="flex h-8 w-8 shrink-0 items-center justify-center"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
         style={{
           backgroundColor: `color-mix(in srgb, ${primaryColor} 13%, var(--color-bg-card))`,
-          borderLeft: `3px solid ${primaryColor}`,
+          border: `1px solid color-mix(in srgb, ${primaryColor} 32%, var(--color-border))`,
         }}
       >
         <div style={{ transform: 'scale(0.68)' }}>{icon}</div>
       </div>
       <div
-        className="flex items-center gap-1.5 px-4 py-3"
+        className="flex items-center gap-1.5 rounded-2xl px-4 py-3"
         style={{
-          backgroundColor: 'var(--color-bg-card)',
-          borderLeft: `3px solid ${primaryColor}`,
+          backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 94%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--color-border) 72%, transparent)',
         }}
       >
         {[0, 1, 2].map((i) => (

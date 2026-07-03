@@ -481,7 +481,7 @@ export default function AdminResources() {
                 {editingResource ? 'Sửa tài nguyên' : 'Thêm tài nguyên'}
               </h3>
               <p className="mt-1 text-sm text-text-muted">
-                Phase này chỉ quản lý metadata và URL. Chưa có upload file hoặc Supabase Storage.
+                Trang này quản lý metadata và URL tài nguyên học tập. Không dùng upload file trực tiếp trong Admin Center.
               </p>
             </div>
             <button
@@ -654,7 +654,7 @@ export default function AdminResources() {
             </div>
             <h3 className="mt-4 font-display text-xl font-extrabold text-text">Chưa có tài nguyên nào</h3>
             <p className="mx-auto mt-2 max-w-md text-sm text-text-muted">
-              Thêm tài nguyên đầu tiên bằng metadata và URL. Upload file sẽ được xử lý ở phase riêng nếu cần.
+              Thêm tài nguyên đầu tiên bằng metadata và URL nguồn chính thống hoặc tài liệu tự biên soạn.
             </p>
             <button type="button" onClick={openCreateForm} className="btn-primary mt-5 gap-2">
               <Plus size={16} />
