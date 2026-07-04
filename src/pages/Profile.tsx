@@ -2,12 +2,64 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, GraduationCap, School, Save, Loader2, LogIn, ArrowLeft, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import {
+  aiExperienceLevelOptions,
+  commonProblemOptions,
+  learningGoalOptions,
+  preferredLearningStyleOptions,
+  strengthOptions,
+  weaknessOptions,
+} from '../data/profileOptions';
 import type { Grade } from '../types/database';
 
 const GRADE_OPTIONS: Grade[] = [10, 11, 12];
 
 function getInitials(name: string) {
   return name.split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? '').join('') || '?';
+}
+
+function toggleValue(values: string[], value: string) {
+  return values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
+}
+
+function ChoiceGroup({
+  label,
+  options,
+  values,
+  onChange,
+}: {
+  label: string;
+  options: string[];
+  values: string[];
+  onChange: (values: string[]) => void;
+}) {
+  return (
+    <div>
+      <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--color-text-light)' }}>
+        {label}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => {
+          const active = values.includes(option);
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => onChange(toggleValue(values, option))}
+              className="border px-3 py-2 text-xs font-semibold transition-colors"
+              style={{
+                backgroundColor: active ? 'var(--color-primary)' : 'var(--color-bg-muted)',
+                borderColor: active ? 'var(--color-primary)' : 'var(--color-border)',
+                color: active ? '#ffffff' : 'var(--color-text-muted)',
+              }}
+            >
+              {option}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 export default function Profile() {
@@ -17,6 +69,13 @@ export default function Profile() {
   const [fullName, setFullName] = useState('');
   const [grade, setGrade] = useState<Grade | ''>('');
   const [school, setSchool] = useState('');
+  const [personalBackground, setPersonalBackground] = useState('');
+  const [strengths, setStrengths] = useState<string[]>([]);
+  const [weaknesses, setWeaknesses] = useState<string[]>([]);
+  const [commonProblems, setCommonProblems] = useState<string[]>([]);
+  const [learningGoals, setLearningGoals] = useState<string[]>([]);
+  const [preferredLearningStyle, setPreferredLearningStyle] = useState('');
+  const [aiExperienceLevel, setAiExperienceLevel] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
@@ -27,6 +86,13 @@ export default function Profile() {
       setFullName(profile.full_name?.trim() || displayName || '');
       setGrade(profile.grade ?? '');
       setSchool(profile.school?.trim() || '');
+      setPersonalBackground(profile.personal_background || '');
+      setStrengths(profile.strengths || []);
+      setWeaknesses(profile.weaknesses || []);
+      setCommonProblems(profile.common_problems || []);
+      setLearningGoals(profile.learning_goals || []);
+      setPreferredLearningStyle(profile.preferred_learning_style || '');
+      setAiExperienceLevel(profile.ai_experience_level || '');
     } else if (displayName) {
       setFullName(displayName);
     }
@@ -38,7 +104,19 @@ export default function Profile() {
     setSaving(true);
     setError('');
     try {
-      await updateProfile({ full_name: fullName.trim(), grade: grade as Grade, school: school.trim() });
+      await updateProfile({
+        full_name: fullName.trim(),
+        grade: grade as Grade,
+        school: school.trim(),
+        personal_background: personalBackground.trim(),
+        strengths,
+        weaknesses,
+        common_problems: commonProblems,
+        learning_goals: learningGoals,
+        preferred_learning_style: preferredLearningStyle,
+        ai_experience_level: aiExperienceLevel,
+        onboarding_completed: true,
+      });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch {
@@ -305,6 +383,105 @@ export default function Profile() {
                     className="input-field"
                     required
                   />
+                </div>
+
+                <div
+                  className="space-y-5 border-t pt-5"
+                  style={{ borderColor: 'var(--color-border)' }}
+                >
+                  <div>
+                    <h3 className="font-display text-base font-bold" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
+                      Cá nhân hóa học tập với AI
+                    </h3>
+                    <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                      Dữ liệu này giúp chatbot hiểu cách bạn học và phản hồi sát hơn.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="profile-personal-background"
+                      className="mb-2 block text-sm font-semibold"
+                      style={{ color: 'var(--color-text)' }}
+                    >
+                      Hiện tại bạn đang gặp khó khăn gì trong học tập hoặc khi dùng AI?
+                    </label>
+                    <textarea
+                      id="profile-personal-background"
+                      value={personalBackground}
+                      onChange={(e) => setPersonalBackground(e.target.value)}
+                      placeholder="Ví dụ: Em hay trì hoãn, không biết bắt đầu học từ đâu, dùng AI hay bị chép đáp án..."
+                      rows={4}
+                      className="input-field resize-none"
+                    />
+                  </div>
+
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <ChoiceGroup label="Điểm mạnh" options={strengthOptions} values={strengths} onChange={setStrengths} />
+                    <ChoiceGroup label="Điểm yếu" options={weaknessOptions} values={weaknesses} onChange={setWeaknesses} />
+                  </div>
+
+                  <ChoiceGroup
+                    label="Vấn đề hay gặp khi dùng AI"
+                    options={commonProblemOptions}
+                    values={commonProblems}
+                    onChange={setCommonProblems}
+                  />
+
+                  <ChoiceGroup
+                    label="Mục tiêu học tập"
+                    options={learningGoalOptions}
+                    values={learningGoals}
+                    onChange={setLearningGoals}
+                  />
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label
+                        htmlFor="profile-learning-style"
+                        className="mb-2 block text-sm font-semibold"
+                        style={{ color: 'var(--color-text)' }}
+                      >
+                        Phong cách học mong muốn
+                      </label>
+                      <select
+                        id="profile-learning-style"
+                        value={preferredLearningStyle}
+                        onChange={(e) => setPreferredLearningStyle(e.target.value)}
+                        className="input-field"
+                      >
+                        <option value="">Chọn cách học</option>
+                        {preferredLearningStyleOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="profile-ai-experience"
+                        className="mb-2 block text-sm font-semibold"
+                        style={{ color: 'var(--color-text)' }}
+                      >
+                        Mức độ dùng AI
+                      </label>
+                      <select
+                        id="profile-ai-experience"
+                        value={aiExperienceLevel}
+                        onChange={(e) => setAiExperienceLevel(e.target.value)}
+                        className="input-field"
+                      >
+                        <option value="">Chọn mức độ</option>
+                        {aiExperienceLevelOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                 </div>
 
                 {error && (

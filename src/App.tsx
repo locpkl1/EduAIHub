@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import Guides from './pages/Guides';
+import GuideLessonDetail from './pages/GuideLessonDetail';
 import AiTools from './pages/AiTools';
 import Lessons from './pages/Lessons';
 import LessonDetail from './pages/LessonDetail';
@@ -30,6 +31,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/guides" element={<Guides />} />
+            <Route path="/guides/:slug" element={<GuideLessonDetail />} />
             <Route path="/ai-tools" element={<AiTools />} />
             <Route path="/ai-tools/hoc-tu-duy-prompt" element={<PromptThinkingChatbot />} />
             <Route path="/ai-tools/goi-y-prompt-hoc-tap" element={<StudyPromptMentorChatbot />} />

@@ -124,25 +124,26 @@ export default function Layout() {
         backgroundSize: '28px 28px',
       }}
     >
-      <header className="sticky top-0 z-50 px-3 pt-3 sm:px-4">
+      <header className="sticky top-0 z-50 px-3 pt-[calc(0.625rem+env(safe-area-inset-top))] sm:px-4 md:pt-3">
         <div
-          className="mx-auto max-w-7xl border shadow-card"
+          className="mx-auto max-w-7xl rounded-[22px] border shadow-card md:rounded-none"
           style={{
             backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 94%, transparent)',
             borderColor: 'var(--color-border-strong)',
-            boxShadow: '6px 6px 0 color-mix(in srgb, var(--color-primary) 14%, transparent)',
+            boxShadow:
+              '0 16px 38px -30px rgba(0,0,0,0.45), 0 0 0 1px color-mix(in srgb, var(--color-bg-card) 48%, transparent)',
             backdropFilter: 'blur(14px)',
           }}
         >
-          <div className="flex h-16 items-center justify-between gap-3 px-3 sm:px-4 lg:px-5">
-            <Link to="/" className="group flex min-w-0 shrink-0 items-center gap-3">
-              <span className="relative flex h-10 w-10 items-center justify-center">
+          <div className="flex min-h-14 items-center justify-between gap-2 px-2.5 py-1.5 sm:gap-3 sm:px-3 md:h-16 md:px-4 md:py-0 lg:px-5">
+            <Link to="/" className="group flex min-w-0 shrink items-center gap-2 sm:gap-3 md:shrink-0">
+              <span className="relative flex h-9 w-9 shrink-0 items-center justify-center sm:h-10 sm:w-10">
                 <span
                   className="absolute inset-0 rotate-[-5deg]"
                   style={{ backgroundColor: 'var(--color-accent)' }}
                 />
                 <span
-                  className="relative flex h-9 w-9 items-center justify-center border"
+                  className="relative flex h-8 w-8 items-center justify-center border sm:h-9 sm:w-9"
                   style={{
                     backgroundColor: 'var(--color-primary)',
                     borderColor: 'var(--color-text)',
@@ -153,7 +154,7 @@ export default function Layout() {
                 </span>
               </span>
               <span className="min-w-0">
-                <span className="block font-display text-base font-extrabold leading-none tracking-tight text-text sm:text-lg">
+                <span className="block truncate font-display text-sm font-extrabold leading-none tracking-tight text-text sm:text-lg">
                   Edu-AI Hub
                 </span>
                 <span className="mt-1 hidden text-[10px] font-bold uppercase tracking-[0.18em] text-text-light sm:block">
@@ -245,7 +246,7 @@ export default function Layout() {
               </div>
             </nav>
 
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
               <ThemeToggle />
 
               {showUser ? (
@@ -253,7 +254,7 @@ export default function Layout() {
                   <button
                     type="button"
                     onClick={() => setUserMenuOpen((p) => !p)}
-                    className="flex items-center gap-2 border px-2 py-1.5 text-sm font-bold transition-colors hover:bg-bg-muted"
+                    className="flex min-h-11 items-center gap-2 rounded-full border px-1.5 text-sm font-bold transition-colors hover:bg-bg-muted sm:px-2"
                     style={{ borderColor: 'var(--color-border)' }}
                     aria-expanded={userMenuOpen}
                   >
@@ -320,7 +321,7 @@ export default function Layout() {
                   )}
                 </div>
               ) : loading ? (
-                <div className="h-9 w-20 animate-pulse bg-bg-muted" />
+                <div className="h-11 w-11 animate-pulse rounded-full bg-bg-muted sm:w-20" />
               ) : (
                 <button
                   type="button"
@@ -335,7 +336,7 @@ export default function Layout() {
               <button
                 type="button"
                 onClick={() => setMobileOpen((p) => !p)}
-                className="flex h-9 w-9 items-center justify-center border text-text-muted transition-colors hover:bg-bg-muted hover:text-text md:hidden"
+                className="flex h-11 w-11 items-center justify-center rounded-full border text-text-muted transition-colors hover:bg-bg-muted hover:text-text md:hidden"
                 style={{ borderColor: 'var(--color-border)' }}
                 aria-label={mobileOpen ? 'Đóng menu' : 'Mở menu'}
                 aria-expanded={mobileOpen}
@@ -347,8 +348,12 @@ export default function Layout() {
 
           {mobileOpen && (
             <div
-              className="border-t px-3 pb-4 pt-3 md:hidden"
-              style={{ borderColor: 'var(--color-border)' }}
+              className="mx-2 mb-2 mt-1 max-h-[min(72dvh,520px)] overflow-y-auto rounded-[20px] border px-2 pb-3 pt-2 shadow-card md:hidden"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 96%, transparent)',
+                borderColor: 'color-mix(in srgb, var(--color-border) 82%, transparent)',
+                boxShadow: '0 18px 44px -34px rgba(0,0,0,0.5)',
+              }}
             >
               <nav className="space-y-2" aria-label="Điều hướng di động">
                 {navItems.map((item) => {
@@ -359,7 +364,7 @@ export default function Layout() {
                       to={item.to}
                       end={item.exact}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-3 text-sm font-bold transition-colors ${
+                        `flex min-h-11 items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold transition-colors ${
                           isActive ? 'bg-primary-light text-primary' : 'bg-bg-muted text-text hover:bg-bg-card'
                         }`
                       }
@@ -382,7 +387,7 @@ export default function Layout() {
                           key={item.to}
                           to={item.to}
                           className={({ isActive }) =>
-                            `flex items-center gap-3 px-3 py-3 text-sm font-bold transition-colors ${
+                            `flex min-h-11 items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold transition-colors ${
                               isActive ? 'bg-primary-light text-primary' : 'bg-bg-muted text-text hover:bg-bg-card'
                             }`
                           }
@@ -403,7 +408,7 @@ export default function Layout() {
                         setMobileOpen(false);
                         navigate('/dashboard');
                       }}
-                      className="flex w-full items-center gap-3 bg-bg-muted px-3 py-3 text-left text-sm font-bold text-text"
+                      className="flex min-h-11 w-full items-center gap-3 rounded-2xl bg-bg-muted px-3 py-3 text-left text-sm font-bold text-text"
                     >
                       <LayoutDashboard size={16} />
                       Bảng điều khiển
@@ -414,7 +419,7 @@ export default function Layout() {
                         setMobileOpen(false);
                         navigate('/profile');
                       }}
-                      className="flex w-full items-center gap-3 bg-bg-muted px-3 py-3 text-left text-sm font-bold text-text"
+                      className="flex min-h-11 w-full items-center gap-3 rounded-2xl bg-bg-muted px-3 py-3 text-left text-sm font-bold text-text"
                     >
                       <User size={16} />
                       Hồ sơ cá nhân
@@ -425,7 +430,7 @@ export default function Layout() {
                         setMobileOpen(false);
                         navigate('/prompts');
                       }}
-                      className="flex w-full items-center gap-3 bg-bg-muted px-3 py-3 text-left text-sm font-bold text-text"
+                      className="flex min-h-11 w-full items-center gap-3 rounded-2xl bg-bg-muted px-3 py-3 text-left text-sm font-bold text-text"
                     >
                       <Library size={16} />
                       Thư viện Prompt
@@ -436,7 +441,7 @@ export default function Layout() {
                         setMobileOpen(false);
                         signOut();
                       }}
-                      className="flex w-full items-center gap-3 bg-bg-muted px-3 py-3 text-left text-sm font-bold text-text-muted"
+                      className="flex min-h-11 w-full items-center gap-3 rounded-2xl bg-bg-muted px-3 py-3 text-left text-sm font-bold text-text-muted"
                     >
                       <LogOut size={16} />
                       Đăng xuất
@@ -451,7 +456,7 @@ export default function Layout() {
                       setMobileOpen(false);
                       signInWithGoogle();
                     }}
-                    className="btn-primary mt-2 flex w-full items-center justify-center gap-2 text-sm"
+                    className="btn-primary mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl text-sm"
                   >
                     <GoogleIcon />
                     Đăng nhập bằng Google

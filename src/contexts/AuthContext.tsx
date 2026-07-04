@@ -20,7 +20,27 @@ interface AuthContextType {
 }
 
 function profileDismissKey(userId: string) {
-  return `profile_dismissed_${userId}`;
+  return `eduaihub_profile_onboarding_dismissed_v2_${userId}`;
+}
+
+const PROFILE_DISMISS_TTL_MS = 12 * 60 * 60 * 1000;
+
+function isProfileDismissedForNow(userId: string) {
+  const raw = localStorage.getItem(profileDismissKey(userId));
+  if (!raw) return false;
+
+  const dismissedAt = Number.parseInt(raw, 10);
+  if (!Number.isFinite(dismissedAt)) {
+    localStorage.removeItem(profileDismissKey(userId));
+    return false;
+  }
+
+  if (Date.now() - dismissedAt > PROFILE_DISMISS_TTL_MS) {
+    localStorage.removeItem(profileDismissKey(userId));
+    return false;
+  }
+
+  return true;
 }
 
 export function isProfileIncomplete(profile: Profile | null): boolean {
@@ -124,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (user) {
-      setProfileDismissed(localStorage.getItem(profileDismissKey(user.id)) === '1');
+      setProfileDismissed(isProfileDismissedForNow(user.id));
     } else {
       setProfileDismissed(false);
     }
@@ -280,7 +300,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   function dismissProfileModal() {
     if (!user) return;
-    localStorage.setItem(profileDismissKey(user.id), '1');
+    localStorage.setItem(profileDismissKey(user.id), String(Date.now()));
     setProfileDismissed(true);
   }
 

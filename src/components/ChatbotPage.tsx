@@ -312,13 +312,21 @@ export default function ChatbotPage({
 
   return (
     <div
-      className="relative flex min-h-[calc(100svh-92px)] min-h-[calc(100dvh-92px)] overflow-hidden text-text"
+      className="relative flex h-[calc(100svh-92px)] h-[calc(100dvh-92px)] min-h-0 overflow-hidden p-2 text-text sm:p-3"
       style={{
         backgroundColor: 'var(--color-bg)',
         backgroundImage:
           'linear-gradient(180deg, color-mix(in srgb, var(--color-bg-card) 58%, transparent), transparent 34%)',
       }}
     >
+      <div
+        className="relative flex min-h-0 min-w-0 flex-1 overflow-hidden rounded-[28px] border"
+        style={{
+          backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 42%, var(--color-bg))',
+          borderColor: 'color-mix(in srgb, var(--color-border) 72%, transparent)',
+          boxShadow: '0 22px 70px -54px rgba(0,0,0,0.5)',
+        }}
+      >
       {sidebarOpen && (
         <button
           type="button"
@@ -330,7 +338,7 @@ export default function ChatbotPage({
 
       <aside
         aria-hidden={!sidebarOpen}
-        className={`absolute bottom-3 left-3 top-3 z-40 flex w-[min(292px,calc(100vw-24px))] shrink-0 flex-col overflow-hidden transition-[transform,width,opacity] duration-200 sm:static sm:z-auto sm:h-auto ${
+        className={`absolute bottom-3 left-3 top-3 z-40 flex min-h-0 w-[min(292px,calc(100vw-24px))] shrink-0 flex-col overflow-hidden rounded-3xl transition-[transform,width,opacity] duration-200 sm:static sm:z-auto sm:h-auto sm:rounded-none ${
           sidebarOpen
             ? 'translate-x-0 sm:w-[264px] sm:opacity-100 lg:w-[280px]'
             : 'pointer-events-none -translate-x-[calc(100%+24px)] sm:w-0 sm:translate-x-0 sm:opacity-0'
@@ -410,7 +418,7 @@ export default function ChatbotPage({
         </div>
       </aside>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <header
           className="shrink-0 border-b px-2.5 py-2 sm:px-4"
           style={{
@@ -651,6 +659,7 @@ export default function ChatbotPage({
             </div>
           </section>
         </div>
+      </div>
       </div>
     </div>
   );

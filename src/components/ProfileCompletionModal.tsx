@@ -1,64 +1,17 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { GraduationCap, Loader2, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import {
+  aiExperienceLevelOptions,
+  commonProblemOptions,
+  learningGoalOptions,
+  preferredLearningStyleOptions,
+  strengthOptions,
+  weaknessOptions,
+} from '../data/profileOptions';
 import type { Grade } from '../types/database';
 
 const GRADE_OPTIONS: Grade[] = [10, 11, 12];
-
-const STRENGTH_OPTIONS = [
-  'Tư duy logic',
-  'Sáng tạo',
-  'Ghi nhớ tốt',
-  'Viết tốt',
-  'Tự học tốt',
-  'Dùng công nghệ tốt',
-  'Giao tiếp tốt',
-];
-
-const WEAKNESS_OPTIONS = [
-  'Trì hoãn',
-  'Mất tập trung',
-  'Mất gốc',
-  'Không biết bắt đầu',
-  'Dễ nản',
-  'Không biết đặt câu hỏi',
-  'Hay chép đáp án',
-];
-
-const COMMON_PROBLEM_OPTIONS = [
-  'Không biết dùng AI đúng cách',
-  'AI trả lời lan man',
-  'Không biết kiểm chứng thông tin',
-  'Không biết biến bài học thành prompt',
-  'Không biết tự đánh giá prompt',
-  'Học nhưng không nhớ lâu',
-];
-
-const LEARNING_GOAL_OPTIONS = [
-  'Học hiệu quả hơn',
-  'Tạo prompt tốt hơn',
-  'Ôn kiểm tra',
-  'Học tiếng Anh',
-  'Viết bài tốt hơn',
-  'Quản lý thời gian',
-  'Tự học có kỷ luật',
-];
-
-const LEARNING_STYLE_OPTIONS = [
-  'Giải thích đơn giản',
-  'Từng bước',
-  'Ví dụ thực tế',
-  'Ngắn gọn',
-  'Hỏi đáp Socratic',
-  'Thử thách nâng cao',
-];
-
-const AI_EXPERIENCE_OPTIONS = [
-  'Mới biết AI',
-  'Đã dùng cơ bản',
-  'Dùng khá thường xuyên',
-  'Muốn dùng AI chuyên nghiệp hơn',
-];
 
 function toggleValue(values: string[], value: string) {
   return values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
@@ -99,6 +52,18 @@ function ChoiceGroup({
         })}
       </div>
     </div>
+  );
+}
+
+function FormSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section
+      className="space-y-4 border p-4"
+      style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+    >
+      <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-text-light">{title}</h3>
+      {children}
+    </section>
   );
 }
 
@@ -213,7 +178,8 @@ export default function ProfileCompletionModal() {
         <form onSubmit={handleSubmit} className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
           <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
             <div className="space-y-4">
-              <div>
+              <FormSection title="Thông tin cơ bản">
+                <div>
                 <label htmlFor="modal-full-name" className="mb-2 block text-xs font-bold uppercase tracking-[0.14em] text-text-light">
                   Tên của bạn
                 </label>
@@ -226,9 +192,9 @@ export default function ProfileCompletionModal() {
                   className="input-field"
                   required
                 />
-              </div>
+                </div>
 
-              <div>
+                <div>
                 <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-text-light">Khối đang học</p>
                 <div className="grid grid-cols-3 gap-2">
                   {GRADE_OPTIONS.map((g) => (
@@ -247,9 +213,9 @@ export default function ProfileCompletionModal() {
                     </button>
                   ))}
                 </div>
-              </div>
+                </div>
 
-              <div>
+                <div>
                 <label htmlFor="modal-school" className="mb-2 block text-xs font-bold uppercase tracking-[0.14em] text-text-light">
                   Tên trường THPT
                 </label>
@@ -262,26 +228,28 @@ export default function ProfileCompletionModal() {
                   className="input-field"
                   required
                 />
-              </div>
+                </div>
+              </FormSection>
 
-              <div>
+              <FormSection title="Bối cảnh học tập cá nhân">
+                <div>
                 <label htmlFor="modal-background" className="mb-2 block text-xs font-bold uppercase tracking-[0.14em] text-text-light">
-                  Bối cảnh học tập
+                  Hiện tại bạn đang gặp khó khăn gì trong học tập hoặc khi dùng AI?
                 </label>
                 <textarea
                   id="modal-background"
                   value={personalBackground}
                   onChange={(e) => setPersonalBackground(e.target.value)}
-                  placeholder="VD: Em đang ôn thi học kỳ, hơi yếu phần tự học Toán..."
+                  placeholder="Ví dụ: Em hay trì hoãn, không biết bắt đầu học từ đâu, dùng AI hay bị chép đáp án..."
                   rows={4}
                   className="input-field resize-none"
                 />
-              </div>
+                </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
                   <label htmlFor="modal-learning-style" className="mb-2 block text-xs font-bold uppercase tracking-[0.14em] text-text-light">
-                    Cách học thích hợp
+                    Phong cách học mong muốn
                   </label>
                   <select
                     id="modal-learning-style"
@@ -290,12 +258,12 @@ export default function ProfileCompletionModal() {
                     className="input-field"
                   >
                     <option value="">Chọn cách học</option>
-                    {LEARNING_STYLE_OPTIONS.map((option) => (
+                    {preferredLearningStyleOptions.map((option) => (
                       <option key={option} value={option}>{option}</option>
                     ))}
                   </select>
-                </div>
-                <div>
+                  </div>
+                  <div>
                   <label htmlFor="modal-ai-level" className="mb-2 block text-xs font-bold uppercase tracking-[0.14em] text-text-light">
                     Mức độ dùng AI
                   </label>
@@ -306,24 +274,29 @@ export default function ProfileCompletionModal() {
                     className="input-field"
                   >
                     <option value="">Chọn mức độ</option>
-                    {AI_EXPERIENCE_OPTIONS.map((option) => (
+                    {aiExperienceLevelOptions.map((option) => (
                       <option key={option} value={option}>{option}</option>
                     ))}
                   </select>
+                  </div>
                 </div>
-              </div>
+              </FormSection>
             </div>
 
             <div className="space-y-5">
-              <ChoiceGroup label="Điểm mạnh" options={STRENGTH_OPTIONS} values={strengths} onChange={setStrengths} />
-              <ChoiceGroup label="Điểm đang kẹt" options={WEAKNESS_OPTIONS} values={weaknesses} onChange={setWeaknesses} />
-              <ChoiceGroup
-                label="Vấn đề thường gặp với AI"
-                options={COMMON_PROBLEM_OPTIONS}
-                values={commonProblems}
-                onChange={setCommonProblems}
-              />
-              <ChoiceGroup label="Mục tiêu học tập" options={LEARNING_GOAL_OPTIONS} values={learningGoals} onChange={setLearningGoals} />
+              <FormSection title="Điểm mạnh và điểm yếu">
+                <ChoiceGroup label="Điểm mạnh" options={strengthOptions} values={strengths} onChange={setStrengths} />
+                <ChoiceGroup label="Điểm yếu" options={weaknessOptions} values={weaknesses} onChange={setWeaknesses} />
+              </FormSection>
+              <FormSection title="Cách bạn dùng AI">
+                <ChoiceGroup
+                  label="Vấn đề hay gặp khi dùng AI"
+                  options={commonProblemOptions}
+                  values={commonProblems}
+                  onChange={setCommonProblems}
+                />
+                <ChoiceGroup label="Mục tiêu học tập" options={learningGoalOptions} values={learningGoals} onChange={setLearningGoals} />
+              </FormSection>
             </div>
           </div>
 
