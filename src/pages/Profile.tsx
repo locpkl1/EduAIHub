@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, GraduationCap, School, Save, Loader2, LogIn, ArrowLeft, Shield } from 'lucide-react';
+import { AlertCircle, User, GraduationCap, School, Save, Loader2, LogIn, ArrowLeft, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import {
   aiExperienceLevelOptions,
@@ -10,6 +10,7 @@ import {
   strengthOptions,
   weaknessOptions,
 } from '../data/profileOptions';
+import { getProfileSaveErrorMessage } from '../lib/profileSaveError';
 import type { Grade } from '../types/database';
 
 const GRADE_OPTIONS: Grade[] = [10, 11, 12];
@@ -46,11 +47,14 @@ function ChoiceGroup({
               key={option}
               type="button"
               onClick={() => onChange(toggleValue(values, option))}
-              className="border px-3 py-2 text-xs font-semibold transition-colors"
+              className="rounded-full border px-3.5 py-2 text-xs font-semibold transition-all duration-150 hover:-translate-y-0.5"
               style={{
-                backgroundColor: active ? 'var(--color-primary)' : 'var(--color-bg-muted)',
-                borderColor: active ? 'var(--color-primary)' : 'var(--color-border)',
+                backgroundColor: active
+                  ? 'var(--color-primary)'
+                  : 'color-mix(in srgb, var(--color-bg-muted) 76%, var(--color-bg-card))',
+                borderColor: active ? 'var(--color-primary)' : 'color-mix(in srgb, var(--color-border) 72%, transparent)',
                 color: active ? '#ffffff' : 'var(--color-text-muted)',
+                boxShadow: active ? '0 10px 22px -16px var(--color-primary)' : 'none',
               }}
             >
               {option}
@@ -119,8 +123,11 @@ export default function Profile() {
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch {
-      setError('Không thể lưu thông tin. Vui lòng thử lại.');
+    } catch (saveError) {
+      if (import.meta.env.DEV) {
+        console.error('Profile page updateProfile failed:', saveError);
+      }
+      setError(getProfileSaveErrorMessage(saveError));
     } finally {
       setSaving(false);
     }
@@ -305,7 +312,7 @@ export default function Profile() {
           {/* Right: Edit form */}
           <div className="md:col-span-2">
             <div
-              className="border"
+              className="overflow-hidden rounded-2xl border"
               style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
             >
               <div
@@ -336,7 +343,7 @@ export default function Profile() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Nhập tên của bạn"
-                    className="input-field"
+                    className="input-field rounded-xl"
                     required
                   />
                 </div>
@@ -352,7 +359,7 @@ export default function Profile() {
                         key={g}
                         type="button"
                         onClick={() => setGrade(g)}
-                        className="flex-1 py-2.5 text-sm font-semibold border-2 transition-all duration-150"
+                        className="flex-1 rounded-xl border-2 py-2.5 text-sm font-semibold transition-all duration-150 hover:-translate-y-0.5"
                         style={
                           grade === g
                             ? { backgroundColor: 'var(--color-primary)', color: '#ffffff', borderColor: 'var(--color-primary)' }
@@ -380,7 +387,7 @@ export default function Profile() {
                     value={school}
                     onChange={(e) => setSchool(e.target.value)}
                     placeholder="VD: THPT Nguyễn Huệ"
-                    className="input-field"
+                    className="input-field rounded-xl"
                     required
                   />
                 </div>
@@ -412,7 +419,7 @@ export default function Profile() {
                       onChange={(e) => setPersonalBackground(e.target.value)}
                       placeholder="Ví dụ: Em hay trì hoãn, không biết bắt đầu học từ đâu, dùng AI hay bị chép đáp án..."
                       rows={4}
-                      className="input-field resize-none"
+                      className="input-field resize-none rounded-xl"
                     />
                   </div>
 
@@ -448,7 +455,7 @@ export default function Profile() {
                         id="profile-learning-style"
                         value={preferredLearningStyle}
                         onChange={(e) => setPreferredLearningStyle(e.target.value)}
-                        className="input-field"
+                        className="input-field rounded-xl"
                       >
                         <option value="">Chọn cách học</option>
                         {preferredLearningStyleOptions.map((option) => (
@@ -471,7 +478,7 @@ export default function Profile() {
                         id="profile-ai-experience"
                         value={aiExperienceLevel}
                         onChange={(e) => setAiExperienceLevel(e.target.value)}
-                        className="input-field"
+                        className="input-field rounded-xl"
                       >
                         <option value="">Chọn mức độ</option>
                         {aiExperienceLevelOptions.map((option) => (
@@ -485,12 +492,13 @@ export default function Profile() {
                 </div>
 
                 {error && (
-                  <p
-                    className="text-sm border px-4 py-3"
-                    style={{ color: '#dc2626', backgroundColor: '#fef2f2', borderColor: '#fecaca' }}
+                  <div
+                    className="flex items-start gap-2 rounded-2xl border px-4 py-3 text-sm"
+                    style={{ color: '#b91c1c', backgroundColor: '#fef2f2', borderColor: '#fecaca' }}
                   >
-                    {error}
-                  </p>
+                    <AlertCircle size={17} className="mt-0.5 shrink-0" />
+                    <p>{error}</p>
+                  </div>
                 )}
 
                 {saved && (

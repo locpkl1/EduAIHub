@@ -124,14 +124,14 @@ export default function Layout() {
         backgroundSize: '28px 28px',
       }}
     >
-      <header className="sticky top-0 z-50 px-3 pt-[calc(0.625rem+env(safe-area-inset-top))] sm:px-4 md:pt-3">
+      <header className="fixed left-0 right-0 top-0 z-50 px-3 pt-[calc(0.625rem+env(safe-area-inset-top))] sm:px-4 md:sticky md:left-auto md:right-auto md:pt-3">
         <div
-          className="mx-auto max-w-7xl rounded-[22px] border shadow-card md:rounded-none"
+          className="mx-auto max-w-7xl rounded-[22px] border shadow-card md:rounded-[24px]"
           style={{
             backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 94%, transparent)',
-            borderColor: 'var(--color-border-strong)',
+            borderColor: 'color-mix(in srgb, var(--color-border-strong) 86%, transparent)',
             boxShadow:
-              '0 16px 38px -30px rgba(0,0,0,0.45), 0 0 0 1px color-mix(in srgb, var(--color-bg-card) 48%, transparent)',
+              '0 16px 38px -30px rgba(0,0,0,0.45), 0 8px 0 -6px color-mix(in srgb, var(--color-primary) 12%, transparent)',
             backdropFilter: 'blur(14px)',
           }}
         >
@@ -467,6 +467,8 @@ export default function Layout() {
           )}
         </div>
       </header>
+
+      <div aria-hidden="true" className="h-[calc(76px+env(safe-area-inset-top))] md:hidden" />
 
       <main className={isChatbotRoute ? 'relative min-w-0 overflow-hidden' : 'relative min-w-0'}>
         <Outlet />

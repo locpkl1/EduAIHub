@@ -99,6 +99,7 @@ export interface PromptTemplate {
   book_series: string | null;
   difficulty: PromptDifficulty | null;
   usage_note: string | null;
+  why_effective: string | null;
   tags: string[];
   status: ContentStatus;
   featured: boolean;
@@ -180,6 +181,7 @@ export type PromptTemplateInsert = {
   book_series?: string | null;
   difficulty?: PromptDifficulty | null;
   usage_note?: string | null;
+  why_effective?: string | null;
   tags?: string[];
   status?: ContentStatus;
   featured?: boolean;

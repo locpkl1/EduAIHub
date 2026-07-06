@@ -320,7 +320,7 @@ export default function ChatbotPage({
       }}
     >
       <div
-        className="relative flex min-h-0 min-w-0 flex-1 overflow-hidden rounded-[28px] border"
+        className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[28px] border"
         style={{
           backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 42%, var(--color-bg))',
           borderColor: 'color-mix(in srgb, var(--color-border) 72%, transparent)',
@@ -335,88 +335,6 @@ export default function ChatbotPage({
           onClick={() => setSidebarOpen(false)}
         />
       )}
-
-      <aside
-        aria-hidden={!sidebarOpen}
-        className={`absolute bottom-3 left-3 top-3 z-40 flex min-h-0 w-[min(292px,calc(100vw-24px))] shrink-0 flex-col overflow-hidden rounded-3xl transition-[transform,width,opacity] duration-200 sm:static sm:z-auto sm:h-auto sm:rounded-none ${
-          sidebarOpen
-            ? 'translate-x-0 sm:w-[264px] sm:opacity-100 lg:w-[280px]'
-            : 'pointer-events-none -translate-x-[calc(100%+24px)] sm:w-0 sm:translate-x-0 sm:opacity-0'
-        }`}
-        style={{
-          backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 96%, transparent)',
-          borderRight: sidebarOpen ? '1px solid var(--color-border)' : '0',
-          boxShadow: sidebarOpen ? '10px 0 26px -24px rgba(0,0,0,0.28)' : 'none',
-        }}
-      >
-        <div className="border-b p-4" style={{ borderColor: 'var(--color-border)' }}>
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-text-light">Sổ trò chuyện</p>
-              <p className="mt-1 text-sm font-bold text-text">{sessions.length} phiên</p>
-            </div>
-            <button
-              type="button"
-              onClick={createNewSession}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white"
-              style={{ backgroundColor: 'var(--color-primary)' }}
-              title="Cuộc trò chuyện mới"
-            >
-              <Plus size={13} />
-              Mới
-            </button>
-          </div>
-          <p className="text-xs leading-5 text-text-muted">
-            Mỗi phiên là một trang nháp riêng cho câu hỏi, prompt và phản hồi.
-          </p>
-        </div>
-
-        <div className="flex-1 space-y-2 overflow-y-auto p-3">
-          {sessions.length === 0 && (
-            <div
-              className="p-4 text-left text-xs leading-5 text-text-muted"
-              style={{
-                backgroundColor: 'var(--color-bg-muted)',
-                borderLeft: `3px solid ${primaryColor}`,
-              }}
-            >
-              Chưa có cuộc trò chuyện nào. Bắt đầu bằng một câu hỏi nhỏ.
-            </div>
-          )}
-          {sessions.map((s) => {
-            const active = s.id === activeSessionId;
-            return (
-              <div
-                key={s.id}
-                className="group flex cursor-pointer items-center gap-2 p-3 text-sm transition-colors"
-                style={{
-                  backgroundColor: active ? 'var(--color-primary-light)' : 'transparent',
-                  borderLeft: active ? '3px solid var(--color-primary)' : '3px solid transparent',
-                  color: active ? 'var(--color-text)' : 'var(--color-text-muted)',
-                }}
-                onClick={() => {
-                  setActiveSessionId(s.id);
-                  if (window.innerWidth < 640) setSidebarOpen(false);
-                }}
-              >
-                <MessageSquare size={14} className="shrink-0 opacity-70" />
-                <span className="min-w-0 flex-1 truncate text-xs font-bold">{s.title}</span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteSession(s.id);
-                  }}
-                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center text-text-light opacity-100 transition-opacity hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
-                  aria-label="Xóa phiên"
-                >
-                  <Trash2 size={12} />
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </aside>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <header
@@ -486,6 +404,105 @@ export default function ChatbotPage({
           </div>
         </header>
 
+        <div className="relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
+          <aside
+            aria-hidden={!sidebarOpen}
+            className={`absolute bottom-3 left-3 top-3 z-40 flex min-h-0 w-[min(292px,calc(100vw-24px))] shrink-0 flex-col overflow-hidden rounded-[24px] border transition-[transform,width,opacity] duration-200 sm:static sm:z-auto sm:h-auto sm:rounded-none sm:border-y-0 sm:border-l-0 ${
+              sidebarOpen
+                ? 'translate-x-0 sm:w-[248px] sm:opacity-100 lg:w-[268px]'
+                : 'pointer-events-none -translate-x-[calc(100%+24px)] sm:w-0 sm:translate-x-0 sm:opacity-0'
+            }`}
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 92%, var(--color-bg))',
+              borderColor: 'color-mix(in srgb, var(--color-border) 68%, transparent)',
+              boxShadow: sidebarOpen ? '14px 0 34px -30px rgba(0,0,0,0.4)' : 'none',
+            }}
+          >
+            <div className="shrink-0 p-3.5" style={{ borderBottom: '1px solid color-mix(in srgb, var(--color-border) 62%, transparent)' }}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-display text-sm font-bold text-text">Phiên học</p>
+                  <p className="mt-0.5 text-[11px] text-text-light">{sessions.length} phiên trò chuyện</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={createNewSession}
+                  className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-bold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  style={{ backgroundColor: primaryColor, boxShadow: `0 12px 26px -20px ${primaryColor}` }}
+                  title="Cuộc trò chuyện mới"
+                >
+                  <Plus size={13} />
+                  Mới
+                </button>
+              </div>
+              <p className="mt-3 rounded-2xl px-3 py-2.5 text-xs leading-5 text-text-muted" style={{ backgroundColor: 'color-mix(in srgb, var(--color-bg-muted) 74%, transparent)' }}>
+                Mỗi phiên là một góc học riêng cho câu hỏi, prompt và phản hồi AI.
+              </p>
+            </div>
+
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2.5">
+              {sessions.length === 0 && (
+                <div
+                  className="rounded-2xl border px-3 py-4 text-left text-xs leading-5 text-text-muted"
+                  style={{
+                    backgroundColor: 'color-mix(in srgb, var(--color-bg-muted) 76%, transparent)',
+                    borderColor: 'color-mix(in srgb, var(--color-border) 62%, transparent)',
+                  }}
+                >
+                  Chưa có phiên nào. Bắt đầu bằng một câu hỏi nhỏ để mở trang học đầu tiên.
+                </div>
+              )}
+              {sessions.map((s) => {
+                const active = s.id === activeSessionId;
+                return (
+                  <div
+                    key={s.id}
+                    className="group flex cursor-pointer items-center gap-2 rounded-[18px] border p-2.5 text-sm transition-all hover:-translate-y-0.5"
+                    style={{
+                      backgroundColor: active
+                        ? `color-mix(in srgb, ${primaryColor} 12%, var(--color-bg-card))`
+                        : 'color-mix(in srgb, var(--color-bg-card) 54%, transparent)',
+                      borderColor: active
+                        ? `color-mix(in srgb, ${primaryColor} 30%, var(--color-border))`
+                        : 'color-mix(in srgb, var(--color-border) 48%, transparent)',
+                      color: active ? 'var(--color-text)' : 'var(--color-text-muted)',
+                      boxShadow: active ? '0 14px 30px -28px rgba(0,0,0,0.45)' : 'none',
+                    }}
+                    onClick={() => {
+                      setActiveSessionId(s.id);
+                      if (window.innerWidth < 640) setSidebarOpen(false);
+                    }}
+                  >
+                    <span
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                      style={{
+                        backgroundColor: active
+                          ? `color-mix(in srgb, ${primaryColor} 16%, var(--color-bg-card))`
+                          : 'color-mix(in srgb, var(--color-bg-muted) 82%, transparent)',
+                      }}
+                    >
+                      <MessageSquare size={14} className="opacity-75" />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-xs font-bold">{s.title}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSession(s.id);
+                      }}
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-text-light opacity-100 transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+                      aria-label="Xóa phiên"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </aside>
+
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+
         {sidebar && (
           <div
             className="max-h-[42dvh] min-h-0 shrink-0 overflow-y-auto overflow-x-hidden border-b px-3 py-3 sm:max-h-[34dvh] sm:px-4 lg:hidden"
@@ -510,9 +527,9 @@ export default function ChatbotPage({
               className="min-h-0 flex-1 overflow-y-auto"
               style={{
                 backgroundImage:
-                  'radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--color-bg-card) 76%, transparent), transparent 42%), linear-gradient(180deg, color-mix(in srgb, var(--color-bg-muted) 34%, transparent), transparent 28%)',
-                backgroundSize: '100% 100%, 100% 100%',
-                backgroundPosition: 'center top, center top',
+                  'linear-gradient(180deg, color-mix(in srgb, var(--color-bg-card) 82%, transparent), transparent 15%, transparent 86%, color-mix(in srgb, var(--color-bg-card) 72%, transparent)), radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--color-bg-card) 76%, transparent), transparent 42%), repeating-linear-gradient(180deg, transparent 0, transparent 31px, color-mix(in srgb, var(--color-border) 36%, transparent) 32px)',
+                backgroundSize: '100% 100%, 100% 100%, 100% 32px',
+                backgroundPosition: 'center top, center top, 0 0',
                 backgroundColor: 'var(--color-bg)',
               }}
             >
@@ -526,7 +543,7 @@ export default function ChatbotPage({
                   onPick={setInput}
                 />
               ) : (
-                <div className="mx-auto w-full max-w-4xl space-y-7 px-3 py-5 sm:px-5 sm:py-6">
+                <div className="mx-auto w-full max-w-[800px] space-y-7 px-3 py-5 sm:px-5 sm:py-6">
                   {messages.map((msg) => (
                     <div
                       key={msg.id}
@@ -606,7 +623,7 @@ export default function ChatbotPage({
                 backdropFilter: 'blur(16px)',
               }}
             >
-              <div className="mx-auto w-full max-w-4xl">
+              <div className="mx-auto w-full max-w-[800px]">
                 <div
                   className="flex min-w-0 items-end gap-2 p-2.5 sm:gap-3 sm:p-3"
                   style={{
@@ -659,6 +676,8 @@ export default function ChatbotPage({
             </div>
           </section>
         </div>
+      </div>
+      </div>
       </div>
       </div>
     </div>

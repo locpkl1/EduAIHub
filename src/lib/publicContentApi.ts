@@ -28,6 +28,7 @@ export type PublishedPromptTemplate = Pick<
   | 'book_series'
   | 'difficulty'
   | 'usage_note'
+  | 'why_effective'
   | 'tags'
   | 'featured'
   | 'updated_at'
@@ -87,6 +88,7 @@ const publishedPromptTemplateFields = [
   'book_series',
   'difficulty',
   'usage_note',
+  'why_effective',
   'tags',
   'featured',
   'updated_at',

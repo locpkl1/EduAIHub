@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { GraduationCap, Loader2, Sparkles } from 'lucide-react';
+import { AlertCircle, GraduationCap, Loader2, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import {
   aiExperienceLevelOptions,
@@ -9,6 +9,7 @@ import {
   strengthOptions,
   weaknessOptions,
 } from '../data/profileOptions';
+import { getProfileSaveErrorMessage } from '../lib/profileSaveError';
 import type { Grade } from '../types/database';
 
 const GRADE_OPTIONS: Grade[] = [10, 11, 12];
@@ -39,11 +40,14 @@ function ChoiceGroup({
               key={option}
               type="button"
               onClick={() => onChange(toggleValue(values, option))}
-              className="border px-3 py-2 text-xs font-semibold transition-colors"
+              className="rounded-full border px-3.5 py-2 text-xs font-semibold transition-all duration-150 hover:-translate-y-0.5"
               style={{
-                backgroundColor: active ? 'var(--color-primary)' : 'var(--color-bg-muted)',
-                borderColor: active ? 'var(--color-primary)' : 'var(--color-border)',
+                backgroundColor: active
+                  ? 'var(--color-primary)'
+                  : 'color-mix(in srgb, var(--color-bg-muted) 76%, var(--color-bg-card))',
+                borderColor: active ? 'var(--color-primary)' : 'color-mix(in srgb, var(--color-border) 72%, transparent)',
                 color: active ? '#ffffff' : 'var(--color-text-muted)',
+                boxShadow: active ? '0 10px 22px -16px var(--color-primary)' : 'none',
               }}
             >
               {option}
@@ -58,8 +62,12 @@ function ChoiceGroup({
 function FormSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section
-      className="space-y-4 border p-4"
-      style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+      className="space-y-4 rounded-2xl border p-4 sm:p-5"
+      style={{
+        backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 84%, var(--color-bg-muted))',
+        borderColor: 'color-mix(in srgb, var(--color-border) 70%, transparent)',
+        boxShadow: '0 18px 40px -36px color-mix(in srgb, var(--color-text) 60%, transparent)',
+      }}
     >
       <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-text-light">{title}</h3>
       {children}
@@ -132,8 +140,11 @@ export default function ProfileCompletionModal() {
         ai_experience_level: aiExperienceLevel,
         onboarding_completed: true,
       });
-    } catch {
-      setError('Không thể lưu thông tin. Vui lòng thử lại.');
+    } catch (saveError) {
+      if (import.meta.env.DEV) {
+        console.error('ProfileCompletionModal updateProfile failed:', saveError);
+      }
+      setError(getProfileSaveErrorMessage(saveError));
     } finally {
       setSaving(false);
     }
@@ -141,21 +152,30 @@ export default function ProfileCompletionModal() {
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-hidden="true" />
+      <div className="absolute inset-0 bg-black/55 backdrop-blur-md" aria-hidden="true" />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="profile-modal-title"
-        className="relative flex max-h-[92dvh] w-full max-w-4xl flex-col overflow-hidden shadow-2xl"
-        style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
+        className="relative flex max-h-[calc(100dvh-24px)] w-full max-w-[960px] flex-col overflow-hidden rounded-[1.75rem] shadow-2xl sm:max-h-[calc(100dvh-32px)]"
+        style={{
+          backgroundColor: 'var(--color-bg-card)',
+          border: '1px solid color-mix(in srgb, var(--color-border) 70%, transparent)',
+        }}
       >
-        <div className="shrink-0 px-5 py-4 sm:px-6" style={{ backgroundColor: 'var(--color-primary)' }}>
-          <div className="flex items-start gap-3">
+        <div
+          className="shrink-0 px-5 py-5 sm:px-6"
+          style={{
+            background:
+              'linear-gradient(135deg, var(--color-primary) 0%, color-mix(in srgb, var(--color-primary) 72%, var(--color-secondary)) 56%, color-mix(in srgb, var(--color-primary) 68%, var(--color-accent)) 100%)',
+          }}
+        >
+          <div className="flex items-start gap-3 sm:gap-4">
             <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
               style={{
-                backgroundColor: 'rgba(255,255,255,0.15)',
-                clipPath: 'polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px))',
+                backgroundColor: 'rgba(255,255,255,0.18)',
+                boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.24)',
               }}
             >
               <GraduationCap size={19} color="#ffffff" />
@@ -165,17 +185,17 @@ export default function ProfileCompletionModal() {
                 <Sparkles size={12} />
                 Hồ sơ học tập
               </p>
-              <h2 id="profile-modal-title" className="font-display text-lg font-bold text-white">
+              <h2 id="profile-modal-title" className="font-display text-xl font-bold text-white sm:text-2xl">
                 Cá nhân hóa EduAI-Hub cho cách bạn học
               </h2>
-              <p className="mt-1 max-w-2xl text-xs leading-5 text-white/75">
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-white/80">
                 Những thông tin này giúp chatbot hiểu lớp học, điểm mạnh, điểm kẹt và cách giải thích phù hợp với bạn.
               </p>
             </div>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+        <form onSubmit={handleSubmit} className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
           <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
             <div className="space-y-4">
               <FormSection title="Thông tin cơ bản">
@@ -189,7 +209,7 @@ export default function ProfileCompletionModal() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Nhập tên hiển thị"
-                  className="input-field"
+                  className="input-field rounded-xl"
                   required
                 />
                 </div>
@@ -202,11 +222,18 @@ export default function ProfileCompletionModal() {
                       key={g}
                       type="button"
                       onClick={() => setGrade(g)}
-                      className="py-2.5 text-sm font-semibold transition-colors"
+                      className="rounded-xl py-2.5 text-sm font-semibold transition-all duration-150 hover:-translate-y-0.5"
                       style={
                         grade === g
-                          ? { backgroundColor: 'var(--color-primary)', color: '#ffffff' }
-                          : { backgroundColor: 'var(--color-bg-muted)', color: 'var(--color-text-muted)' }
+                          ? {
+                              backgroundColor: 'var(--color-primary)',
+                              color: '#ffffff',
+                              boxShadow: '0 12px 24px -18px var(--color-primary)',
+                            }
+                          : {
+                              backgroundColor: 'color-mix(in srgb, var(--color-bg-muted) 78%, var(--color-bg-card))',
+                              color: 'var(--color-text-muted)',
+                            }
                       }
                     >
                       Lớp {g}
@@ -225,7 +252,7 @@ export default function ProfileCompletionModal() {
                   value={school}
                   onChange={(e) => setSchool(e.target.value)}
                   placeholder="VD: THPT Nguyễn Huệ"
-                  className="input-field"
+                  className="input-field rounded-xl"
                   required
                 />
                 </div>
@@ -241,11 +268,13 @@ export default function ProfileCompletionModal() {
                   value={personalBackground}
                   onChange={(e) => setPersonalBackground(e.target.value)}
                   placeholder="Ví dụ: Em hay trì hoãn, không biết bắt đầu học từ đâu, dùng AI hay bị chép đáp án..."
-                  rows={4}
-                  className="input-field resize-none"
+                  rows={5}
+                  className="input-field resize-none rounded-xl"
                 />
                 </div>
+              </FormSection>
 
+              <FormSection title="Cách bạn học">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
                   <label htmlFor="modal-learning-style" className="mb-2 block text-xs font-bold uppercase tracking-[0.14em] text-text-light">
@@ -255,7 +284,7 @@ export default function ProfileCompletionModal() {
                     id="modal-learning-style"
                     value={preferredLearningStyle}
                     onChange={(e) => setPreferredLearningStyle(e.target.value)}
-                    className="input-field"
+                    className="input-field rounded-xl"
                   >
                     <option value="">Chọn cách học</option>
                     {preferredLearningStyleOptions.map((option) => (
@@ -271,7 +300,7 @@ export default function ProfileCompletionModal() {
                     id="modal-ai-level"
                     value={aiExperienceLevel}
                     onChange={(e) => setAiExperienceLevel(e.target.value)}
-                    className="input-field"
+                    className="input-field rounded-xl"
                   >
                     <option value="">Chọn mức độ</option>
                     {aiExperienceLevelOptions.map((option) => (
@@ -295,27 +324,39 @@ export default function ProfileCompletionModal() {
                   values={commonProblems}
                   onChange={setCommonProblems}
                 />
-                <ChoiceGroup label="Mục tiêu học tập" options={learningGoalOptions} values={learningGoals} onChange={setLearningGoals} />
+              </FormSection>
+              <FormSection title="Mục tiêu học tập">
+                <ChoiceGroup label="Bạn muốn EduAI-Hub hỗ trợ điều gì?" options={learningGoalOptions} values={learningGoals} onChange={setLearningGoals} />
               </FormSection>
             </div>
           </div>
 
           {error && (
-            <p className="mt-5 border px-3 py-2.5 text-xs" style={{ color: '#dc2626', backgroundColor: '#fef2f2', borderColor: '#fecaca' }}>
-              {error}
-            </p>
+            <div
+              className="mt-5 flex items-start gap-2 rounded-2xl border px-4 py-3 text-sm"
+              style={{ color: '#b91c1c', backgroundColor: '#fef2f2', borderColor: '#fecaca' }}
+            >
+              <AlertCircle size={17} className="mt-0.5 shrink-0" />
+              <p>{error}</p>
+            </div>
           )}
 
-          <div className="sticky bottom-0 -mx-5 mt-6 flex flex-col gap-2 border-t px-5 pt-4 sm:-mx-6 sm:flex-row sm:items-center sm:justify-end sm:px-6"
-            style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+          <div
+            className="sticky bottom-0 -mx-4 mt-6 flex flex-col gap-2 border-t px-4 pt-4 sm:-mx-6 sm:flex-row sm:items-center sm:justify-end sm:px-6"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 92%, transparent)',
+              borderColor: 'color-mix(in srgb, var(--color-border) 72%, transparent)',
+              backdropFilter: 'blur(12px)',
+            }}
           >
-            <button type="button" onClick={dismissProfileModal} className="px-4 py-2 text-xs font-bold text-text-muted transition-colors hover:text-text">
+            <button type="button" onClick={dismissProfileModal} className="rounded-full px-4 py-2.5 text-xs font-bold text-text-muted transition-colors hover:text-text">
               Để sau
             </button>
             <button
               type="submit"
               disabled={!canSubmit || saving}
-              className="btn-primary inline-flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-all duration-150 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ backgroundColor: 'var(--color-primary)', boxShadow: '0 16px 30px -20px var(--color-primary)' }}
             >
               {saving ? (
                 <><Loader2 size={14} className="animate-spin" /> Đang lưu...</>

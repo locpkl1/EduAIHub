@@ -39,6 +39,7 @@ interface PromptFormState {
   book_series: string;
   difficulty: '' | PromptDifficulty;
   usage_note: string;
+  why_effective: string;
   tags: string;
   status: ContentStatus;
   featured: boolean;
@@ -53,6 +54,7 @@ const emptyForm: PromptFormState = {
   book_series: '',
   difficulty: '',
   usage_note: '',
+  why_effective: '',
   tags: '',
   status: 'draft',
   featured: false,
@@ -108,6 +110,7 @@ function buildFormFromTemplate(template: PromptTemplate): PromptFormState {
     book_series: template.book_series ?? '',
     difficulty: template.difficulty ?? '',
     usage_note: template.usage_note ?? '',
+    why_effective: template.why_effective ?? '',
     tags: template.tags.join(', '),
     status: template.status,
     featured: template.featured,
@@ -259,6 +262,7 @@ export default function AdminPrompts() {
       book_series: normalizeOptional(form.book_series),
       difficulty: form.difficulty || null,
       usage_note: normalizeOptional(form.usage_note),
+      why_effective: normalizeOptional(form.why_effective),
       tags: parseTags(form.tags),
       status: form.status,
       featured: form.featured,
@@ -583,12 +587,21 @@ export default function AdminPrompts() {
               />
             </label>
             <label className="space-y-1.5 lg:col-span-2">
-              <span className="text-sm font-bold text-text">Ghi chú sử dụng</span>
+              <span className="text-sm font-bold text-text">Khi nào nên dùng prompt này?</span>
               <textarea
                 value={form.usage_note}
                 onChange={(event) => setForm((current) => ({ ...current, usage_note: event.target.value }))}
                 className="input-field min-h-24 resize-y"
-                placeholder="Gợi ý khi nào nên dùng prompt này..."
+                placeholder="Gợi ý tình huống nên dùng prompt này: ôn tập, giải thích khái niệm, luyện viết, tự kiểm tra..."
+              />
+            </label>
+            <label className="space-y-1.5 lg:col-span-2">
+              <span className="text-sm font-bold text-text">Vì sao prompt này hiệu quả?</span>
+              <textarea
+                value={form.why_effective}
+                onChange={(event) => setForm((current) => ({ ...current, why_effective: event.target.value }))}
+                className="input-field min-h-24 resize-y"
+                placeholder="Giải thích ngắn gọn vì sao prompt này giúp học sinh hỏi AI tốt hơn. Ví dụ: prompt có bối cảnh rõ, yêu cầu từng bước, có phần tự luyện và kiểm chứng."
               />
             </label>
             <label className="space-y-1.5">
