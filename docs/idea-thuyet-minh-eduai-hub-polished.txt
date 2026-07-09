@@ -1,0 +1,357 @@
+B. PHẦN MÔ TẢ NỘI DUNG SẢN PHẨM
+
+1. Tính mới, tính sáng tạo
+
+EduAI-Hub là nền tảng web/PWA hướng đến học sinh trung học phổ thông Việt Nam, với mục tiêu giúp học sinh biết sử dụng AI hiệu quả, chủ động và có trách nhiệm. Điểm mới của sản phẩm không nằm ở việc tạo thêm một chatbot hỏi đáp, mà nằm ở cách em tổ chức một môi trường học tập để học sinh hiểu cách dùng AI trước khi nhờ AI hỗ trợ.
+
+Hiện nay, nhiều học sinh đã biết đến ChatGPT, Gemini, Claude và các công cụ AI khác. Tuy nhiên, không phải bạn nào cũng biết hỏi AI đúng cách. Có bạn chỉ nhập một câu rất chung như “giải bài này giúp em”, “viết bài văn này giúp em”, rồi nhận lại một câu trả lời có vẻ hoàn chỉnh nhưng bản thân chưa thật sự hiểu. Nếu dùng AI theo cách đó lâu dài, học sinh dễ quen với việc lấy đáp án nhanh, ít kiểm chứng và phụ thuộc vào công cụ.
+
+EduAI-Hub được xây dựng để giải quyết vấn đề này theo hướng gần gũi hơn: dạy học sinh cách đặt câu hỏi, cách thêm bối cảnh, cách kiểm tra lại câu trả lời và cách dùng AI như một người hỗ trợ học tập. Nói cách khác, sản phẩm không xem AI là nơi làm bài thay, mà xem AI là công cụ giúp người học tự học tốt hơn nếu biết sử dụng đúng.
+
+Một điểm sáng của EduAI-Hub là Cẩm nang học AI gồm 12 bài nhập môn. Cẩm nang này tạo một lộ trình cơ bản để học sinh hiểu AI là gì, prompt là gì, vì sao cần kiểm chứng thông tin, làm thế nào để không phụ thuộc AI, cần chú ý gì về đạo đức và bảo mật khi dùng AI. Với em, phần cẩm nang rất quan trọng vì học sinh không nên bắt đầu bằng việc hỏi AI thật nhiều, mà nên bắt đầu bằng việc hiểu mình đang dùng công cụ gì và cần chịu trách nhiệm ra sao.
+
+Bên cạnh cẩm nang, sản phẩm có 3 trợ lý AI được chia vai trò rõ ràng. Trợ lý “Học Tư Duy Prompt Với AI” giúp học sinh hiểu cách xây dựng một prompt tốt. Trợ lý “Gợi Ý Prompt Học Tập” hỗ trợ tạo prompt theo bối cảnh học tập như lớp, môn, bài học, mục tiêu và trình độ hiện tại. Trợ lý “Đánh Giá Prompt Của Bạn” giúp học sinh xem lại prompt đã viết, nhận ra điểm còn mơ hồ và cải thiện dần. Cách chia này giúp EduAI-Hub không bị biến thành một khung chat chung chung, mà trở thành nơi luyện kỹ năng dùng AI theo từng bước.
+
+Kho Prompt cũng không chỉ là nơi để sao chép prompt mẫu. Mỗi prompt nên được xem như một ví dụ học tập: dùng trong tình huống nào, vì sao hiệu quả, cấu trúc gồm những phần nào và cần tùy chỉnh ra sao trước khi áp dụng. Nhờ đó, học sinh không chỉ “copy một đoạn lệnh”, mà học được cách tạo ra prompt phù hợp với bài học thật của mình.
+
+EduAI-Hub còn có Hồ sơ học tập cá nhân hóa. Học sinh có thể cập nhật khối lớp, trường, điểm mạnh, điểm yếu, vấn đề thường gặp khi dùng AI, mục tiêu học tập, phong cách học và mức độ kinh nghiệm với AI. Những thông tin này giúp phản hồi của trợ lý AI gần hơn với từng bạn, thay vì mọi học sinh đều nhận cùng một kiểu gợi ý.
+
+Dashboard học tập giúp học sinh nhìn lại quá trình sử dụng sản phẩm: prompt gần đây, việc cần làm, phiên học và thời lượng học. Phần này giúp việc dùng AI không bị rời rạc. Học sinh có thể bắt đầu từ một câu hỏi, lưu lại prompt tốt, ghi nhận phiên học và tiếp tục cải thiện cách học của mình.
+
+Ở phía quản trị, Admin Center giúp cập nhật bài viết, prompt mẫu, tài nguyên hỗ trợ và nội dung public theo trạng thái nháp, đã xuất bản hoặc lưu trữ. Điều này giúp sản phẩm có khả năng phát triển nội dung sau này mà không cần sửa code mỗi lần muốn thêm bài hướng dẫn hoặc prompt mẫu mới.
+
+Về kỹ thuật, EduAI-Hub được xây dựng bằng React, TypeScript, Vite và Tailwind CSS. Phần đăng nhập và dữ liệu dùng Supabase; các trợ lý AI được kết nối thông qua lớp trung gian phía server để hạn chế lộ thông tin kết nối nhạy cảm từ phía trình duyệt. Sản phẩm có thể chạy trên web, có cấu hình PWA cơ bản và có hướng đóng gói APK Android demo bằng Capacitor. Việc tận dụng các nền tảng AI có sẵn cũng giúp tối ưu chi phí, vì dự án không tự huấn luyện mô hình AI riêng mà tập trung vào cách tổ chức trải nghiệm học tập.
+
+Tóm lại, tính mới của EduAI-Hub là đặt trọng tâm vào năng lực dùng AI của học sinh. Sản phẩm không khuyến khích chép bài, không cổ vũ phụ thuộc AI, mà giúp học sinh biết hỏi rõ hơn, kiểm chứng kỹ hơn và học chủ động hơn.
+
+2. Ý tưởng xây dựng mô hình, sản phẩm
+
+Từ trải nghiệm tự học với AI, em nhận ra AI không chỉ mạnh ở việc đưa đáp án, mà mạnh hơn ở khả năng giải thích, gợi ý, phản hồi và giúp người học tự điều chỉnh cách học. Tuy nhiên, điều đó chỉ xảy ra khi người học biết hỏi đúng cách.
+
+Trong thực tế, nhiều học sinh hiện nay đã nghe đến hoặc từng dùng ChatGPT, Gemini, Claude. Các bạn có thể dùng AI để hỏi bài, dịch tiếng Anh, tóm tắt nội dung, tìm ý tưởng viết văn hoặc giải thích một khái niệm khó. Nhưng em cũng thấy một vấn đề khá rõ: nhiều bạn hỏi AI rất chung chung, muốn có kết quả thật nhanh, sau đó dễ copy lại mà chưa hiểu kỹ. Có khi câu trả lời của AI nghe rất tự tin nhưng vẫn có thể sai, thiếu nguồn hoặc không phù hợp với bài học trên lớp.
+
+Xã hội và nhà trường thường lo ngại việc học sinh dùng AI để đạo văn, chép bài hoặc lười suy nghĩ. Em nghĩ nỗi lo đó có cơ sở, nhưng nếu chỉ dừng ở việc cảnh báo thì chưa đủ. Học sinh cần được hướng dẫn cụ thể hơn: khi nào nên dùng AI, hỏi thế nào cho rõ, kiểm tra câu trả lời ra sao, phần nào cần tự làm lại, phần nào không nên đưa cho AI vì liên quan đến riêng tư hoặc đạo đức học tập.
+
+Từ suy nghĩ đó, em đặt ra câu hỏi cho dự án:
+
+“Làm thế nào để học sinh THPT có thể tiếp cận AI một cách chính thống, hiệu quả và có trách nhiệm?”
+
+EduAI-Hub được hình thành như một lời thử nghiệm cho câu hỏi này. Em không muốn xây một công cụ chỉ trả lời thay học sinh. Em muốn tạo một không gian học AI có cấu trúc, nơi học sinh có thể đi từ bước hiểu cơ bản, luyện cách đặt prompt, thử dùng trợ lý AI, lưu lại prompt tốt, rồi nhìn lại quá trình học của mình.
+
+Quy trình chính của sản phẩm là: đọc cẩm nang, chọn trợ lý AI phù hợp, luyện prompt, lưu prompt hữu ích, theo dõi phiên học và cập nhật hồ sơ học tập. Quy trình này giúp học sinh không chỉ tương tác với AI một lần rồi thôi, mà dần hình thành thói quen học có mục tiêu.
+
+EduAI-Hub không thay thế giáo viên, sách vở hay quá trình học thật. Vai trò của sản phẩm là hỗ trợ học sinh tự học tốt hơn: biết đặt câu hỏi trước khi xin đáp án, biết kiểm tra lại trước khi tin, biết diễn đạt lại bằng lời của mình và biết dùng AI để hiểu bài chứ không né tránh việc học.
+
+Trong phiên bản hiện tại, dự án tập trung cho học sinh THPT vì đây là nhóm đã tiếp xúc nhiều với công nghệ và bắt đầu có nhu cầu tự học cao hơn. Nếu được phát triển tiếp, EduAI-Hub có thể mở rộng cho giáo viên và nhà trường như một tài liệu hướng dẫn học sinh dùng AI trong học tập một cách an toàn, minh bạch và có trách nhiệm.
+
+3. Nguyên, vật liệu xây dựng mô hình, sản phẩm
+
+Vì EduAI-Hub là sản phẩm phần mềm nên nguyên, vật liệu của dự án chủ yếu là công cụ lập trình, nền tảng số và nội dung giáo dục do em tự xây dựng. Sản phẩm không dùng vật liệu nguy hiểm, không cần thiết bị đặc biệt, chỉ cần máy tính cá nhân, kết nối Internet và các nền tảng cloud phù hợp.
+
+Về công cụ lập trình, dự án sử dụng React để xây dựng giao diện theo từng thành phần, TypeScript để code rõ ràng và an toàn hơn, Vite để phát triển và đóng gói nhanh, Tailwind CSS để thiết kế giao diện responsive, hỗ trợ chế độ sáng/tối và tạo phong cách gần gũi với học sinh.
+
+Về nền tảng dữ liệu và đăng nhập, EduAI-Hub sử dụng Supabase để hỗ trợ đăng nhập Google, lưu hồ sơ học tập, prompt cá nhân, công việc, phiên học và các nội dung quản trị. Hệ thống có phân quyền để người dùng chỉ thao tác với dữ liệu của mình, còn nội dung công khai được kiểm soát qua trạng thái xuất bản.
+
+Về nền tảng AI, sản phẩm tận dụng Coze hoặc các API AI có sẵn để vận hành 3 trợ lý theo vai trò đã thiết kế. Đây là hướng phù hợp với một dự án học sinh vì không cần tự huấn luyện mô hình AI riêng, giảm chi phí ban đầu và tập trung vào phần quan trọng hơn: thiết kế cách học, cách hỏi và cách kiểm chứng.
+
+Về triển khai, EduAI-Hub có thể chạy trên website public thông qua Vercel, có PWA cơ bản để tạo cảm giác gần với ứng dụng cài đặt được, và có cấu hình Capacitor để đóng gói APK Android demo. Bản APK nên được hiểu là phiên bản thử nghiệm phục vụ trình bày/nộp thi; nếu phát hành rộng cần kiểm thử và hoàn thiện thêm.
+
+Về nội dung giáo dục, sản phẩm sử dụng cẩm nang học AI, prompt mẫu, hướng dẫn kiểm chứng, ghi chú bảo mật, nội dung về đạo đức học tập và các tài nguyên hỗ trợ. Đây là phần em xem là “linh hồn” của sản phẩm, vì công nghệ chỉ có ý nghĩa khi được đặt vào một mục tiêu học tập rõ ràng.
+
+Trong quá trình vận hành và trình bày sản phẩm, dự án không đưa thông tin kết nối nhạy cảm, tài khoản riêng, dữ liệu cá nhân thật của người dùng hoặc nội dung riêng tư vào báo cáo. Một số nguồn ngữ cảnh/tài nguyên hỗ trợ theo lớp, môn hoặc bài học có thể được dùng để giúp AI hiểu nhu cầu học tập tốt hơn, nhưng không được trình bày như một thư viện tài liệu chính thức đầy đủ.
+
+4. Cách sử dụng vận hành
+
+a. Đối với học sinh
+
+Học sinh có thể truy cập EduAI-Hub bằng trình duyệt web. Nếu có bản APK Android demo, học sinh có thể cài thử theo hướng dẫn của tác giả. Trong giai đoạn thử nghiệm, truy cập bằng website là cách đơn giản nhất vì chỉ cần có Internet và trình duyệt.
+
+Khi vào nền tảng, học sinh có thể đăng nhập bằng Google. Việc đăng nhập giúp lưu hồ sơ học tập, prompt cá nhân, việc cần làm và tiến độ học tập. Sau khi đăng nhập, học sinh nên cập nhật hồ sơ học tập trước, gồm khối lớp, trường, phong cách học, mức độ dùng AI, điểm mạnh, điểm yếu, vấn đề thường gặp và mục tiêu học tập. Các thông tin này giúp hệ thống hiểu người học hơn, nhưng học sinh vẫn cần tránh nhập thông tin riêng tư không cần thiết.
+
+Bước tiếp theo là đọc Cẩm nang học AI. Cẩm nang giống như phần nhập môn để học sinh hiểu cách dùng AI trước khi sử dụng các trợ lý. Các bài trong cẩm nang giúp học sinh hiểu AI không phải lúc nào cũng đúng, prompt càng rõ thì phản hồi càng sát, và người học vẫn phải tự kiểm chứng, tự làm lại, tự chịu trách nhiệm với bài của mình.
+
+Sau khi nắm tinh thần cơ bản, học sinh vào Công cụ AI để chọn trợ lý phù hợp. Nếu chưa biết cách hỏi, có thể bắt đầu với “Học Tư Duy Prompt Với AI”. Nếu đang có một bài học cụ thể và muốn tạo prompt học tập, có thể dùng “Gợi Ý Prompt Học Tập”. Nếu đã tự viết prompt nhưng chưa chắc prompt đó rõ hay chưa, có thể dùng “Đánh Giá Prompt Của Bạn”.
+
+Khi trò chuyện với AI, học sinh nên viết bối cảnh cụ thể: đang học lớp mấy, môn gì, vướng phần nào, muốn AI giải thích ngắn hay chi tiết, có cần ví dụ hoặc bài tự luyện không. Phản hồi của AI có thể được sao chép, nhưng không nên copy máy móc. Học sinh cần đọc lại, kiểm chứng bằng tài liệu đáng tin cậy hoặc hỏi giáo viên khi cần.
+
+Kho Prompt là nơi học sinh xem lại prompt cá nhân đã lưu và tham khảo prompt mẫu. Khi mở một prompt mẫu, học sinh nên đọc phần giải thích trước khi dùng: prompt này phù hợp lúc nào, vì sao hiệu quả, gồm những phần nào và cần sửa gì cho đúng với bài của mình. Như vậy, Kho Prompt trở thành nơi học cách hỏi AI, không chỉ là nơi lấy sẵn câu lệnh.
+
+Dashboard giúp học sinh theo dõi việc học hằng ngày. Các bạn có thể xem prompt gần đây, thêm việc cần làm, ghi nhận phiên học và số phút học. Đây là cách để việc dùng AI gắn với thói quen tự học, thay vì chỉ mở AI khi cần đáp án nhanh.
+
+Quy trình sử dụng có thể tóm tắt như sau:
+
+Đọc cẩm nang -> chọn trợ lý AI -> luyện prompt -> lưu prompt tốt -> theo dõi học tập -> cập nhật hồ sơ -> tiếp tục cải thiện cách học.
+
+Trong mọi bước, tinh thần quan trọng nhất là: dùng AI để học tốt hơn, không dùng AI để chép bài. AI có thể giúp gợi ý và giải thích, nhưng học sinh vẫn là người suy nghĩ, chọn lọc, kiểm chứng và viết lại bằng năng lực của mình.
+
+b. Đối với quản trị/admin
+
+Admin đăng nhập bằng tài khoản đã được phân quyền để vào Admin Center. Tại đây, admin có thể quản lý bài viết/cẩm nang, prompt mẫu, tài nguyên hỗ trợ và nội dung public theo trạng thái nháp, đã xuất bản hoặc lưu trữ.
+
+Với bài viết và cẩm nang, admin có thể bổ sung nội dung hướng dẫn học AI, chỉnh sửa bài cũ hoặc ẩn các nội dung chưa hoàn thiện. Với prompt mẫu, admin có thể thêm mục đích, môn học, khối lớp, độ khó, ghi chú khi nào nên dùng và giải thích vì sao prompt đó hiệu quả. Đây là cách giúp học sinh hiểu logic của prompt thay vì chỉ sao chép.
+
+Với tài nguyên hỗ trợ, Admin Center hiện quản lý metadata và đường dẫn như tiêu đề, mô tả, loại tài nguyên, URL nguồn hoặc file URL. Phần này nên được xem là chức năng quản lý liên kết/tài nguyên hỗ trợ, chưa phải hệ thống upload file trực tiếp hoàn chỉnh.
+
+Điểm thuận lợi của Admin Center là nội dung có thể được cập nhật dần mà không cần sửa source code trực tiếp. Điều này rất cần cho một sản phẩm giáo dục, vì nội dung về AI và nhu cầu học sinh có thể thay đổi nhanh.
+
+5. Đánh giá giải pháp
+
+a. Khả năng áp dụng
+
+EduAI-Hub có thể áp dụng cho học sinh THPT, đặc biệt là những bạn đã biết đến AI nhưng chưa có phương pháp sử dụng rõ ràng. Sản phẩm phù hợp với việc tự học ở nhà, học nhóm, câu lạc bộ học thuật, hoạt động trải nghiệm, STEM/AI hoặc các buổi hướng dẫn kỹ năng số trong trường học.
+
+Ở phạm vi ban đầu, EduAI-Hub có thể được thử nghiệm trong một lớp, một nhóm học sinh hoặc một câu lạc bộ tại Cần Thơ. Sau khi nhận phản hồi thật từ học sinh, sản phẩm có thể điều chỉnh nội dung, giao diện và cách hướng dẫn để dễ dùng hơn. Nếu tiếp tục phát triển, sản phẩm có thể mở rộng ra các trường khác như một công cụ hỗ trợ học AI có trách nhiệm.
+
+Sản phẩm cũng có thể hỗ trợ giáo viên trong việc định hướng học sinh dùng AI. Giáo viên có thể dùng cẩm nang hoặc prompt mẫu như tài liệu tham khảo khi tổ chức hoạt động học tập có sử dụng AI. Tuy nhiên, các chức năng dành riêng cho giáo viên nên được xem là hướng phát triển, cần kiểm thử thêm trước khi triển khai rộng.
+
+Về triển khai, EduAI-Hub có lợi thế là chạy trên web nên dễ truy cập. Học sinh chỉ cần thiết bị có Internet, không cần phần cứng đặc biệt. PWA và APK Android demo giúp tăng khả năng tiếp cận trên điện thoại, nhưng bản Android vẫn cần được hoàn thiện thêm nếu muốn phát hành rộng.
+
+b. Hiệu quả
+
+Về kinh tế, EduAI-Hub tận dụng các nền tảng AI có sẵn nên không phải tự huấn luyện mô hình riêng. Điều này giúp giảm chi phí phát triển ban đầu, phù hợp với điều kiện của một dự án học sinh. Ngoài ra, khi học sinh biết hỏi AI rõ ràng hơn, các bạn cũng giảm lãng phí thời gian vì hỏi sai, nhận câu trả lời lệch ý rồi phải sửa đi sửa lại.
+
+Về học tập, sản phẩm giúp học sinh có quy trình dùng AI rõ hơn. Thay vì hỏi ngẫu nhiên, học sinh được hướng dẫn đọc cẩm nang, đặt prompt có bối cảnh, kiểm chứng câu trả lời, lưu prompt tốt và theo dõi phiên học. Điều này giúp AI trở thành công cụ hỗ trợ tự học, không phải nơi lấy đáp án nhanh.
+
+Về xã hội, EduAI-Hub góp phần nâng cao năng lực AI literacy cho học sinh. Học sinh không chỉ biết tên các công cụ AI, mà còn hiểu cách dùng AI có mục tiêu, có đạo đức và có kiểm chứng. Sản phẩm cũng góp phần giảm thói quen phụ thuộc AI, giảm nguy cơ chép bài máy móc, đồng thời khuyến khích tư duy phản biện.
+
+Điểm quan trọng nhất là EduAI-Hub hướng học sinh đến vai trò chủ động. AI có thể giải thích và gợi ý, nhưng học sinh vẫn phải đặt câu hỏi, đọc lại, kiểm tra, sửa prompt và tự trình bày bằng lời của mình. Đây là tinh thần mà em muốn sản phẩm truyền tải.
+
+6. Phụ lục minh họa
+
+Các hình dưới đây là gợi ý để tác giả tự chụp màn hình và chèn vào bản Word sau. File text này chỉ giữ chú thích hình ảnh.
+
+[Hình 1. Trang chủ EduAI-Hub với thông điệp học AI có trách nhiệm.]
+
+[Hình 2. Thanh điều hướng chính giúp học sinh vào cẩm nang, công cụ AI và kho tài nguyên.]
+
+[Hình 3. Nút chuyển đổi sáng/tối trong header.]
+
+[Hình 4. Giao diện đăng nhập Google.]
+
+[Hình 5. Hồ sơ học tập cá nhân hóa theo khối lớp, điểm mạnh, điểm yếu và mục tiêu.]
+
+[Hình 6. Các lựa chọn phong cách học và mức độ kinh nghiệm với AI.]
+
+[Hình 7. Danh sách Cẩm nang học AI gồm 12 bài nhập môn.]
+
+[Hình 8. Chi tiết một bài cẩm nang về prompt hoặc kiểm chứng thông tin AI.]
+
+[Hình 9. Trang Công cụ AI giới thiệu 3 trợ lý theo 3 vai trò.]
+
+[Hình 10. Trợ lý Học Tư Duy Prompt Với AI trong giao diện chat.]
+
+[Hình 11. Trợ lý Gợi Ý Prompt Học Tập với ngữ cảnh lớp, môn, bài học và mục tiêu.]
+
+[Hình 12. Trợ lý Đánh Giá Prompt Của Bạn góp ý cách cải thiện prompt.]
+
+[Hình 13. Lịch sử phiên trò chuyện được lưu trên trình duyệt.]
+
+[Hình 14. Nút sao chép phản hồi AI kèm lời nhắc kiểm chứng.]
+
+[Hình 15. Kho Prompt với prompt cá nhân và prompt tham khảo.]
+
+[Hình 16. Danh sách prompt mẫu có mục đích, môn học và thẻ phân loại.]
+
+[Hình 17. Chi tiết prompt mẫu với phần khi nào nên dùng và vì sao hiệu quả.]
+
+[Hình 18. Phần giải thích cấu trúc prompt và cách tùy chỉnh.]
+
+[Hình 19. Dashboard hiển thị prompt gần đây, việc cần làm và phiên học.]
+
+[Hình 20. Form ghi nhận phiên học theo môn và số phút.]
+
+[Hình 21. Admin Center quản lý nội dung theo trạng thái nháp, xuất bản và lưu trữ.]
+
+[Hình 22. Trang quản lý prompt mẫu trong Admin Center.]
+
+[Hình 23. Trang quản lý tài nguyên hỗ trợ bằng metadata và URL.]
+
+[Hình 24. Website EduAI-Hub được triển khai public.]
+
+[Hình 25. Bản APK Android demo hoặc màn hình cài đặt thử nghiệm.]
+
+[Hình 26. QR code website và QR code APK để truy cập nhanh.]
+
+Link website: [Tác giả tự điền]
+
+QR code website: [Tác giả tự chèn]
+
+Link APK Android: [Tác giả tự điền]
+
+QR code APK: [Tác giả tự chèn]
+
+7. Các thuyết minh khác
+
+Hạn chế hiện tại:
+
+Vì EduAI-Hub vẫn là sản phẩm đang phát triển, một số phần cần tiếp tục hoàn thiện sau cuộc thi. Đây cũng là cơ sở để em tiếp tục cải tiến sản phẩm thay vì xem bản hiện tại là điểm kết thúc.
+
+- Kiểm thử thực tế: Sản phẩm cần được dùng thử với nhiều học sinh thật hơn để kiểm tra mức độ dễ hiểu, dễ dùng và phù hợp với thói quen học tập.
+- Nội dung học tập: Cẩm nang, prompt mẫu và tài nguyên hỗ trợ cần tiếp tục bổ sung, chỉnh sửa và phân loại rõ hơn theo từng nhu cầu học.
+- Phụ thuộc nền tảng AI bên thứ ba: Chất lượng phản hồi, tốc độ và chi phí vận hành chatbot có thể bị ảnh hưởng bởi dịch vụ AI bên ngoài.
+- Triển khai rộng và tối ưu hiệu năng: Nếu số lượng người dùng tăng, cần kiểm thử thêm về tốc độ tải, bảo mật, phân quyền và trải nghiệm trên nhiều thiết bị.
+- APK demo: Bản Android hiện phù hợp để trình bày và nộp thi; nếu phát hành rộng cần ký bản phát hành, kiểm thử thiết bị và chuẩn bị quy trình cập nhật.
+
+Hướng phát triển:
+
+Trong thời gian tới, em muốn phát triển EduAI-Hub theo hướng gần hơn với nhu cầu học thật của học sinh và giáo viên.
+
+- Mở rộng cho giáo viên, giúp giáo viên có thể tham khảo cẩm nang, prompt mẫu hoặc hoạt động hướng dẫn học sinh dùng AI đúng cách.
+- Bổ sung chức năng phản hồi bài làm, trong đó AI góp ý cấu trúc, lập luận, diễn đạt và hướng cải thiện, không làm thay toàn bộ bài.
+- Game hóa học tập bằng điểm kinh nghiệm, huy hiệu, cấp độ hoặc thử thách luyện prompt để tạo động lực học đều đặn.
+- Thêm các trợ lý chuyên biệt cho viết văn, tiếng Anh, luyện đề, lập kế hoạch học tập, sơ đồ tư duy và ôn tập theo mục tiêu.
+- Bổ sung thống kê tiến độ trực quan hơn, giúp học sinh nhìn lại số phiên học, prompt đã lưu và mục tiêu đã hoàn thành.
+- Khảo sát học sinh thật sau khi dùng thử để có dữ liệu đánh giá khách quan hơn, chỉ đưa số liệu vào báo cáo khi có dữ liệu thật.
+- Mở rộng EduAI-Hub thành một hệ sinh thái học AI có trách nhiệm trong trường học, nơi học sinh học cách dùng AI đúng, giáo viên có tài liệu hướng dẫn và nhà trường có thêm công cụ hỗ trợ chuyển đổi số giáo dục.
+
+DANH MỤC HÌNH ẢNH MINH HỌA ĐỀ XUẤT
+
+1. Tên hình: Trang chủ EduAI-Hub.
+Nên chụp gì: Phần đầu trang chủ, logo, thông điệp chính và nút bắt đầu.
+Chèn vào phần nào: Mục 1 hoặc phụ lục.
+Ý nghĩa minh họa: Cho thấy sản phẩm có định hướng rõ ràng ngay từ màn hình đầu tiên.
+
+2. Tên hình: Header và điều hướng.
+Nên chụp gì: Thanh điều hướng với các khu vực chính của nền tảng.
+Chèn vào phần nào: Mục 4.
+Ý nghĩa minh họa: Làm rõ luồng sử dụng đơn giản cho học sinh.
+
+3. Tên hình: Chế độ sáng.
+Nên chụp gì: Một màn hình chính ở light mode.
+Chèn vào phần nào: Mục 1 hoặc phụ lục.
+Ý nghĩa minh họa: Thể hiện giao diện sáng, dễ đọc, phù hợp học sinh.
+
+4. Tên hình: Chế độ tối.
+Nên chụp gì: Cùng màn hình ở dark mode.
+Chèn vào phần nào: Mục 1 hoặc phụ lục.
+Ý nghĩa minh họa: Cho thấy sản phẩm hỗ trợ trải nghiệm học vào nhiều thời điểm.
+
+5. Tên hình: Đăng nhập Google.
+Nên chụp gì: Nút đăng nhập hoặc màn hình sau khi đăng nhập thành công.
+Chèn vào phần nào: Mục 4.
+Ý nghĩa minh họa: Minh họa luồng tài khoản người dùng.
+
+6. Tên hình: Hồ sơ học tập.
+Nên chụp gì: Trang hồ sơ có khối lớp, trường, phong cách học và mục tiêu.
+Chèn vào phần nào: Mục 1 hoặc mục 4.
+Ý nghĩa minh họa: Làm rõ yếu tố cá nhân hóa cho từng học sinh.
+
+7. Tên hình: Lựa chọn điểm mạnh và điểm yếu.
+Nên chụp gì: Các lựa chọn trong phần hồ sơ học tập.
+Chèn vào phần nào: Mục 4.
+Ý nghĩa minh họa: Cho thấy hệ thống thu thập ngữ cảnh học tập có ích.
+
+8. Tên hình: Danh sách Cẩm nang học AI.
+Nên chụp gì: Trang liệt kê các bài trong cẩm nang.
+Chèn vào phần nào: Mục 1.
+Ý nghĩa minh họa: Chứng minh sản phẩm có lộ trình nhập môn AI.
+
+9. Tên hình: Bài học về prompt.
+Nên chụp gì: Trang chi tiết một bài hướng dẫn cách viết prompt.
+Chèn vào phần nào: Mục 1 hoặc mục 4.
+Ý nghĩa minh họa: Làm rõ nội dung dạy học sinh cách hỏi AI.
+
+10. Tên hình: Bài học về kiểm chứng.
+Nên chụp gì: Đoạn nội dung nhắc học sinh kiểm tra câu trả lời AI.
+Chèn vào phần nào: Mục 5.
+Ý nghĩa minh họa: Nhấn mạnh tinh thần dùng AI có trách nhiệm.
+
+11. Tên hình: Trang Công cụ AI.
+Nên chụp gì: Ba thẻ trợ lý AI với vai trò khác nhau.
+Chèn vào phần nào: Mục 1 hoặc mục 4.
+Ý nghĩa minh họa: Thể hiện cách chia trợ lý theo nhu cầu học tập.
+
+12. Tên hình: Trợ lý Học Tư Duy Prompt.
+Nên chụp gì: Giao diện chat với câu hỏi về cách viết prompt.
+Chèn vào phần nào: Mục 4.
+Ý nghĩa minh họa: Cho thấy học sinh được hướng dẫn cách hỏi, không chỉ nhận đáp án.
+
+13. Tên hình: Trợ lý Gợi Ý Prompt Học Tập.
+Nên chụp gì: Phần nhập ngữ cảnh học tập và phản hồi gợi ý prompt.
+Chèn vào phần nào: Mục 1 hoặc mục 4.
+Ý nghĩa minh họa: Minh họa khả năng hỗ trợ theo bối cảnh học cụ thể.
+
+14. Tên hình: Trợ lý Đánh Giá Prompt.
+Nên chụp gì: AI phân tích một prompt và gợi ý cách sửa.
+Chèn vào phần nào: Mục 1.
+Ý nghĩa minh họa: Thể hiện quá trình rèn prompt qua phản hồi.
+
+15. Tên hình: Lịch sử phiên chat.
+Nên chụp gì: Sidebar hiển thị các phiên trò chuyện.
+Chèn vào phần nào: Mục 4.
+Ý nghĩa minh họa: Cho thấy học sinh có thể quay lại phiên học gần đây trên thiết bị.
+
+16. Tên hình: Sao chép phản hồi AI.
+Nên chụp gì: Nút copy trong phản hồi AI.
+Chèn vào phần nào: Mục 4.
+Ý nghĩa minh họa: Minh họa thao tác tiện lợi khi học, đi kèm yêu cầu tự kiểm chứng.
+
+17. Tên hình: Lời nhắc kiểm chứng trong chat.
+Nên chụp gì: Dòng nhắc AI có thể sai trong giao diện chatbot.
+Chèn vào phần nào: Mục 5.
+Ý nghĩa minh họa: Cho thấy thiết kế không cổ vũ tin AI tuyệt đối.
+
+18. Tên hình: Kho Prompt cá nhân.
+Nên chụp gì: Danh sách prompt đã lưu của học sinh.
+Chèn vào phần nào: Mục 1 hoặc mục 4.
+Ý nghĩa minh họa: Cho thấy học sinh có thể lưu lại công cụ học tập hữu ích.
+
+19. Tên hình: Kho prompt tham khảo.
+Nên chụp gì: Các thẻ prompt mẫu do hệ thống hoặc admin cung cấp.
+Chèn vào phần nào: Mục 1.
+Ý nghĩa minh họa: Minh họa nguồn prompt mẫu có thể mở rộng.
+
+20. Tên hình: Chi tiết prompt mẫu.
+Nên chụp gì: Nội dung prompt, khi nào nên dùng và vì sao hiệu quả.
+Chèn vào phần nào: Mục 1.
+Ý nghĩa minh họa: Chứng minh Kho Prompt dùng để học phương pháp, không chỉ copy.
+
+21. Tên hình: Cấu trúc prompt.
+Nên chụp gì: Phần giải thích vai trò, bối cảnh, nhiệm vụ và định dạng.
+Chèn vào phần nào: Mục 1.
+Ý nghĩa minh họa: Làm rõ kiến thức cốt lõi về prompt.
+
+22. Tên hình: Dashboard học tập.
+Nên chụp gì: Các thẻ thống kê prompt, công việc và phiên học.
+Chèn vào phần nào: Mục 4 hoặc mục 5.
+Ý nghĩa minh họa: Cho thấy sản phẩm hỗ trợ thói quen tự học.
+
+23. Tên hình: Ghi nhận phiên học.
+Nên chụp gì: Form nhập môn học và số phút học.
+Chèn vào phần nào: Mục 4.
+Ý nghĩa minh họa: Minh họa cách học sinh theo dõi quá trình học.
+
+24. Tên hình: Admin Center.
+Nên chụp gì: Trang tổng quan admin với các nhóm nội dung.
+Chèn vào phần nào: Mục 1 hoặc mục 4b.
+Ý nghĩa minh họa: Cho thấy sản phẩm có nền quản trị nội dung.
+
+25. Tên hình: Quản lý prompt mẫu.
+Nên chụp gì: Bảng prompt mẫu và form thêm/sửa.
+Chèn vào phần nào: Mục 4b.
+Ý nghĩa minh họa: Chứng minh nội dung prompt có thể được cập nhật linh hoạt.
+
+26. Tên hình: Quản lý tài nguyên hỗ trợ.
+Nên chụp gì: Trang quản lý tài nguyên bằng tiêu đề, mô tả, loại và URL.
+Chèn vào phần nào: Mục 4b hoặc mục 7.
+Ý nghĩa minh họa: Thể hiện khả năng mở rộng tài nguyên học tập.
+
+27. Tên hình: Website public.
+Nên chụp gì: Website đang chạy trên môi trường public, không lộ thông tin nhạy cảm.
+Chèn vào phần nào: Mục 5.
+Ý nghĩa minh họa: Chứng minh sản phẩm có thể truy cập bằng trình duyệt.
+
+28. Tên hình: PWA trên điện thoại.
+Nên chụp gì: Website chạy ở giao diện điện thoại.
+Chèn vào phần nào: Mục 5.
+Ý nghĩa minh họa: Cho thấy khả năng tiếp cận trên thiết bị phổ biến.
+
+29. Tên hình: APK Android demo.
+Nên chụp gì: Màn hình app demo hoặc quá trình cài thử APK.
+Chèn vào phần nào: Mục 5 hoặc mục 7.
+Ý nghĩa minh họa: Thể hiện định hướng đa nền tảng ở mức thử nghiệm.
+
+30. Tên hình: QR code website và APK.
+Nên chụp gì: Hai mã QR do tác giả tự tạo sau khi có link chính thức.
+Chèn vào phần nào: Cuối mục 6.
+Ý nghĩa minh họa: Giúp người xem truy cập nhanh sản phẩm và bản demo.

@@ -20,14 +20,56 @@ import {
 } from '../lib/cozeClient';
 import { formatAiText, looksLikePrompt, userRequestedSave } from '../lib/formatAiText';
 
-type Message = { id: string; role: 'user' | 'ai'; text: string };
-type ChatSession = { id: string; title: string; messages: Message[]; convId: string | null; createdAt: number };
+type ChatMessage = { id: string; role: 'user' | 'ai'; text: string };
+type ChatSession = {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  conversationId: string | null;
+  createdAt: string;
+  updatedAt?: string;
+};
+
+type StoredChatMessage = {
+  id?: unknown;
+  role: 'user' | 'ai';
+  text: string;
+};
+
+type StoredChatSession = Partial<Omit<ChatSession, 'messages'>> & {
+  messages?: unknown;
+  convId?: unknown;
+  conversationId?: unknown;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+};
 
 const MAX_SESSIONS = 20;
 const MAX_MESSAGES_PER_SESSION = 80;
 
 function genId() {
   return Math.random().toString(36).slice(2, 11);
+}
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function readStoredDate(value: unknown) {
+  if (typeof value === 'string' && value.trim()) return value;
+  if (typeof value === 'number' && Number.isFinite(value)) return new Date(value).toISOString();
+  return nowIso();
+}
+
+function readStoredConversationId(source: StoredChatSession) {
+  const value = source.conversationId ?? source.convId;
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function isStoredChatMessage(value: unknown): value is StoredChatMessage {
+  if (!value || typeof value !== 'object') return false;
+  const message = value as Partial<StoredChatMessage>;
+  return (message.role === 'user' || message.role === 'ai') && typeof message.text === 'string';
 }
 
 function getInitials(name: string) {
@@ -52,20 +94,25 @@ function loadStoredSessions(raw: unknown): ChatSession[] {
     .slice(0, MAX_SESSIONS)
     .map((item): ChatSession | null => {
       if (!item || typeof item !== 'object') return null;
-      const source = item as Partial<ChatSession>;
-      const messages = Array.isArray(source.messages)
-        ? source.messages
-            .filter((msg) => msg && (msg.role === 'user' || msg.role === 'ai') && typeof msg.text === 'string')
-            .slice(-MAX_MESSAGES_PER_SESSION)
-            .map((msg) => ({ id: genId(), role: msg.role, text: msg.text }))
-        : [];
+      const source = item as StoredChatSession;
+      const rawMessages = Array.isArray(source.messages) ? source.messages : [];
+      const messages = rawMessages
+        .filter(isStoredChatMessage)
+        .slice(-MAX_MESSAGES_PER_SESSION)
+        .map((msg) => ({
+          id: typeof msg.id === 'string' && msg.id.trim() ? msg.id : genId(),
+          role: msg.role,
+          text: msg.text,
+        }));
 
+      const createdAt = readStoredDate(source.createdAt);
       return {
-        id: genId(),
+        id: typeof source.id === 'string' && source.id.trim() ? source.id : genId(),
         title: typeof source.title === 'string' && source.title.trim() ? source.title : 'Cuộc trò chuyện',
         messages,
-        convId: typeof source.convId === 'string' && source.convId.trim() ? source.convId : null,
-        createdAt: typeof source.createdAt === 'number' ? source.createdAt : Date.now(),
+        conversationId: readStoredConversationId(source),
+        createdAt,
+        updatedAt: readStoredDate(source.updatedAt ?? createdAt),
       };
     })
     .filter((session): session is ChatSession => Boolean(session));
@@ -73,13 +120,16 @@ function loadStoredSessions(raw: unknown): ChatSession[] {
 
 function serializeSessions(sessions: ChatSession[]) {
   return trimSessions(sessions).map((session) => ({
+    id: session.id,
     title: session.title,
     messages: session.messages.map((message) => ({
+      id: message.id,
       role: message.role,
       text: message.text,
     })),
-    convId: session.convId,
+    conversationId: session.conversationId,
     createdAt: session.createdAt,
+    updatedAt: session.updatedAt,
   }));
 }
 
@@ -186,8 +236,9 @@ export default function ChatbotPage({
       id,
       title: 'Cuộc trò chuyện mới',
       messages: [],
-      convId: null,
-      createdAt: Date.now(),
+      conversationId: null,
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
     };
     setSessions((prev) => trimSessions([session, ...prev]));
     setActiveSessionId(id);
@@ -231,15 +282,16 @@ export default function ChatbotPage({
         id,
         title: text.slice(0, 40),
         messages: [],
-        convId: null,
-        createdAt: Date.now(),
+        conversationId: null,
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
       };
       setSessions((prev) => trimSessions([session, ...prev]));
       sessionId = id;
       setActiveSessionId(id);
     }
 
-    const userMsg: Message = { id: genId(), role: 'user', text };
+    const userMsg: ChatMessage = { id: genId(), role: 'user', text };
 
     setSessions((prev) =>
       prev.map((s) => {
@@ -249,6 +301,7 @@ export default function ChatbotPage({
           ...s,
           messages: [...s.messages, userMsg].slice(-MAX_MESSAGES_PER_SESSION),
           title: isNewTitle ? text.slice(0, 40) : s.title,
+          updatedAt: nowIso(),
         };
       })
     );
@@ -257,11 +310,11 @@ export default function ChatbotPage({
     setLoading(true);
 
     const currentSession = sessionsRef.current.find((s) => s.id === sessionId);
-    const currentConvId = currentSession?.convId ?? null;
+    const currentConversationId = currentSession?.conversationId ?? null;
     try {
       const { content, conversation_id } = await callCoze({
         message: text,
-        conversationId: currentConvId,
+        conversationId: currentConversationId,
         botKey,
         userId: user?.id ?? null,
         userContext,
@@ -274,11 +327,16 @@ export default function ChatbotPage({
         },
       });
 
-      const aiMsg: Message = { id: genId(), role: 'ai', text: content };
+      const aiMsg: ChatMessage = { id: genId(), role: 'ai', text: content };
       setSessions((prev) =>
         prev.map((s) =>
           s.id === sessionId
-            ? { ...s, convId: conversation_id, messages: [...s.messages, aiMsg].slice(-MAX_MESSAGES_PER_SESSION) }
+            ? {
+                ...s,
+                conversationId: conversation_id,
+                messages: [...s.messages, aiMsg].slice(-MAX_MESSAGES_PER_SESSION),
+                updatedAt: nowIso(),
+              }
             : s
         )
       );
@@ -286,10 +344,12 @@ export default function ChatbotPage({
       await maybeSavePrompt(text, content);
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại.';
-      const aiMsg: Message = { id: genId(), role: 'ai', text: errMsg };
+      const aiMsg: ChatMessage = { id: genId(), role: 'ai', text: errMsg };
       setSessions((prev) =>
         prev.map((s) =>
-          s.id === sessionId ? { ...s, messages: [...s.messages, aiMsg].slice(-MAX_MESSAGES_PER_SESSION) } : s
+          s.id === sessionId
+            ? { ...s, messages: [...s.messages, aiMsg].slice(-MAX_MESSAGES_PER_SESSION), updatedAt: nowIso() }
+            : s
         )
       );
     } finally {
