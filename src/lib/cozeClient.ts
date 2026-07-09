@@ -44,6 +44,7 @@ type CozeApiResponse = Partial<CallCozeResult> & {
 };
 
 const VALID_BOT_KEYS: CozeBotKey[] = ['prompt-thinking', 'study-prompt', 'prompt-evaluator'];
+const COZE_PROXY_URL = import.meta.env.VITE_COZE_PROXY_URL || '/api/coze';
 
 export async function callCoze(payload: CallCozePayload): Promise<CallCozeResult> {
   const message = payload.message?.trim();
@@ -56,7 +57,7 @@ export async function callCoze(payload: CallCozePayload): Promise<CallCozeResult
     throw new Error('Chatbot không hợp lệ. Vui lòng tải lại trang và thử lại.');
   }
 
-  const res = await fetch('/api/coze', {
+  const res = await fetch(COZE_PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

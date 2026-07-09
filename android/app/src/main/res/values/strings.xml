@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">EduAI-Hub</string>
+    <string name="title_activity_main">EduAI-Hub</string>
+    <string name="package_name">com.tloclearns.eduaihub</string>
+    <string name="custom_url_scheme">com.tloclearns.eduaihub</string>
+</resources>
