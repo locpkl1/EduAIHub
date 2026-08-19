@@ -210,9 +210,9 @@ function HeroSection() {
           </div>
 
           <h1 className="max-w-2xl font-display text-[clamp(2.35rem,5vw,3.75rem)] font-semibold leading-[1.08] tracking-normal text-text">
-            AI có thể trả lời rất nhanh.
+            Học cách hỏi,
             <span className="relative mt-2 block text-primary sm:mt-3">
-              Nhưng bạn vẫn phải là người hiểu.
+              để biết cách học.
               <span
                 aria-hidden="true"
                 className="absolute -bottom-1 left-0 h-3 w-[74%] -rotate-1 sm:-bottom-2"
