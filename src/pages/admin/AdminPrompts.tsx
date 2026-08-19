@@ -24,6 +24,7 @@ import type {
   PromptTemplateUpdate,
 } from '../../types/database';
 import StatusBadge from '../../components/admin/StatusBadge';
+import { DEFAULT_BOOK_SERIES } from '../../data/educationData';
 
 type StatusFilter = 'all' | ContentStatus;
 type GradeFilter = 'all' | '10' | '11' | '12';
@@ -51,7 +52,7 @@ const emptyForm: PromptFormState = {
   purpose: '',
   subject: '',
   grade: '',
-  book_series: '',
+  book_series: DEFAULT_BOOK_SERIES,
   difficulty: '',
   usage_note: '',
   why_effective: '',
@@ -107,7 +108,7 @@ function buildFormFromTemplate(template: PromptTemplate): PromptFormState {
     purpose: template.purpose ?? '',
     subject: template.subject ?? '',
     grade: template.grade ? String(template.grade) as PromptFormState['grade'] : '',
-    book_series: template.book_series ?? '',
+    book_series: DEFAULT_BOOK_SERIES,
     difficulty: template.difficulty ?? '',
     usage_note: template.usage_note ?? '',
     why_effective: template.why_effective ?? '',
@@ -259,7 +260,7 @@ export default function AdminPrompts() {
       purpose: normalizeOptional(form.purpose),
       subject: normalizeOptional(form.subject),
       grade: parseGrade(form.grade),
-      book_series: normalizeOptional(form.book_series),
+      book_series: DEFAULT_BOOK_SERIES,
       difficulty: form.difficulty || null,
       usage_note: normalizeOptional(form.usage_note),
       why_effective: normalizeOptional(form.why_effective),
@@ -555,15 +556,12 @@ export default function AdminPrompts() {
                 <option value="12">Lớp 12</option>
               </select>
             </label>
-            <label className="space-y-1.5">
+            <div className="space-y-1.5">
               <span className="text-sm font-bold text-text">Bộ sách</span>
-              <input
-                value={form.book_series}
-                onChange={(event) => setForm((current) => ({ ...current, book_series: event.target.value }))}
-                className="input-field"
-                placeholder="Cánh Diều, Kết Nối Tri Thức..."
-              />
-            </label>
+              <div className="input-field flex items-center bg-bg-muted font-semibold text-text-muted">
+                {DEFAULT_BOOK_SERIES}
+              </div>
+            </div>
             <label className="space-y-1.5">
               <span className="text-sm font-bold text-text">Độ khó</span>
               <select

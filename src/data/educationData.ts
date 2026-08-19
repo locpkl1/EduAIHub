@@ -11,35 +11,15 @@ export const grades = [
   { value: '12', label: 'Lớp 12' },
 ];
 
-export const bookSeries = [
-  { value: 'chan_troi', label: 'Chân Trời Sáng Tạo' },
-  { value: 'canh_dieu', label: 'Cánh Diều' },
-  { value: 'ket_noi', label: 'Kết Nối Tri Thức' },
-];
+export const DEFAULT_BOOK_SERIES = 'Kết nối tri thức với cuộc sống';
 
-export const subjectNameToKey: Record<string, string> = {
-  'Toán học': 'toan',
-  'Vật lý': 'vat_li',
-  'Hóa học': 'hoa_hoc',
-  'Sinh học': 'sinh_hoc',
-  'Ngữ văn': 'ngu_van',
-  'Tiếng Anh': 'tieng_anh',
-  'Lịch sử': 'lich_su',
-  'Địa lý': 'dia_li',
-  'Giáo dục công dân': 'gdcd',
-  'Tin học': 'tin_hoc',
-  'Công nghệ': 'cong_nghe',
-  'Thể chất': 'the_chat',
-};
-
-export function getTextbookTableOfContents(grade: number, subject: string): string[] {
-  const gradeKey = grade.toString();
-  const subjectKey = subjectNameToKey[subject];
-  if (!subjectKey || !lessons[gradeKey]?.[subjectKey]) {
-    return ['Chương 1: Giới thiệu môn học', 'Chương 2: Kiến thức cơ bản', 'Chương 3: Ứng dụng thực tiễn'];
-  }
-  return lessons[gradeKey][subjectKey].map((lesson, index) => `Chương ${index + 1}: ${lesson}`);
+export function isTargetBookSeries(value: string | null | undefined) {
+  return typeof value === 'string' && value.toLocaleLowerCase('vi').includes('kết nối tri thức');
 }
+
+export const bookSeries = [
+  { value: 'ket_noi', label: DEFAULT_BOOK_SERIES },
+];
 
 export const subjects = [
   { value: 'toan', label: 'Toán học' },
@@ -56,6 +36,8 @@ export const subjects = [
   { value: 'the_chat', label: 'Thể chất' },
 ];
 
+// Legacy/sample curriculum kept only as a compatibility fallback. It is not a
+// verified source for the controlled Toán 11 curriculum demo.
 export const lessons: Record<string, Record<string, string[]>> = {
   '10': {
     toan: ['Đại số: Số thực', 'Đại số: Lượng giác', 'Hình học: Vecto', 'Hình học: Tứ giác', 'Giải tích: Giới hạn'],
@@ -115,10 +97,8 @@ export interface Textbook {
   series: string;
   grade: number;
   cover: string;
-  pdfUrl: string;
+  pdfUrl: string | null;
 }
-
-const samplePdfUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
 
 const textbookSeed = [
   // Lớp 10
@@ -173,9 +153,13 @@ const textbookSeed = [
   { subject: 'Ngữ văn', series: 'Kết Nối Tri Thức', grade: 12, cover: 'https://images.pexels.com/photos/159823/books-writing-pages-reading-reading-books-159823.jpeg?auto=compress&cs=tinysrgb&w=300' },
 ];
 
-export const textbooks: Textbook[] = textbookSeed.map((book) => ({
+export const textbooks: Textbook[] = textbookSeed
+  .filter((book) => isTargetBookSeries(book.series))
+  .map((book) => ({
   ...book,
-  pdfUrl: samplePdfUrl,
+  series: DEFAULT_BOOK_SERIES,
+  cover: '',
+  pdfUrl: null,
 }));
 
 export const guides = [
@@ -333,7 +317,7 @@ export const guideArticles: Record<number, GuideArticle> = {
         'Bảng so sánh: Phù hợp môn Lịch sử, Địa lý — so sánh sự kiện, nhân vật, thời gian.',
       ]},
       { type: 'h2', content: 'Prompt mẫu tóm tắt SGK' },
-      { type: 'p', content: '"Tóm tắt Chương 2 — Liên kết hóa học (Hóa 10, bộ Cánh Diều) theo 4 phần: khái niệm chính, công thức, ví dụ minh họa, lỗi sai thường gặp. Mỗi phần tối đa 5 gạch đầu dòng."' },
+      { type: 'p', content: '"Tóm tắt Chương 2 — Liên kết hóa học (Hóa 10, bộ Kết nối tri thức với cuộc sống) theo 4 phần: khái niệm chính, công thức, ví dụ minh họa, lỗi sai thường gặp. Mỗi phần tối đa 5 gạch đầu dòng."' },
       { type: 'h2', content: 'Sau khi tóm tắt' },
       { type: 'p', content: 'Đọc lại sách, gạch chân phần AI có thể bỏ sót, và tự viết 3 câu hỏi kiểm tra cho chính mình.' },
     ],
@@ -408,20 +392,20 @@ Văn bản:
     purpose: 'Giải thích khái niệm',
     subject: 'Toán học',
     difficulty: 'intermediate',
-    usage_note: 'Dùng khi bạn gặp một khái niệm Toán khó hiểu và cần AI giải thích chậm rãi bằng ví dụ, công thức và bài luyện tập.',
-    why_effective: 'Prompt này hiệu quả vì nó yêu cầu AI đóng vai gia sư kiên nhẫn, giải thích bằng ví dụ và giúp học sinh hiểu bản chất thay vì chỉ nhớ công thức.',
+    usage_note: 'Dùng khi bạn gặp một khái niệm Toán khó hiểu và muốn được gợi mở từng bước trước khi xem lời giải.',
+    why_effective: 'Prompt này yêu cầu AI hỏi lại, giải thích bằng ví dụ và dành phần suy luận chính cho học sinh thay vì đưa ngay lời giải hoàn chỉnh.',
     tags: ['toán học', 'khái niệm', 'ví dụ'],
     title: 'Prompt giải thích khái niệm Toán học',
-    description: 'Hiểu sâu một khái niệm toán qua ví dụ, hình ảnh và bài tập minh họa.',
+    description: 'Tìm hiểu một khái niệm Toán qua câu hỏi gợi mở, ví dụ và phần tự luyện.',
     category: 'Toán học',
     content: `Bạn là gia sư Toán học kiên nhẫn. Hãy giải thích khái niệm "[Tên khái niệm]" cho học sinh lớp [X] theo các bước:
-1. Định nghĩa bằng ngôn ngữ đơn giản
-2. Ví dụ thực tế dễ hình dung
-3. Công thức (nếu có) kèm giải thích từng ký hiệu
-4. Một bài tập cơ bản có lời giải chi tiết
-5. Một bài tập nâng cao để tự luyện (chỉ đưa đề, không giải)
+1. Hỏi tôi đã biết gì về khái niệm này
+2. Giải thích bằng ngôn ngữ đơn giản và một ví dụ dễ hình dung
+3. Nêu công thức (nếu có) và giải thích từng ký hiệu
+4. Cho một bài cơ bản, dừng lại để tôi tự làm từng bước
+5. Chỉ phản hồi hoặc gợi ý sau khi tôi trả lời
 
-Lưu ý: Không nhảy bước, tránh thuật ngữ khó nếu chưa giải thích.`,
+Lưu ý: Không đưa đáp án cuối ngay, không nhảy bước và tránh thuật ngữ khó nếu chưa giải thích.`,
   },
   {
     id: 'ref-3',
@@ -449,19 +433,22 @@ Sau khi tôi trả lời, hãy sửa lỗi ngữ pháp và gợi ý cách nói t
     purpose: 'Ôn thi trắc nghiệm',
     subject: 'Ôn tập',
     difficulty: 'advanced',
-    usage_note: 'Dùng khi bạn đã học xong một chương và muốn tự kiểm tra bằng câu hỏi trắc nghiệm có giải thích đáp án.',
+    usage_note: 'Dùng khi bạn đã học xong một nội dung và muốn tự kiểm tra dựa trên chính tài liệu mình cung cấp.',
     why_effective: 'Prompt này hiệu quả vì nó biến nội dung học thành câu hỏi kiểm tra, giúp học sinh tự đánh giá thay vì chỉ đọc lại bài.',
     tags: ['ôn thi', 'trắc nghiệm', 'tự đánh giá'],
     title: 'Prompt ôn thi trắc nghiệm',
-    description: 'Sinh câu hỏi trắc nghiệm và giải thích đáp án theo chương SGK.',
+    description: 'Tạo câu hỏi trắc nghiệm và phản hồi dựa trên nội dung đã cung cấp.',
     category: 'Ôn tập',
-    content: `Bạn là trợ lý ôn thi. Dựa trên nội dung chương "[Tên chương]" môn [Môn học], hãy tạo 10 câu hỏi trắc nghiệm (4 đáp án A-D).
+    content: `Bạn là trợ lý ôn thi. Chỉ dựa trên phần nội dung tôi dán bên dưới, hãy tạo 10 câu hỏi trắc nghiệm (4 đáp án A-D) từ cơ bản đến vận dụng.
 
-Với mỗi câu:
-- Ghi rõ đáp án đúng
-- Giải thích ngắn tại sao đáp án đó đúng
-- Chỉ ra lỗi sai phổ biến ở các đáp án nhiễu
+Hãy hỏi từng câu một và chờ tôi trả lời. Sau mỗi câu:
+- Cho biết câu trả lời của tôi đúng hay cần xem lại
+- Giải thích ngắn lý do
+- Chỉ ra lỗi suy luận nếu có
 
-Cuối cùng, tổng kết 3 điểm kiến thức trọng tâm cần nhớ từ chương này.`,
+Cuối cùng, tổng kết 3 điểm tôi cần ôn lại. Không bổ sung kiến thức ngoài nội dung đã cung cấp.
+
+Nội dung ôn tập:
+[Dán nội dung đã học vào đây]`,
   },
 ];

@@ -32,3 +32,6 @@ android/app/.cxx/
 .env.development.local
 .env.production.local
 !.env.example
+# Large textbook files - stored locally only
+public/resources/Hóa học 11 kết nối tri thức.pdf
+public/resources/Sách giáo khoa Toán 11 (tập 1) (Kết Nối Tri Thức Với Cuộc Sống) - TOANMATH.com.pdf

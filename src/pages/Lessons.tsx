@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Brain, MessageSquare, AlertTriangle, Target, BookOpen, TrendingUp, Star, Search, ChevronDown, FileText } from 'lucide-react';
+import { Clock, Brain, AlertTriangle, TrendingUp, Star, Search, ChevronDown, FileText } from 'lucide-react';
 import { fetchPublishedContentPosts, type PublishedContentPost } from '../lib/publicContentApi';
 
 export interface Lesson {
@@ -21,20 +21,20 @@ export interface Lesson {
 export const lessons: Lesson[] = [
   {
     id: 1,
-    title: 'Cách biến AI thành gia sư cá nhân miễn phí',
+    title: 'Biến AI thành người hướng dẫn học tập',
     tag: 'Chiến lược',
     tagColor: 'primary',
-    desc: 'Thiết lập đúng vai trò cho AI, đặt câu hỏi liên tục và xây dựng phiên học 1:1 hiệu quả không cần trả tiền',
+    desc: 'Thiết lập vai trò, yêu cầu câu hỏi gợi mở và giữ phần suy luận chính cho chính bạn.',
     readTime: '7 phút',
     featured: true,
     icon: Brain,
     content: {
-      intro: 'Gia sư AI không phải là AI trả lời câu hỏi của bạn — mà là AI được bạn lập trình để DẠY bạn. Sự khác biệt này rất quan trọng.',
+      intro: 'AI hỗ trợ học tốt hơn khi nó hướng dẫn quá trình suy nghĩ thay vì đưa ngay một câu trả lời hoàn chỉnh.',
       sections: [
         {
           heading: 'Bước 1: Thiết lập vai trò cho AI',
-          body: 'Bắt đầu mỗi phiên học bằng prompt thiết lập vai trò: "Bạn là gia sư Toán lớp 12 kiên nhẫn, giỏi giải thích bằng ví dụ đời sống. Nhiệm vụ của bạn là giúp tôi HIỂU, không phải làm thay tôi. Khi tôi sai, hãy hỏi tôi câu hỏi gợi ý thay vì đưa đáp án ngay."',
-          tips: ['Thêm tính cách cho AI (kiên nhẫn, gần gũi)', 'Đặt quy tắc rõ: không đưa đáp án ngay', 'Chỉ rõ môn và lớp'],
+          body: 'Bắt đầu bằng prompt: "Bạn là người hướng dẫn học tập kiên nhẫn. Nhiệm vụ của bạn là giúp em hiểu, không làm thay. Khi em sai, hãy đặt một câu hỏi gợi ý thay vì đưa đáp án ngay." Sau đó thêm lớp, môn và nội dung bạn đang học.',
+          tips: ['Nói rõ vai trò hỗ trợ', 'Đặt quy tắc không đưa đáp án ngay', 'Thêm lớp, môn và mục tiêu'],
         },
         {
           heading: 'Bước 2: Học theo phương pháp Socratic',
@@ -42,133 +42,57 @@ export const lessons: Lesson[] = [
         },
         {
           heading: 'Bước 3: Kiểm tra sau khi học',
-          body: 'Cuối mỗi phiên, yêu cầu: "Hãy hỏi tôi 5 câu kiểm tra về những gì tôi vừa học. Chờ tôi trả lời từng câu trước khi cho biết đúng sai." Đây là cách hiệu quả nhất để kiểm tra bạn có thực sự hiểu không.',
+          body: 'Cuối mỗi phiên, yêu cầu: "Hãy hỏi tôi 5 câu kiểm tra về những gì tôi vừa học. Chờ tôi trả lời từng câu trước khi phản hồi." Sau đó tự giải thích lại phần quan trọng bằng lời của mình.',
           tips: ['Tự trả lời trước khi xem đáp án', 'Yêu cầu câu hỏi từ dễ đến khó', 'Nhờ AI phân tích lỗi sai'],
         },
       ],
     },
   },
   {
-    id: 2,
-    title: 'Học tiếng Anh với AI — từ giao tiếp đến ôn thi',
-    tag: 'Tiếng Anh',
-    tagColor: 'accent',
-    desc: 'Luyện nói, mở rộng từ vựng, sửa lỗi ngữ pháp và viết luận với AI — hoàn toàn miễn phí và linh hoạt 24/7',
-    readTime: '8 phút',
-    featured: true,
-    icon: MessageSquare,
-    content: {
-      intro: 'AI là người bạn học tiếng Anh lý tưởng: không phán xét, sẵn sàng 24/7, kiên nhẫn vô hạn và phản hồi ngay lập tức.',
-      sections: [
-        {
-          heading: 'Luyện từ vựng theo chủ đề',
-          body: 'Prompt hiệu quả: "Bạn là giáo viên tiếng Anh. Dạy tôi 10 từ vựng chủ đề [Environment/Technology/Health] — mỗi từ cần: phát âm IPA, nghĩa tiếng Việt, 2 câu ví dụ tự nhiên và 1 mẹo ghi nhớ vui."',
-          tips: ['Học theo chủ đề, không học lẻ tẻ', 'Yêu cầu câu ví dụ thực tế', 'Tạo flashcard từ phản hồi'],
-        },
-        {
-          heading: 'Sửa lỗi ngữ pháp và viết luận',
-          body: 'Viết đoạn văn → paste vào AI với prompt: "Hãy sửa lỗi ngữ pháp trong đoạn văn này, giải thích tại sao sai và cách viết đúng. Sau đó đánh giá mức độ tự nhiên của tiếng Anh theo thang 1-10."',
-        },
-        {
-          heading: 'Luyện nói với AI',
-          body: 'Dùng ChatGPT voice hoặc Gemini: "Hãy giả vờ là người phỏng vấn tôi về chủ đề Climate Change. Hỏi tôi 3 câu, chờ tôi trả lời và sau đó nhận xét ngữ pháp và từ vựng của tôi."',
-        },
-      ],
-    },
-  },
-  {
     id: 3,
-    title: 'Những lỗi sai cực kỳ phổ biến khi dùng AI học tập',
+    title: 'Những lỗi phổ biến khi dùng AI học tập',
     tag: 'Kinh nghiệm',
     tagColor: 'warning',
-    desc: 'Copy paste, tin tuyệt đối, hỏi quá mơ hồ — 5 lỗi này đang khiến bạn lãng phí tiềm năng của AI và tự hại bản thân',
+    desc: 'Nhận diện prompt mơ hồ, thói quen sao chép và việc tin câu trả lời mà chưa kiểm chứng.',
     readTime: '6 phút',
     featured: false,
     icon: AlertTriangle,
     content: {
-      intro: 'Dùng AI sai cách không chỉ không giúp ích — đôi khi còn có hại hơn không dùng. Đây là 5 lỗi bạn cần tránh ngay.',
+      intro: 'AI chỉ hỗ trợ việc học khi bạn vẫn đọc, suy nghĩ, kiểm tra và tự trình bày lại kết quả.',
       sections: [
         {
           heading: 'Lỗi 1: Hỏi quá mơ hồ',
-          body: 'Tệ: "Giải thích Vật lý cho tôi". Tốt: "Tôi là HS lớp 12, đang học Chương Khúc xạ ánh sáng. Giải thích định luật Snell với 2 ví dụ thực tế và 1 bài tập áp dụng mức trung bình."',
-          tips: ['Luôn thêm lớp, môn, chương cụ thể', 'Chỉ rõ muốn bao nhiêu ví dụ', 'Nêu mức độ khó'],
+          body: 'Prompt "Giải thích bài này" thiếu mục tiêu và bối cảnh. Hãy nói rõ lớp, môn, nội dung đang học, phần chưa hiểu và kiểu hỗ trợ bạn muốn nhận.',
+          tips: ['Thêm lớp, môn và chủ đề', 'Nêu phần đang vướng', 'Nói rõ muốn gợi ý hay phản hồi'],
         },
         {
           heading: 'Lỗi 2: Copy nguyên văn câu trả lời AI',
-          body: 'AI viết bài cho bạn = bạn không học được gì. Đọc, hiểu, rồi TỰ VIẾT LẠI bằng lời của bạn. Nộp bài do AI viết trong kỳ thi có thể bị xử lý gian lận.',
+          body: 'Sao chép một câu trả lời hoàn chỉnh không cho thấy bạn đã hiểu. Hãy đọc, kiểm chứng, tự giải thích và viết lại bằng lời của mình theo yêu cầu của giáo viên.',
         },
         {
           heading: 'Lỗi 3: Tin tuyệt đối vào AI',
           body: 'AI có thể sai, đặc biệt với số liệu, công thức Toán/Lý/Hóa và sự kiện lịch sử. Quy tắc vàng: bất kỳ thông tin quan trọng nào cũng cần đối chiếu với sách giáo khoa.',
-          tips: ['Luôn đối chiếu SGK', 'Đặc biệt cẩn thận với số liệu', 'Hỏi "Bạn chắc chắn không?" để AI tự kiểm tra'],
-        },
-      ],
-    },
-  },
-  {
-    id: 4,
-    title: 'Dùng AI để lập kế hoạch ôn thi cực kỳ hiệu quả',
-    tag: 'Ôn thi',
-    tagColor: 'success',
-    desc: 'Từ lịch học Pomodoro đến bộ đề trắc nghiệm tự động — AI có thể làm được tất cả nếu bạn biết cách prompt đúng',
-    readTime: '9 phút',
-    featured: false,
-    icon: Target,
-    content: {
-      intro: 'Ôn thi là thời điểm AI hữu ích nhất. Nhưng phải dùng đúng cách — nghĩa là AI hỗ trợ, không làm thay.',
-      sections: [
-        {
-          heading: 'Tạo lịch ôn tập cá nhân hóa',
-          body: 'Prompt: "Tôi còn 3 tuần trước kỳ thi THPT. Tôi học khối A (Toán, Lý, Hóa). Điểm yếu là Hóa hữu cơ và Vật lý điện. Hãy lập lịch ôn tập 3 tuần, mỗi ngày học 3 tiếng, theo phương pháp spaced repetition."',
-          tips: ['Cung cấp đủ thông tin (thời gian, điểm yếu, thời lượng)', 'Yêu cầu phương pháp cụ thể (Pomodoro, spaced repetition)', 'Xem lại và điều chỉnh lịch sau 1 tuần'],
-        },
-        {
-          heading: 'Tạo bộ câu hỏi trắc nghiệm tự động',
-          body: 'Prompt: "Tôi là giáo viên Hóa học lớp 12. Tạo 15 câu trắc nghiệm về Este-Lipit, mỗi câu 4 đáp án A-D, ghi đáp án đúng và giải thích ngắn 2 dòng. Phân bổ: 5 câu nhận biết, 5 câu thông hiểu, 5 câu vận dụng."',
-        },
-      ],
-    },
-  },
-  {
-    id: 5,
-    title: 'Tóm tắt sách giáo khoa siêu nhanh với AI',
-    tag: 'Mẹo học',
-    tagColor: 'primary',
-    desc: 'Biến một chương sách giáo khoa dài thành mindmap, flashcard và điểm trọng tâm chỉ trong vài phút',
-    readTime: '5 phút',
-    featured: false,
-    icon: BookOpen,
-    content: {
-      intro: 'AI có thể giúp bạn đọc và xử lý tài liệu nhanh hơn — nhưng nhớ rằng tóm tắt không thay thế việc đọc và hiểu.',
-      sections: [
-        {
-          heading: 'Prompt tóm tắt chương học',
-          body: 'Paste nội dung chương vào AI và dùng prompt: "Hãy tóm tắt chương này theo cấu trúc: 1) Ý chính 3 gạch đầu dòng 2) 5 khái niệm quan trọng cần nhớ 3) 2 lỗi sai học sinh hay gặp 4) Câu hỏi ôn tập khả năng cao."',
-          tips: ['Không chỉ copy tóm tắt — đọc và hiểu trước', 'Tự thêm ví dụ từ kinh nghiệm của bạn', 'So sánh với ghi chú trên lớp'],
-        },
-        {
-          heading: 'Tạo flashcard nhanh',
-          body: 'Prompt: "Từ nội dung tóm tắt trên, tạo 10 cặp flashcard định nghĩa theo format: [Mặt trước: câu hỏi/thuật ngữ] | [Mặt sau: giải thích ngắn gọn dưới 20 chữ]."',
+          tips: ['Đối chiếu phần quan trọng với SGK', 'Cẩn thận với công thức, số liệu và trích dẫn', 'Yêu cầu AI nêu căn cứ và phần chưa chắc chắn'],
         },
       ],
     },
   },
   {
     id: 6,
-    title: 'Cách kiểm chứng thông tin AI cung cấp',
+    title: 'Cách kiểm chứng phản hồi của AI',
     tag: 'Tư duy phản biện',
     tagColor: 'warning',
-    desc: 'AI hay nói sai nhất ở đâu? Làm thế nào để phát hiện và kiểm chứng mà không mất nhiều thời gian?',
+    desc: 'Nhận diện phần đáng nghi và đối chiếu thông tin quan trọng trước khi sử dụng.',
     readTime: '6 phút',
     featured: false,
     icon: TrendingUp,
     content: {
-      intro: 'AI rất tự tin ngay cả khi sai. Khả năng phát hiện và kiểm chứng thông tin là kỹ năng quan trọng nhất khi dùng AI.',
+      intro: 'AI có thể trình bày trôi chảy dù thông tin còn thiếu hoặc sai. Cách viết tự tin không phải là bằng chứng về độ chính xác.',
       sections: [
         {
-          heading: 'AI sai nhiều nhất ở đâu?',
-          body: '1) Số liệu và thống kê (hay bịa năm tháng, con số). 2) Công thức Toán/Lý/Hóa phức tạp (hay nhầm dấu, đơn vị). 3) Sự kiện lịch sử (nhầm nhân vật, địa danh). 4) Tên tác giả và tác phẩm văn học.',
-          tips: ['Cẩn thận với mọi con số cụ thể', 'Kiểm tra công thức trước khi dùng bài thi', 'Đặt câu hỏi "Nguồn của thông tin này là gì?"'],
+          heading: 'Những phần cần kiểm tra kỹ',
+          body: 'Số liệu, công thức, ngày tháng, tên riêng, trích dẫn và điều kiện áp dụng đều có thể bị thiếu hoặc nhầm. Hãy đánh dấu từng ý quan trọng thay vì chỉ đọc toàn bộ câu trả lời một lần.',
+          tips: ['Cẩn thận với con số cụ thể', 'Kiểm tra công thức và điều kiện áp dụng', 'Yêu cầu nêu nguồn hoặc căn cứ có thể đối chiếu'],
         },
         {
           heading: 'Quy trình kiểm chứng 3 bước',
@@ -179,7 +103,7 @@ export const lessons: Lesson[] = [
   },
 ];
 
-export const allTags = ['Tất cả', 'Chiến lược', 'Tiếng Anh', 'Kinh nghiệm', 'Ôn thi', 'Mẹo học', 'Tư duy phản biện'];
+export const allTags = ['Tất cả', 'Chiến lược', 'Kinh nghiệm', 'Tư duy phản biện'];
 
 export const tagColorMap: Record<string, { bg: string; text: string }> = {
   primary: { bg: 'var(--color-primary-light)', text: 'var(--color-primary)' },
@@ -206,8 +130,7 @@ export default function Lessons() {
       try {
         const posts = await fetchPublishedContentPosts();
         if (!cancelled) setPublishedPosts(posts);
-      } catch (error) {
-        console.error('Error fetching published posts:', error);
+      } catch {
         if (!cancelled) setPublishedPosts([]);
       } finally {
         if (!cancelled) setPostsLoading(false);
@@ -407,7 +330,7 @@ function FeaturedPostCard({ post, onClick }: { post: PublishedContentPost; onCli
             className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full"
             style={{ backgroundColor: 'var(--color-accent-light)', color: 'var(--color-accent)' }}
           >
-            Ná»•i báº­t
+            Nổi bật
           </span>
         </div>
       </div>

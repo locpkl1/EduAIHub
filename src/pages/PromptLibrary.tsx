@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useMemo, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import type { SavedPrompt } from '../types/database';
-import { referencePrompts, type ReferencePrompt } from '../data/educationData';
+import {
+  DEFAULT_BOOK_SERIES,
+  isTargetBookSeries,
+  referencePrompts,
+  type ReferencePrompt,
+} from '../data/educationData';
 import {
   ArrowLeft,
   BookOpen,
@@ -13,10 +16,11 @@ import {
   Loader2,
   LogIn,
   Sparkles,
-  Trash2,
   X,
 } from 'lucide-react';
 import { fetchPublishedPromptTemplates, type PublishedPromptTemplate } from '../lib/publicContentApi';
+import SavedPromptCollection from '../components/saved-prompts/SavedPromptWorkspace';
+import { useSavedPrompts } from '../hooks/useSavedPrompts';
 
 type Tab = 'mine' | 'reference';
 type ReferenceSource = 'template' | 'fallback';
@@ -58,6 +62,10 @@ const promptStructure = [
     description: 'AI cần làm gì cho bạn',
   },
   {
+    title: 'Ràng buộc',
+    description: 'điều AI cần giới hạn hoặc tránh làm thay',
+  },
+  {
     title: 'Định dạng',
     description: 'câu trả lời nên trình bày ra sao',
   },
@@ -65,14 +73,14 @@ const promptStructure = [
 
 const customizeChecklist = [
   'Thay [Môn học] bằng môn thật',
-  'Thay [Chủ đề] bằng bài/chương đang học',
+  'Thay [Chủ đề] bằng nội dung đang học',
   'Nói rõ lớp và trình độ hiện tại',
   'Yêu cầu AI giải thích từng bước',
   'Thêm yêu cầu tự kiểm tra hoặc bài luyện tập',
 ];
 
 const defaultWhyEffective =
-  'Prompt này hiệu quả vì nó giúp AI hiểu rõ vai trò, bối cảnh, nhiệm vụ và cách trả lời mong muốn. Khi dùng, bạn nên thay các phần trong ngoặc bằng bài học thật của mình.';
+  'Prompt này hiệu quả vì nó giúp AI hiểu rõ vai trò, nhiệm vụ, bối cảnh, ràng buộc và cách trả lời mong muốn. Khi dùng, bạn nên thay các phần trong ngoặc bằng nội dung học thật của mình.';
 
 function buildUsageFallback(prompt: LibraryReferencePrompt) {
   const purpose = prompt.purpose ? prompt.purpose.toLowerCase() : 'học tập';
@@ -89,7 +97,7 @@ function normalizeTemplate(template: PublishedPromptTemplate): LibraryReferenceP
     purpose: template.purpose,
     subject: template.subject,
     grade: template.grade,
-    book_series: template.book_series,
+    book_series: template.book_series ? DEFAULT_BOOK_SERIES : null,
     difficulty: template.difficulty,
     usage_note: template.usage_note,
     why_effective: template.why_effective,
@@ -162,69 +170,6 @@ function CopyButton({ text, className = '' }: { text: string; className?: string
         </>
       )}
     </button>
-  );
-}
-
-function PromptCard({
-  title,
-  subtitle,
-  content,
-  badge,
-  onDelete,
-  deleting,
-}: {
-  title: string;
-  subtitle?: string;
-  content: string;
-  badge?: string;
-  onDelete?: () => void;
-  deleting?: boolean;
-}) {
-  const preview = content.length > 160 ? `${content.slice(0, 160).trim()}...` : content;
-  return (
-    <div
-      className="card-hover flex h-full flex-col p-5"
-      style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
-    >
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3
-            className="truncate font-display text-sm font-bold"
-            style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}
-          >
-            {title}
-          </h3>
-          {subtitle && (
-            <p className="mt-0.5 text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              {subtitle}
-            </p>
-          )}
-        </div>
-        <div className="flex flex-shrink-0 items-center gap-2">
-          {badge && <span className="tag tag-primary">{badge}</span>}
-          {onDelete && (
-            <button
-              type="button"
-              onClick={onDelete}
-              disabled={deleting}
-              className="rounded p-1.5 transition-colors"
-              style={{ color: 'var(--color-text-light)' }}
-              title="Xóa prompt"
-            >
-              {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-            </button>
-          )}
-        </div>
-      </div>
-
-      <p className="line-clamp-3 flex-1 whitespace-pre-line text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-        {preview}
-      </p>
-
-      <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--color-border)' }}>
-        <CopyButton text={content} />
-      </div>
-    </div>
   );
 }
 
@@ -463,33 +408,23 @@ function PromptDetailPanel({ prompt, onClose }: { prompt: LibraryReferencePrompt
 }
 
 export default function PromptLibrary() {
-  const { profile, isGuest, loading: authLoading, signInWithGoogle } = useAuth();
+  const { user, isGuest, loading: authLoading, signInWithGoogle } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('mine');
-  const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>([]);
   const [publicTemplates, setPublicTemplates] = useState<PublishedPromptTemplate[]>([]);
   const [selectedPromptId, setSelectedPromptId] = useState<string | null>(null);
   const [templatesLoading, setTemplatesLoading] = useState(true);
   const [templatesError, setTemplatesError] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  const fetchSavedPrompts = useCallback(async () => {
-    if (!profile) return;
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('saved_prompts')
-        .select('*')
-        .eq('user_id', profile.id)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setSavedPrompts(data || []);
-    } catch (error) {
-      console.error('Error fetching saved prompts:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [profile]);
+  const {
+    prompts: savedPrompts,
+    loading,
+    fetchError: savedPromptsError,
+    retry: fetchSavedPrompts,
+    updatePrompt,
+    deletePrompt,
+  } = useSavedPrompts({
+    userId: user?.id,
+    enabled: !authLoading && !isGuest,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -499,9 +434,12 @@ export default function PromptLibrary() {
       setTemplatesError(false);
       try {
         const templates = await fetchPublishedPromptTemplates();
-        if (!cancelled) setPublicTemplates(templates);
-      } catch (error) {
-        console.error('Error fetching public prompt templates:', error);
+        if (!cancelled) {
+          setPublicTemplates(templates.filter((template) => (
+            !template.book_series || isTargetBookSeries(template.book_series)
+          )));
+        }
+      } catch {
         if (!cancelled) {
           setPublicTemplates([]);
           setTemplatesError(true);
@@ -518,11 +456,6 @@ export default function PromptLibrary() {
     };
   }, []);
 
-  useEffect(() => {
-    if (authLoading || isGuest || !profile || !isSupabaseConfigured) return;
-    fetchSavedPrompts();
-  }, [profile, isGuest, authLoading, fetchSavedPrompts]);
-
   const referenceItems = useMemo(() => (
     publicTemplates.length > 0
       ? publicTemplates.map(normalizeTemplate)
@@ -536,24 +469,6 @@ export default function PromptLibrary() {
       setSelectedPromptId(null);
     }
   }, [activeTab, referenceItems, selectedPromptId]);
-
-  async function handleDeletePrompt(id: string) {
-    if (!profile || !confirm('Xóa prompt này?')) return;
-    setDeletingId(id);
-    try {
-      const { error } = await supabase
-        .from('saved_prompts')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', profile.id);
-      if (error) throw error;
-      setSavedPrompts((prev) => prev.filter((p) => p.id !== id));
-    } catch (error) {
-      console.error('Error deleting prompt:', error);
-    } finally {
-      setDeletingId(null);
-    }
-  }
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'mine', label: 'Kho prompt của tôi' },
@@ -635,20 +550,25 @@ export default function PromptLibrary() {
               <div className="flex justify-center py-20">
                 <Loader2 className="h-7 w-7 animate-spin" style={{ color: 'var(--color-primary)' }} />
               </div>
-            ) : savedPrompts.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {savedPrompts.map((prompt) => (
-                  <PromptCard
-                    key={prompt.id}
-                    title={prompt.purpose || 'Prompt học tập'}
-                    subtitle={[prompt.subject, prompt.chapter].filter(Boolean).join(' · ')}
-                    content={prompt.prompt_content}
-                    badge={prompt.book_series || undefined}
-                    onDelete={() => handleDeletePrompt(prompt.id)}
-                    deleting={deletingId === prompt.id}
-                  />
-                ))}
+            ) : savedPromptsError ? (
+              <div
+                className="border p-8 text-center sm:p-12"
+                style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+              >
+                <h2 className="font-display text-lg font-bold text-text">Chưa tải được Kho Prompt</h2>
+                <p className="mx-auto mt-2 max-w-md text-sm text-text-muted">
+                  Dữ liệu đã lưu của bạn không bị thay đổi. Vui lòng kiểm tra kết nối rồi thử lại.
+                </p>
+                <button type="button" onClick={fetchSavedPrompts} className="btn-outline mt-5">
+                  Thử tải lại
+                </button>
               </div>
+            ) : savedPrompts.length > 0 ? (
+              <SavedPromptCollection
+                prompts={savedPrompts}
+                onUpdate={updatePrompt}
+                onDelete={deletePrompt}
+              />
             ) : (
               <div
                 className="border p-8 text-center sm:p-12"
@@ -667,7 +587,7 @@ export default function PromptLibrary() {
                   Chưa có prompt nào
                 </h2>
                 <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                  Hãy thử chatbot Tạo Prompt Học Tập. Prompt đã lưu sẽ hiển thị tại đây.
+                  Hãy thử chatbot Gợi Ý Prompt Học Tập. Prompt đã lưu sẽ hiển thị tại đây.
                 </p>
               </div>
             )}

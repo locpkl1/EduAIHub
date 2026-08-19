@@ -22,13 +22,13 @@ import type {
   Grade,
 } from '../../types/database';
 import StatusBadge from '../../components/admin/StatusBadge';
+import { DEFAULT_BOOK_SERIES } from '../../data/educationData';
 
 type StatusFilter = 'all' | ContentStatus;
 type GradeFilter = 'all' | '10' | '11' | '12';
 
 interface CurriculumFormState {
   grade: '10' | '11' | '12';
-  book_series: string;
   subject: string;
   chapter_title: string;
   lesson_title: string;
@@ -38,11 +38,8 @@ interface CurriculumFormState {
   sort_order: string;
 }
 
-const bookSeriesOptions = ['Chân Trời Sáng Tạo', 'Cánh Diều', 'Kết Nối Tri Thức'];
-
 const emptyForm: CurriculumFormState = {
   grade: '10',
-  book_series: bookSeriesOptions[0],
   subject: '',
   chapter_title: '',
   lesson_title: '',
@@ -81,7 +78,6 @@ function formatDate(value: string) {
 function buildFormFromItem(item: CurriculumItem): CurriculumFormState {
   return {
     grade: String(item.grade) as CurriculumFormState['grade'],
-    book_series: item.book_series,
     subject: item.subject,
     chapter_title: item.chapter_title,
     lesson_title: item.lesson_title ?? '',
@@ -103,7 +99,6 @@ export default function AdminCurriculum() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [gradeFilter, setGradeFilter] = useState<GradeFilter>('all');
-  const [bookSeriesFilter, setBookSeriesFilter] = useState('all');
   const [subjectFilter, setSubjectFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [formOpen, setFormOpen] = useState(false);
@@ -161,12 +156,11 @@ export default function AdminCurriculum() {
         (item.lesson_title ?? '').toLowerCase().includes(keyword) ||
         (item.description ?? '').toLowerCase().includes(keyword);
       const matchesGrade = gradeFilter === 'all' || item.grade === Number.parseInt(gradeFilter, 10);
-      const matchesBookSeries = bookSeriesFilter === 'all' || item.book_series === bookSeriesFilter;
       const matchesSubject = subjectFilter === 'all' || item.subject === subjectFilter;
       const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
-      return matchesSearch && matchesGrade && matchesBookSeries && matchesSubject && matchesStatus;
+      return matchesSearch && matchesGrade && matchesSubject && matchesStatus;
     });
-  }, [items, search, gradeFilter, bookSeriesFilter, subjectFilter, statusFilter]);
+  }, [items, search, gradeFilter, subjectFilter, statusFilter]);
 
   function openCreateForm() {
     setEditingItem(null);
@@ -196,7 +190,7 @@ export default function AdminCurriculum() {
 
     return {
       grade: parseGrade(form.grade),
-      book_series: form.book_series.trim(),
+      book_series: DEFAULT_BOOK_SERIES,
       subject: form.subject.trim(),
       chapter_title: form.chapter_title.trim(),
       lesson_title: normalizeOptional(form.lesson_title),
@@ -355,14 +349,14 @@ export default function AdminCurriculum() {
       )}
 
       <section className="rounded-2xl border bg-bg-card p-4 shadow-card" style={{ borderColor: 'var(--color-border)' }}>
-        <div className="grid gap-3 xl:grid-cols-[1fr_auto_auto_auto_auto] xl:items-center">
+        <div className="grid gap-3 xl:grid-cols-[1fr_auto_auto_auto] xl:items-center">
           <label className="relative block">
             <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-light" />
             <input
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Tìm theo bộ sách, môn, chủ đề/chương/bài học..."
+              placeholder="Tìm theo môn, chủ đề/chương/bài học..."
               className="input-field pl-10"
             />
           </label>
@@ -376,19 +370,6 @@ export default function AdminCurriculum() {
             <option value="10">Lớp 10</option>
             <option value="11">Lớp 11</option>
             <option value="12">Lớp 12</option>
-          </select>
-          <select
-            value={bookSeriesFilter}
-            onChange={(event) => setBookSeriesFilter(event.target.value)}
-            className="input-field min-w-[13rem] pr-10"
-            aria-label="Lọc bộ sách"
-          >
-            <option value="all">Tất cả</option>
-            {bookSeriesOptions.map((series) => (
-              <option key={series} value={series}>
-                {series}
-              </option>
-            ))}
           </select>
           <select
             value={subjectFilter}
@@ -454,21 +435,12 @@ export default function AdminCurriculum() {
                 <option value="12">Lớp 12</option>
               </select>
             </label>
-            <label className="space-y-1.5">
+            <div className="space-y-1.5">
               <span className="text-sm font-bold text-text">Bộ sách</span>
-              <select
-                value={form.book_series}
-                onChange={(event) => setForm((current) => ({ ...current, book_series: event.target.value }))}
-                className="input-field pr-10"
-                required
-              >
-                {bookSeriesOptions.map((series) => (
-                  <option key={series} value={series}>
-                    {series}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <div className="input-field flex items-center bg-bg-muted font-semibold text-text-muted">
+                {DEFAULT_BOOK_SERIES}
+              </div>
+            </div>
             <label className="space-y-1.5">
               <span className="text-sm font-bold text-text">Môn học</span>
               <input

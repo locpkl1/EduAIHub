@@ -21,7 +21,6 @@ export default function PromptEvaluatorChatbot() {
       icon={<ClipboardCheck size={20} style={{ color: 'var(--color-accent)' }} />}
       accentColor="var(--color-accent)"
       botKey="prompt-evaluator"
-      autoSavePrompts
       userContext={userContext}
       starterPrompts={STARTERS}
     />

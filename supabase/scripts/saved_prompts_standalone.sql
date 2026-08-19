@@ -27,6 +27,7 @@ ALTER TABLE public.saved_prompts ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can view own prompts" ON public.saved_prompts;
 DROP POLICY IF EXISTS "Users can insert own prompts" ON public.saved_prompts;
+DROP POLICY IF EXISTS "Users can update own prompts" ON public.saved_prompts;
 DROP POLICY IF EXISTS "Users can delete own prompts" ON public.saved_prompts;
 
 CREATE POLICY "Users can view own prompts"
@@ -37,6 +38,12 @@ CREATE POLICY "Users can view own prompts"
 CREATE POLICY "Users can insert own prompts"
   ON public.saved_prompts FOR INSERT
   TO authenticated
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can update own prompts"
+  ON public.saved_prompts FOR UPDATE
+  TO authenticated
+  USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
 
 CREATE POLICY "Users can delete own prompts"

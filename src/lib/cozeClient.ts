@@ -17,6 +17,8 @@ export type StudyContext = {
   grade?: string;
   subject?: string;
   textbookSeries?: string;
+  knowledgeArea?: string;
+  topic?: string;
   chapter?: string;
   lesson?: string;
   learningGoal?: string;
@@ -45,6 +47,7 @@ type CozeApiResponse = Partial<CallCozeResult> & {
 
 const VALID_BOT_KEYS: CozeBotKey[] = ['prompt-thinking', 'study-prompt', 'prompt-evaluator'];
 const COZE_PROXY_URL = import.meta.env.VITE_COZE_PROXY_URL || '/api/coze';
+const CLIENT_TIMEOUT_MS = 75000;
 
 export async function callCoze(payload: CallCozePayload): Promise<CallCozeResult> {
   const message = payload.message?.trim();
@@ -57,14 +60,28 @@ export async function callCoze(payload: CallCozePayload): Promise<CallCozeResult
     throw new Error('Chatbot không hợp lệ. Vui lòng tải lại trang và thử lại.');
   }
 
-  const res = await fetch(COZE_PROXY_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      ...payload,
-      message,
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), CLIENT_TIMEOUT_MS);
+  let res: Response;
+
+  try {
+    res = await fetch(COZE_PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...payload,
+        message,
+      }),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error('Chatbot phản hồi quá lâu. Vui lòng kiểm tra mạng và thử gửi lại.');
+    }
+    throw new Error('Không thể kết nối chatbot. Vui lòng kiểm tra mạng và thử lại.');
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 
   const data = (await res.json().catch(() => ({}))) as CozeApiResponse;
 
@@ -72,12 +89,12 @@ export async function callCoze(payload: CallCozePayload): Promise<CallCozeResult
     throw new Error(data.error ?? `Không thể kết nối chatbot (${res.status}). Vui lòng thử lại sau.`);
   }
 
-  if (!data.content || !data.conversation_id) {
+  if (typeof data.content !== 'string' || !data.content.trim() || !data.conversation_id) {
     throw new Error('Phản hồi không hợp lệ từ API.');
   }
 
   return {
-    content: data.content,
+    content: data.content.trim(),
     conversation_id: data.conversation_id,
     chat_id: data.chat_id,
   };

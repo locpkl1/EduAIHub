@@ -8,7 +8,6 @@ const urlsToCache = [
   '/prompts',
   '/textbooks',
   '/icon.svg',
-  '/vite.svg',
 ];
 
 self.addEventListener('install', (event) => {

@@ -15,7 +15,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { CTASection, EditorialCard, LoadingState, SectionHeading, ShapeAccent } from '../components/ui';
-import { guideLessons, type GuideAccent } from '../data/guideLessons';
+import { guideLessons, guideStages, type GuideAccent, type GuideStageNumber } from '../data/guideLessons';
 import { fetchPublishedContentPosts, type PublishedContentPost } from '../lib/publicContentApi';
 
 interface Outcome {
@@ -48,7 +48,7 @@ const outcomes: Outcome[] = [
   },
   {
     title: 'Biết viết prompt tốt',
-    desc: 'Dùng vai trò, bối cảnh, nhiệm vụ và định dạng để hỏi rõ hơn, học nhẹ hơn.',
+    desc: 'Dùng mục tiêu, bối cảnh, nhiệm vụ, ràng buộc và định dạng để hỏi rõ hơn.',
     icon: MessageSquareText,
     accent: 'orange',
   },
@@ -65,6 +65,13 @@ const outcomes: Outcome[] = [
     accent: 'ink',
   },
 ];
+
+const stageAccents: Record<GuideStageNumber, GuideAccent> = {
+  1: 'blue',
+  2: 'orange',
+  3: 'green',
+  4: 'ink',
+};
 
 function Eyebrow({ children, className = '' }: { children: ReactNode; className?: string }) {
   return <span className={`section-label inline-flex ${className}`}>{children}</span>;
@@ -109,7 +116,7 @@ function PublishedPostsSection({ posts, loading }: { posts: PublishedContentPost
       <SectionHeading
         eyebrow="Bài viết mới"
         title="Bài viết mới từ EduAI-Hub"
-        description="Phần này lấy từ nội dung admin đã xuất bản. Các bài học mini-course ở trên vẫn là nội dung tĩnh, nên trang không bị trống nếu Supabase chưa có bài mới."
+        description="Các bài viết ngắn bổ sung góc nhìn thực hành để bạn tiếp tục luyện cách học chủ động với AI."
         action={
           <Link to="/lessons" className="btn-outline gap-2">
             Xem tất cả
@@ -165,8 +172,7 @@ export default function Guides() {
       try {
         const posts = await fetchPublishedContentPosts();
         if (!cancelled) setPublishedPosts(posts.slice(0, 3));
-      } catch (error) {
-        console.error('Error fetching guide posts:', error);
+      } catch {
         if (!cancelled) setPublishedPosts([]);
       } finally {
         if (!cancelled) setPostsLoading(false);
@@ -192,11 +198,11 @@ export default function Guides() {
               Cẩm nang học AI cho học sinh THPT
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-8 text-text-muted sm:text-lg">
-              Một mini-course gồm {lessonCount} bài học ngắn giúp bạn hiểu AI, viết prompt tốt hơn, kiểm chứng thông tin và dùng AI để học thật, không chép bài.
+              Một mini-course gồm {lessonCount} chương qua 4 chặng: biết AI, biết hỏi, biết học, biết kiểm chứng và dần tự học mà không phụ thuộc vào AI.
             </p>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-text-muted sm:text-base">
-              EduAI-Hub giúp bạn tận dụng các công cụ AI miễn phí như ChatGPT, Gemini, Claude và các trợ lý AI học tập trong nền tảng.
-              Mục tiêu không phải để AI học thay bạn, mà để bạn biết hỏi, biết nghĩ cùng AI và biết tự kiểm tra kết quả.
+              EduAI-Hub không thay thế những công cụ như ChatGPT, Gemini hay NotebookLM. Nền tảng giúp bạn xác định đúng nhu cầu,
+              chọn cách hỗ trợ, kiểm chứng và tự làm lại sau mỗi cuộc trò chuyện.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link to="/ai-tools" className="btn-primary gap-2">
@@ -230,7 +236,7 @@ export default function Guides() {
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/75">Mini-course</p>
                     <p className="mt-4 font-display text-5xl font-black leading-none">{lessonCount}</p>
-                    <p className="mt-2 text-sm font-semibold text-white/85">bài học có thể đọc riêng từng phần</p>
+                    <p className="mt-2 text-sm font-semibold text-white/85">chương học nối thành 4 chặng</p>
                   </div>
                   <div className="inline-flex w-fit items-center gap-2 bg-white px-3 py-2 text-xs font-bold text-primary">
                     <GraduationCap size={14} />
@@ -245,7 +251,7 @@ export default function Guides() {
                     <Eyebrow>Sứ mệnh của EduAI-Hub</Eyebrow>
                   </div>
                 </div>
-                <h2 className="font-display text-2xl font-bold leading-tight text-text">Dùng AI như bạn học, không như phao cứu sinh</h2>
+                <h2 className="font-display text-2xl font-bold leading-tight text-text">Dùng AI như bạn học</h2>
                 <p className="mt-3 text-sm leading-7 text-text-muted">
                   EduAI-Hub không khuyến khích học sinh chép đáp án hay để AI làm hộ bài. Cẩm nang này giúp bạn hỏi tốt hơn,
                   hiểu sâu hơn, kiểm chứng kỹ hơn và dần học độc lập hơn.
@@ -261,7 +267,7 @@ export default function Guides() {
           <SectionHeading
             eyebrow="Bạn sẽ học được gì?"
             title="Một bộ kỹ năng nhỏ, dùng được trong mọi môn học"
-            description="Các bài học được thiết kế để đọc nhanh, nhưng mỗi bài đều có mục tiêu rõ và có thể áp dụng ngay."
+            description="Mỗi chương có mục tiêu, tình huống, prompt tham khảo, bài tập ngắn và phần tự kiểm tra để bạn áp dụng ngay."
           />
           <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {outcomes.map((item, index) => (
@@ -276,35 +282,62 @@ export default function Guides() {
 
         <section className="border-y py-14 sm:py-16" style={{ borderColor: 'var(--color-border)' }}>
           <SectionHeading
-            eyebrow={`Lộ trình ${lessonCount} bài học`}
-            title="Đi từng bài, hoặc chọn đúng phần bạn đang cần"
-            description="Mỗi thẻ là một bài riêng với URL riêng. Bạn có thể đọc theo thứ tự hoặc mở ngay bài phù hợp với vấn đề hôm nay."
+            eyebrow={`Lộ trình ${lessonCount} chương · 4 chặng`}
+            title="Một hành trình tự học cùng Edu-AI Hub"
+            description="Đọc theo thứ tự để đi từ nền tảng đến tự chủ, hoặc gợi mở đúng chương cho vấn đề bạn đang gặp, nếu có thắc mắc gì hãy hỏi chatbot Học tư duy prompt."
           />
-          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {guideLessons.map((lesson) => (
-              <EditorialCard key={lesson.slug} accent={lesson.accent} interactive className="flex min-h-[25rem] flex-col">
-                <div className="flex items-start justify-between gap-4">
-                  <NumberStamp accent={lesson.accent}>{String(lesson.number).padStart(2, '0')}</NumberStamp>
-                  <span
-                    className="inline-flex px-2.5 py-1 text-xs font-bold"
-                    style={{ backgroundColor: accentSoft[lesson.accent], color: accentText[lesson.accent] }}
+          <div className="mt-10 space-y-14">
+            {guideStages.map((stage) => {
+              const accent = stageAccents[stage.number];
+              const stageLessons = guideLessons.filter((lesson) => lesson.stage === stage.number);
+
+              return (
+                <section key={stage.number} aria-labelledby={`guide-stage-${stage.number}`}>
+                  <div
+                    className="grid gap-4 border-l-4 bg-bg-muted p-5 sm:grid-cols-[auto_1fr] sm:items-center sm:p-6"
+                    style={{ borderColor: accentText[accent] }}
                   >
-                    {lesson.tag}
-                  </span>
-                </div>
-                <IconMark icon={lesson.icon} accent={lesson.accent} />
-                <h3 className="mt-5 font-display text-2xl font-bold leading-tight text-text">{lesson.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-text-muted">{lesson.cardDescription}</p>
-                <div className="mt-4 border-t pt-4" style={{ borderColor: 'var(--color-border)' }}>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-text-light">Mục tiêu</p>
-                  <p className="mt-2 text-sm font-semibold leading-6 text-text">{lesson.goal}</p>
-                </div>
-                <Link to={`/guides/${lesson.slug}`} className="btn-primary mt-auto gap-2 self-start">
-                  Đọc bài
-                  <ArrowRight size={15} />
-                </Link>
-              </EditorialCard>
-            ))}
+                    <NumberStamp accent={accent}>{String(stage.number).padStart(2, '0')}</NumberStamp>
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-text-light">
+                        Chặng {stage.number} · {stageLessons.length} chương
+                      </p>
+                      <h3 id={`guide-stage-${stage.number}`} className="mt-2 font-display text-2xl font-bold leading-tight text-text sm:text-3xl">
+                        {stage.title}
+                      </h3>
+                      <p className="mt-2 max-w-3xl text-sm leading-7 text-text-muted">{stage.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {stageLessons.map((lesson) => (
+                      <EditorialCard key={lesson.slug} accent={lesson.accent} interactive className="flex min-h-[25rem] flex-col">
+                        <div className="flex items-start justify-between gap-4">
+                          <NumberStamp accent={lesson.accent}>{String(lesson.number).padStart(2, '0')}</NumberStamp>
+                          <span
+                            className="inline-flex px-2.5 py-1 text-xs font-bold"
+                            style={{ backgroundColor: accentSoft[lesson.accent], color: accentText[lesson.accent] }}
+                          >
+                            {lesson.tag}
+                          </span>
+                        </div>
+                        <IconMark icon={lesson.icon} accent={lesson.accent} />
+                        <h4 className="mt-5 font-display text-2xl font-bold leading-tight text-text">{lesson.title}</h4>
+                        <p className="mt-3 text-sm leading-7 text-text-muted">{lesson.cardDescription}</p>
+                        <div className="mt-4 border-t pt-4" style={{ borderColor: 'var(--color-border)' }}>
+                          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-text-light">Mục tiêu</p>
+                          <p className="mt-2 text-sm font-semibold leading-6 text-text">{lesson.goal}</p>
+                        </div>
+                        <Link to={`/guides/${lesson.slug}`} className="btn-primary mt-auto gap-2 self-start">
+                          Đọc bài
+                          <ArrowRight size={15} />
+                        </Link>
+                      </EditorialCard>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         </section>
 

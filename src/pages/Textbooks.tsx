@@ -1,92 +1,81 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Book, BookOpen, Check, ChevronRight, Copy, ExternalLink, FileText, Sparkles } from 'lucide-react';
-import { textbooks, bookSeries, grades } from '../data/educationData';
-import Modal from '../components/Modal';
 import {
-  fetchPublishedCurriculumItems,
+  DEFAULT_BOOK_SERIES,
+  textbooks,
+  bookSeries,
+  grades,
+  isTargetBookSeries,
+} from '../data/educationData';
+import { resolveCurriculumSubject } from '../data/curriculumData';
+import {
+  getLocalTextbooksForSubject,
+  isLocalTextbookFileUrl,
+} from '../data/localTextbookResources';
+import {
   fetchPublishedLearningResources,
-  type PublishedCurriculumItem,
   type PublishedLearningResource,
 } from '../lib/publicContentApi';
-
-type TextbookItem = (typeof textbooks)[number];
+import { getSafeResourceUrl } from '../lib/resourceFiles';
 
 const seriesDescriptions: Record<string, string> = {
-  chan_troi: 'Một hàng sách giàu hoạt động thực hành, hợp với việc tự học và ghi chú theo dự án.',
-  canh_dieu: 'Bộ sách gần gũi đời sống, dễ dùng để nối kiến thức trên lớp với ví dụ hằng ngày.',
-  ket_noi: 'Tập trung kết nối kiến thức, bài học và tình huống thực tiễn để học sâu hơn cùng AI.',
+  ket_noi: 'Bộ sách được dùng thống nhất làm ngữ cảnh học tập trong EduAI-Hub.',
 };
 
 export default function Textbooks() {
-  const [selectedGrade, setSelectedGrade] = useState('10');
-  const [selectedBook, setSelectedBook] = useState<TextbookItem | null>(null);
-  const [selectedSeries, setSelectedSeries] = useState('');
-  const [curriculumItems, setCurriculumItems] = useState<PublishedCurriculumItem[]>([]);
+  const [selectedGrade, setSelectedGrade] = useState('11');
   const [learningResources, setLearningResources] = useState<PublishedLearningResource[]>([]);
   const [publicLoading, setPublicLoading] = useState(true);
   const [publicError, setPublicError] = useState(false);
-  const [curriculumSeriesFilter, setCurriculumSeriesFilter] = useState('all');
   const [curriculumSubjectFilter, setCurriculumSubjectFilter] = useState('all');
   const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null);
 
   const selectedGradeLabel = grades.find((g) => g.value === selectedGrade)?.label || '';
-  const filteredTextbooks = textbooks.filter((book) => book.grade.toString() === selectedGrade);
+  const filteredTextbooks = textbooks.filter(
+    (book) => book.grade.toString() === selectedGrade && isTargetBookSeries(book.series)
+  );
   const groupedBySeries = bookSeries.map((series) => ({
     ...series,
-    books: filteredTextbooks.filter((book) => book.series === series.label),
+    books: filteredTextbooks,
   }));
   const subjectCount = new Set(filteredTextbooks.map((book) => book.subject)).size;
   const shelfStats = [
     { value: '3', label: 'khối lớp THPT' },
-    { value: '3', label: 'bộ sách chính' },
-    { value: `${subjectCount}+`, label: `môn học ${selectedGradeLabel}` },
+    { value: '1', label: 'bộ sách thống nhất' },
+    { value: `${subjectCount}`, label: `môn học ${selectedGradeLabel}` },
     { value: 'AI', label: 'ngữ cảnh học tập' },
   ];
-  const filteredCurriculumItems = useMemo(
-    () =>
-      curriculumItems.filter((item) => {
-        const matchesGrade = item.grade.toString() === selectedGrade;
-        const matchesSeries = curriculumSeriesFilter === 'all' || item.book_series === curriculumSeriesFilter;
-        const matchesSubject = curriculumSubjectFilter === 'all' || item.subject === curriculumSubjectFilter;
-        return matchesGrade && matchesSeries && matchesSubject;
-      }),
-    [curriculumItems, curriculumSeriesFilter, curriculumSubjectFilter, selectedGrade]
-  );
-  const groupedCurriculumItems = useMemo(() => {
-    const groups = new Map<string, PublishedCurriculumItem[]>();
-    filteredCurriculumItems.forEach((item) => {
-      const key = `${item.book_series}||${item.subject}||${item.chapter_title}`;
-      groups.set(key, [...(groups.get(key) ?? []), item]);
-    });
-    return Array.from(groups.entries()).map(([key, items]) => {
-      const [book_series, subject, chapter_title] = key.split('||');
-      return { book_series, subject, chapter_title, items };
-    });
-  }, [filteredCurriculumItems]);
-  const curriculumSeriesOptions = useMemo(
-    () => Array.from(new Set(curriculumItems.filter((item) => item.grade.toString() === selectedGrade).map((item) => item.book_series))),
-    [curriculumItems, selectedGrade]
-  );
+  const mathGrade11Curriculum = resolveCurriculumSubject({ grade: 11, subjectKey: 'toan' });
+  const showsMathGrade11 = selectedGrade === '11'
+    && (curriculumSubjectFilter === 'all' || curriculumSubjectFilter === 'Toán học');
+  const controlledCurriculumGroups = useMemo<CurriculumGroup[]>(() => {
+    if (!showsMathGrade11 || mathGrade11Curriculum?.dataStatus !== 'verified') return [];
+    return (mathGrade11Curriculum.knowledgeAreas ?? []).map((area) => ({
+      book_series: mathGrade11Curriculum.textbookSeries,
+      subject: mathGrade11Curriculum.subject,
+      chapter_title: area.title,
+      isKnowledgeArea: true,
+      items: area.topics.map((topic) => ({
+        id: topic.id,
+        lesson_title: topic.title,
+        description: null,
+        suggested_prompt: null,
+      })),
+    }));
+  }, [mathGrade11Curriculum, showsMathGrade11]);
+  const curriculumGroups = controlledCurriculumGroups;
   const curriculumSubjectOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          curriculumItems
-            .filter((item) => {
-              const matchesGrade = item.grade.toString() === selectedGrade;
-              const matchesSeries = curriculumSeriesFilter === 'all' || item.book_series === curriculumSeriesFilter;
-              return matchesGrade && matchesSeries;
-            })
-            .map((item) => item.subject)
-        )
-      ),
-    [curriculumItems, curriculumSeriesFilter, selectedGrade]
+    () => selectedGrade === '11' ? ['Toán học'] : [],
+    [selectedGrade]
   );
   const filteredResources = useMemo(
     () =>
       learningResources.filter((resource) => {
         const matchesGrade = resource.grade === null || resource.grade.toString() === selectedGrade;
-        return matchesGrade;
+        const matchesSeries = !resource.book_series || isTargetBookSeries(resource.book_series);
+        const safeUrl = getSafeResourceUrl(resource);
+        const duplicatesLocalTextbook = safeUrl ? isLocalTextbookFileUrl(safeUrl) : false;
+        return matchesGrade && matchesSeries && Boolean(safeUrl) && !duplicatesLocalTextbook;
       }),
     [learningResources, selectedGrade]
   );
@@ -98,18 +87,12 @@ export default function Textbooks() {
       setPublicLoading(true);
       setPublicError(false);
       try {
-        const [items, resources] = await Promise.all([
-          fetchPublishedCurriculumItems(),
-          fetchPublishedLearningResources(),
-        ]);
+        const resources = await fetchPublishedLearningResources();
         if (!cancelled) {
-          setCurriculumItems(items);
           setLearningResources(resources);
         }
-      } catch (error) {
-        console.error('Error fetching public curriculum/resources:', error);
+      } catch {
         if (!cancelled) {
-          setCurriculumItems([]);
           setLearningResources([]);
           setPublicError(true);
         }
@@ -127,23 +110,9 @@ export default function Textbooks() {
 
   useEffect(() => {
     setCurriculumSubjectFilter('all');
-  }, [curriculumSeriesFilter, selectedGrade]);
-
-  useEffect(() => {
-    setCurriculumSeriesFilter('all');
   }, [selectedGrade]);
 
-  function openModal(book: TextbookItem, seriesLabel: string) {
-    setSelectedBook(book);
-    setSelectedSeries(seriesLabel);
-  }
-
-  function closeModal() {
-    setSelectedBook(null);
-    setSelectedSeries('');
-  }
-
-  async function copySuggestedPrompt(item: PublishedCurriculumItem) {
+  async function copySuggestedPrompt(item: CurriculumDisplayItem) {
     if (!item.suggested_prompt) return;
     try {
       await navigator.clipboard.writeText(item.suggested_prompt);
@@ -152,12 +121,6 @@ export default function Textbooks() {
     } catch (error) {
       console.error('Error copying suggested prompt:', error);
     }
-  }
-
-  function openResource(resource: PublishedLearningResource) {
-    const href = resource.external_url?.trim() || resource.file_url?.trim();
-    if (!href) return;
-    window.open(href, '_blank', 'noopener,noreferrer');
   }
 
   return (
@@ -185,7 +148,7 @@ export default function Textbooks() {
               <span className="block text-primary">cho học sinh THPT</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-8 text-text-muted sm:text-lg">
-              Bản đồ chương trình, tài nguyên học tập và ngữ cảnh theo lớp, bộ sách, môn học cho lớp 10, 11, 12.
+              Bản đồ chương trình, tài nguyên học tập và ngữ cảnh theo lớp, môn học cho lớp 10, 11, 12.
               Chọn chủ đề học tập rồi dùng AI với bối cảnh rõ ràng hơn.
             </p>
 
@@ -235,7 +198,7 @@ export default function Textbooks() {
                     color: '#ffffff',
                   }}
                 >
-                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-80">{series.books.length} sách</span>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] opacity-80">{series.books.length} môn học</span>
                   <span className="writing-mode-vertical font-display text-lg font-bold leading-tight [writing-mode:vertical-rl]">
                     {series.label}
                   </span>
@@ -257,7 +220,7 @@ export default function Textbooks() {
         >
           <div className="mb-3 flex items-center gap-2">
             <span className="h-2 w-8" style={{ backgroundColor: 'var(--color-accent)' }} />
-            <span className="text-xs font-bold uppercase tracking-[0.16em] text-text-light">Chọn kệ sách</span>
+            <span className="text-xs font-bold uppercase tracking-[0.16em] text-text-light">Chọn khối lớp</span>
           </div>
           <div className="grid w-full grid-cols-3 gap-2">
             {grades.map((grade) => (
@@ -301,7 +264,7 @@ export default function Textbooks() {
                 <div className="min-w-0">
                   <div className="mb-3 flex items-center gap-3">
                     <span className="h-8 w-1 shrink-0" style={{ backgroundColor: 'var(--color-primary)' }} />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-text-light">Hàng sách</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-text-light">Danh mục môn học</span>
                   </div>
                   <h2 className="font-display text-2xl font-bold leading-tight text-text">
                     {series.label}
@@ -315,44 +278,114 @@ export default function Textbooks() {
                   style={{ backgroundColor: 'var(--color-primary-light)', borderColor: 'var(--color-border)' }}
                 >
                   <Book size={14} />
-                  {series.books.length} sách {selectedGradeLabel}
+                  {series.books.length} môn {selectedGradeLabel}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 min-[430px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                {series.books.map((book, index) => (
-                  <button
-                    key={`${selectedGrade}-${book.subject}-${series.value}-${index}`}
-                    type="button"
-                    onClick={() => openModal(book, series.label)}
-                    className="group flex min-w-0 cursor-pointer flex-col overflow-hidden border bg-bg-card p-2 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-primary hover:shadow-card-hover focus-visible:-translate-y-0.5"
-                    style={{ borderColor: 'var(--color-border)' }}
-                  >
-                    <TextbookCover book={book} gradeLabel={selectedGradeLabel} seriesLabel={series.label} />
+                {series.books.map((book, index) => {
+                  const localBooks = getLocalTextbooksForSubject(selectedGrade, book.subject);
+                  const hasLocalBooks = localBooks.length > 0;
 
-                    <div className="flex flex-1 flex-col p-3">
-                      <div className="mb-1 flex min-w-0 items-center gap-1">
-                        <Book size={11} className="shrink-0" style={{ color: 'var(--color-primary)' }} />
-                        <span className="truncate text-[10px] font-semibold" style={{ color: 'var(--color-primary)' }}>
-                          {series.label}
-                        </span>
-                      </div>
-                      <h3
-                        className="font-display font-bold text-sm line-clamp-1"
-                        style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}
+                  return (
+                    <article
+                      key={`${selectedGrade}-${book.subject}-${series.value}-${index}`}
+                      className="group flex min-w-0 flex-col overflow-hidden border bg-bg-card transition-all duration-200 hover:-translate-y-0.5 hover:border-primary hover:shadow-card-hover"
+                      style={{ borderColor: 'var(--color-border)' }}
+                    >
+                      <div
+                        className="relative overflow-hidden border-b p-4"
+                        style={{
+                          backgroundColor: 'var(--color-bg-muted)',
+                          borderColor: 'var(--color-border)',
+                          backgroundImage:
+                            'linear-gradient(135deg, color-mix(in srgb, var(--color-primary-light) 72%, transparent) 0 38%, transparent 38% 100%), radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--color-border) 48%, transparent) 1px, transparent 0)',
+                          backgroundSize: '100% 100%, 18px 18px',
+                        }}
                       >
-                        {book.subject}
-                      </h3>
-                      <div className="mt-4 flex min-h-10 items-center justify-between gap-3 border-t pt-3" style={{ borderColor: 'var(--color-border)' }}>
-                        <span className="text-xs font-semibold text-text-light">{selectedGradeLabel}</span>
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-primary">
-                          Xem tài liệu hỗ trợ
-                          <ChevronRight size={13} />
-                        </span>
+                        <span
+                          aria-hidden="true"
+                          className="absolute bottom-0 left-0 top-0 w-1.5"
+                          style={{ backgroundColor: 'var(--color-primary)' }}
+                        />
+                        <div className="flex items-start justify-between gap-3 pl-2">
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">
+                              {book.subject}
+                            </p>
+                            <h3 className="mt-2 font-display text-lg font-extrabold leading-tight text-text">
+                              {book.subject === 'Toán học' ? 'Toán' : book.subject} {selectedGrade}
+                            </h3>
+                          </div>
+                          <span
+                            className="inline-flex h-10 w-10 shrink-0 items-center justify-center border"
+                            style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+                          >
+                            {hasLocalBooks ? (
+                              <FileText size={18} className="text-primary" />
+                            ) : (
+                              <Book size={18} className="text-text-light" />
+                            )}
+                          </span>
+                        </div>
+                        <p className="mt-4 line-clamp-2 pl-2 text-[10px] font-semibold leading-4 text-text-light">
+                          {series.label}
+                        </p>
                       </div>
-                    </div>
-                  </button>
-                ))}
+
+                      <div className="flex flex-1 flex-col p-3">
+                        {hasLocalBooks ? (
+                          <div className="space-y-2" aria-label={`Tài liệu ${book.subject} ${selectedGradeLabel}`}>
+                            {localBooks.map((localBook) => (
+                              <div
+                                key={localBook.fileUrl}
+                                className="border p-3"
+                                style={{ backgroundColor: 'var(--color-bg)', borderColor: 'var(--color-border)' }}
+                              >
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  <span
+                                    className="border px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.12em] text-primary"
+                                    style={{ backgroundColor: 'var(--color-primary-light)', borderColor: 'var(--color-border)' }}
+                                  >
+                                    PDF
+                                  </span>
+                                  {localBook.volume && (
+                                    <span className="text-[10px] font-bold text-text-light">
+                                      {localBook.volume}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="mt-2 line-clamp-2 text-xs font-bold leading-5 text-text">
+                                  {localBook.title}
+                                </p>
+                                <a
+                                  href={localBook.fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 border px-3 text-xs font-extrabold transition-colors hover:bg-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                                  style={{ backgroundColor: 'var(--color-primary)', borderColor: 'var(--color-primary)', color: '#ffffff' }}
+                                  aria-label={`Xem ${localBook.title}${localBook.volume ? ` ${localBook.volume}` : ''}`}
+                                >
+                                  Xem sách
+                                  <ExternalLink size={13} />
+                                </a>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div
+                            className="flex min-h-24 flex-1 items-center border border-dashed px-3 py-4"
+                            style={{ backgroundColor: 'var(--color-bg-muted)', borderColor: 'var(--color-border)' }}
+                          >
+                            <p className="text-xs font-semibold leading-5 text-text-muted">
+                              Tài liệu đang được cập nhật
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </section>
           ))}
@@ -362,13 +395,11 @@ export default function Textbooks() {
           loading={publicLoading}
           hasError={publicError}
           selectedGradeLabel={selectedGradeLabel}
-          seriesOptions={curriculumSeriesOptions}
           subjectOptions={curriculumSubjectOptions}
-          seriesFilter={curriculumSeriesFilter}
           subjectFilter={curriculumSubjectFilter}
-          groups={groupedCurriculumItems}
+          groups={curriculumGroups}
+          pendingOfficialData={showsMathGrade11 && mathGrade11Curriculum?.dataStatus === 'official-data-required'}
           copiedPromptId={copiedPromptId}
-          onSeriesChange={setCurriculumSeriesFilter}
           onSubjectChange={setCurriculumSubjectFilter}
           onCopyPrompt={copySuggestedPrompt}
         />
@@ -377,7 +408,7 @@ export default function Textbooks() {
           loading={publicLoading}
           selectedGradeLabel={selectedGradeLabel}
           resources={filteredResources}
-          onOpenResource={openResource}
+          hasError={publicError}
         />
 
         {/* About section */}
@@ -389,7 +420,7 @@ export default function Textbooks() {
             className="font-display font-bold text-lg mb-5"
             style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}
           >
-            Chương trình sách giáo khoa mới 2018
+            Phạm vi dữ liệu hiện tại
           </h2>
           <div className="grid md:grid-cols-3 gap-5">
             {bookSeries.map((series) => (
@@ -409,10 +440,6 @@ export default function Textbooks() {
                   {series.label}
                 </h3>
                 <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-                  {series.value === 'chan_troi' &&
-                    'Tập trung phát triển năng lực người học với nhiều hoạt động thực tiễn và dự án học tập.'}
-                  {series.value === 'canh_dieu' &&
-                    'Thiết kế hiện đại, gần gũi với đời sống, chú trọng phát triển tư duy sáng tạo.'}
                   {series.value === 'ket_noi' &&
                     'Đa dạng hình thức học tập, kết nối kiến thức với thực tiễn Việt Nam và thế giới.'}
                 </p>
@@ -420,66 +447,27 @@ export default function Textbooks() {
             ))}
           </div>
           <p className="text-xs leading-relaxed mt-5" style={{ color: 'var(--color-text-light)' }}>
-            Chương trình GDPT 2018 áp dụng từ năm học 2020-2021 với 3 bộ sách được cấp phép bởi Bộ GD&ĐT.
-            Tập trung phát triển năng lực và phẩm chất người học, tăng cường hoạt động thực hành.
+            EduAI-Hub hiện sử dụng thống nhất bộ {DEFAULT_BOOK_SERIES}. Chỉ nội dung đã được kiểm soát mới xuất hiện trong bản đồ; các phần còn thiếu được hiển thị bằng trạng thái đang cập nhật.
           </p>
         </div>
       </div>
 
-      {/* Modal */}
-      <Modal isOpen={!!selectedBook} onClose={closeModal} size="xl">
-        {selectedBook && (
-          <>
-            <div
-              className="p-4 pr-14 sm:p-6 sm:pr-16"
-              style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)' }}
-            >
-              <div className="flex items-start gap-3">
-                <span
-                  className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center border"
-                  style={{ backgroundColor: 'var(--color-primary-light)', borderColor: 'var(--color-border)', color: 'var(--color-primary)' }}
-                >
-                  <BookOpen size={18} />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-text-light">Tài liệu hỗ trợ</p>
-                  <h2 className="mt-1 font-display text-xl font-bold leading-tight text-text sm:text-2xl">
-                    {selectedBook.subject}
-                  </h2>
-                </div>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <span className="tag tag-primary">Bộ sách: {selectedSeries}</span>
-                <span className="tag">Khối lớp: {selectedGradeLabel}</span>
-              </div>
-              <p className="text-xs mt-2" style={{ color: 'var(--color-text-light)' }}>
-                {selectedBook.subject} — {selectedSeries} — Chương trình GDPT 2018
-              </p>
-            </div>
-
-            <div
-              className="flex-1 overflow-y-auto p-3 sm:p-5"
-              style={{ backgroundColor: 'var(--color-bg)' }}
-            >
-              <iframe
-                src={selectedBook.pdfUrl}
-                title={`Tài liệu hỗ trợ ${selectedBook.subject}`}
-                className="h-[62dvh] min-h-[18rem] w-full border-0 sm:h-[70dvh]"
-                style={{ backgroundColor: 'var(--color-bg-muted)' }}
-              />
-            </div>
-          </>
-        )}
-      </Modal>
     </div>
   );
 }
+type CurriculumDisplayItem = {
+  id: string;
+  lesson_title: string | null;
+  description: string | null;
+  suggested_prompt: string | null;
+};
 
 type CurriculumGroup = {
   book_series: string;
   subject: string;
   chapter_title: string;
-  items: PublishedCurriculumItem[];
+  isKnowledgeArea?: boolean;
+  items: CurriculumDisplayItem[];
 };
 
 const resourceTypeLabels: Record<PublishedLearningResource['resource_type'], string> = {
@@ -494,29 +482,31 @@ function CurriculumMapSection({
   loading,
   hasError,
   selectedGradeLabel,
-  seriesOptions,
   subjectOptions,
-  seriesFilter,
   subjectFilter,
   groups,
+  pendingOfficialData,
   copiedPromptId,
-  onSeriesChange,
   onSubjectChange,
   onCopyPrompt,
 }: {
   loading: boolean;
   hasError: boolean;
   selectedGradeLabel: string;
-  seriesOptions: string[];
   subjectOptions: string[];
-  seriesFilter: string;
   subjectFilter: string;
   groups: CurriculumGroup[];
+  pendingOfficialData: boolean;
   copiedPromptId: string | null;
-  onSeriesChange: (value: string) => void;
   onSubjectChange: (value: string) => void;
-  onCopyPrompt: (item: PublishedCurriculumItem) => void;
+  onCopyPrompt: (item: CurriculumDisplayItem) => void;
 }) {
+  const [expandedGroupKey, setExpandedGroupKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    setExpandedGroupKey(null);
+  }, [selectedGradeLabel, subjectFilter]);
+
   return (
     <section
       className="mb-10 mt-12 border p-4 sm:p-5"
@@ -529,29 +519,20 @@ function CurriculumMapSection({
             Ngữ cảnh học tập cho {selectedGradeLabel}
           </h2>
           <p className="mt-2 text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-            Chọn lớp, bộ sách, môn học, chương và bài học để có prompt gợi ý học cùng AI đúng ngữ cảnh.
+            Xem mảng kiến thức và chủ đề đã được kiểm soát để dùng AI với ngữ cảnh rõ ràng hơn.
           </p>
+          {groups.some((group) => group.isKnowledgeArea) && (
+            <p className="mt-3 border-l-2 border-primary pl-3 text-xs leading-5 text-text-light">
+              Các mảng kiến thức là cách EduAI-Hub đơn giản hóa lựa chọn cho học sinh, không phải tên chương chính thức của SGK.
+            </p>
+          )}
         </div>
 
-        <div className="grid w-full gap-2 sm:grid-cols-2 lg:w-[28rem]">
-          <select
-            value={seriesFilter}
-            onChange={(event) => onSeriesChange(event.target.value)}
-            className="min-h-11 px-4 pr-10 text-sm font-medium outline-none"
-            style={{ backgroundColor: 'var(--color-bg-muted)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
-            aria-label="Lọc theo bộ sách"
-          >
-            <option value="all">Tất cả bộ sách</option>
-            {seriesOptions.map((series) => (
-              <option key={series} value={series}>
-                {series}
-              </option>
-            ))}
-          </select>
+        <div className="w-full lg:w-64">
           <select
             value={subjectFilter}
             onChange={(event) => onSubjectChange(event.target.value)}
-            className="min-h-11 px-4 pr-10 text-sm font-medium outline-none"
+            className="min-h-11 w-full px-4 pr-10 text-sm font-medium outline-none"
             style={{ backgroundColor: 'var(--color-bg-muted)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
             aria-label="Lọc theo môn học"
           >
@@ -565,108 +546,123 @@ function CurriculumMapSection({
         </div>
       </div>
 
+      {pendingOfficialData && (
+        <div
+          className="mt-6 border-l-4 px-4 py-4 text-sm leading-6"
+          style={{ backgroundColor: 'var(--color-accent-light)', borderColor: 'var(--color-accent)', color: 'var(--color-text-muted)' }}
+        >
+          <p className="font-bold text-text">Nội dung Toán 11 đang được cập nhật.</p>
+          <p className="mt-1">Danh sách chưa được xác minh sẽ không xuất hiện tại đây.</p>
+        </div>
+      )}
+
       {loading ? (
         <div className="mt-6 border px-4 py-5 text-sm" style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)', color: 'var(--color-text-light)' }}>
           Đang tải bản đồ chương trình học...
         </div>
       ) : groups.length > 0 ? (
-        <div className="mt-6 space-y-4">
-          {groups.map((group) => (
-            <article
-              key={`${group.book_series}-${group.subject}-${group.chapter_title}`}
-              className="border p-4"
-              style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
-            >
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--color-primary)' }}>
-                    {group.book_series} · {group.subject}
-                  </p>
-                  <h3 className="mt-1 font-display text-lg font-bold" style={{ color: 'var(--color-text)' }}>
+        <div className="mt-6 grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {groups.map((group) => {
+            const groupKey = `${group.book_series}-${group.subject}-${group.chapter_title}`;
+            const isExpanded = expandedGroupKey === groupKey;
+
+            return (
+              <article
+                key={groupKey}
+                className="min-w-0 border p-4 sm:p-5"
+                style={{
+                  backgroundColor: 'var(--color-bg-card)',
+                  borderColor: isExpanded ? 'var(--color-primary)' : 'var(--color-border)',
+                  boxShadow: isExpanded ? '5px 5px 0 color-mix(in srgb, var(--color-primary) 12%, transparent)' : 'none',
+                }}
+              >
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">
+                  {group.subject} · {selectedGradeLabel}
+                </p>
+                <div className="mt-3 flex items-start justify-between gap-3">
+                  <h3 className="min-w-0 font-display text-xl font-extrabold leading-snug text-text">
                     {group.chapter_title}
                   </h3>
+                  <span className="shrink-0 border px-2.5 py-1 text-xs font-bold text-primary" style={{ backgroundColor: 'var(--color-primary-light)', borderColor: 'var(--color-border)' }}>
+                    {group.items.length} {group.isKnowledgeArea ? 'chủ đề' : 'bài học'}
+                  </span>
                 </div>
-                <span className="border px-3 py-1 text-xs font-semibold" style={{ backgroundColor: 'var(--color-primary-light)', borderColor: 'var(--color-border)', color: 'var(--color-primary)' }}>
-                  {group.items.length} bài học
-                </span>
-              </div>
 
-              <div className="mt-4 grid gap-3">
-                {group.items.map((item) => {
-                  const isCopied = copiedPromptId === item.id;
-                  return (
-                    <div
-                      key={item.id}
-                      className="border p-3"
-                      style={{ backgroundColor: 'var(--color-bg)', borderColor: 'var(--color-border)' }}
-                    >
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="min-w-0">
-                          <h4 className="font-display text-sm font-bold" style={{ color: 'var(--color-text)' }}>
-                            {item.lesson_title || 'Mục học tập'}
-                          </h4>
-                          {item.description && (
-                            <p className="mt-1 text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-                              {item.description}
-                            </p>
-                          )}
-                        </div>
-                        {item.suggested_prompt && (
-                          <button
-                            type="button"
-                            onClick={() => onCopyPrompt(item)}
-                            className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 border px-3 text-xs font-bold transition-all"
-                            style={{
-                              backgroundColor: isCopied ? 'var(--color-success)' : 'var(--color-primary)',
-                              borderColor: isCopied ? 'var(--color-success)' : 'var(--color-primary)',
-                              color: '#ffffff',
-                            }}
-                          >
-                            {isCopied ? <Check size={13} /> : <Copy size={13} />}
-                            {isCopied ? 'Đã sao chép' : 'Sao chép prompt gợi ý'}
-                          </button>
-                        )}
-                      </div>
-                      {item.suggested_prompt && (
-                        <p
-                          className="mt-3 border-l-2 px-3 py-2 text-xs leading-relaxed line-clamp-3"
-                          style={{
-                            backgroundColor: 'var(--color-bg-muted)',
-                            borderColor: 'var(--color-primary)',
-                            color: 'var(--color-text-muted)',
-                          }}
-                        >
-                          {item.suggested_prompt}
-                        </p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </article>
-          ))}
+                <button
+                  type="button"
+                  onClick={() => setExpandedGroupKey(isExpanded ? null : groupKey)}
+                  aria-expanded={isExpanded}
+                  className="mt-5 flex min-h-11 w-full items-center justify-between border px-4 text-sm font-bold transition-colors"
+                  style={{
+                    backgroundColor: isExpanded ? 'var(--color-primary)' : 'var(--color-bg-muted)',
+                    borderColor: isExpanded ? 'var(--color-primary)' : 'var(--color-border)',
+                    color: isExpanded ? '#ffffff' : 'var(--color-primary)',
+                  }}
+                >
+                  {isExpanded ? 'Đóng danh sách' : 'Xem chủ đề'}
+                  <ChevronRight size={17} className={`transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                </button>
+
+                {isExpanded && (
+                  <div className="mt-4 border-t pt-4" style={{ borderColor: 'var(--color-border)' }}>
+                    <ol className="space-y-2">
+                      {group.items.map((item, index) => {
+                        const isCopied = copiedPromptId === item.id;
+                        return (
+                          <li key={item.id} className="border p-3" style={{ backgroundColor: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
+                            <div className="flex items-start gap-3">
+                              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-light text-xs font-extrabold text-primary">
+                                {index + 1}
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <h4 className="font-display text-sm font-bold leading-6 text-text">
+                                  {item.lesson_title || (group.isKnowledgeArea ? 'Chủ đề' : 'Mục học tập')}
+                                </h4>
+                                {item.description && <p className="mt-1 text-sm leading-6 text-text-muted">{item.description}</p>}
+                              </div>
+                            </div>
+                            {item.suggested_prompt && (
+                              <button
+                                type="button"
+                                onClick={() => onCopyPrompt(item)}
+                                className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 border px-3 text-xs font-bold"
+                                style={{ backgroundColor: isCopied ? 'var(--color-success)' : 'var(--color-primary)', borderColor: 'transparent', color: '#ffffff' }}
+                              >
+                                {isCopied ? <Check size={13} /> : <Copy size={13} />}
+                                {isCopied ? 'Đã sao chép' : 'Sao chép prompt gợi ý'}
+                              </button>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  </div>
+                )}
+              </article>
+            );
+          })}
         </div>
-      ) : (
+      ) : !pendingOfficialData ? (
         <div className="mt-6 border px-4 py-5 text-sm" style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}>
           {hasError
-            ? 'Chưa tải được bản đồ chương trình học từ EduAI-Hub. Bạn vẫn có thể xem danh mục tĩnh bên dưới.'
-            : 'Chưa có mục chương trình đã xuất bản cho lựa chọn này. Danh mục tĩnh bên dưới vẫn sẵn sàng để tham khảo.'}
+            ? 'Chưa tải được nội dung chương trình. Vui lòng thử lại sau.'
+            : 'Nội dung chương trình cho lựa chọn này đang được cập nhật.'}
         </div>
-      )}
+      ) : null}
     </section>
   );
 }
 
 function LearningResourcesSection({
   loading,
+  hasError,
   selectedGradeLabel,
   resources,
-  onOpenResource,
 }: {
   loading: boolean;
+  hasError: boolean;
   selectedGradeLabel: string;
   resources: PublishedLearningResource[];
-  onOpenResource: (resource: PublishedLearningResource) => void;
 }) {
   return (
     <section
@@ -692,7 +688,7 @@ function LearningResourcesSection({
       ) : resources.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {resources.slice(0, 6).map((resource) => {
-            const hasLink = Boolean(resource.external_url?.trim() || resource.file_url?.trim());
+            const href = getSafeResourceUrl(resource);
             return (
               <article
                 key={resource.id}
@@ -709,7 +705,11 @@ function LearningResourcesSection({
                         {resource.title}
                       </h3>
                       <p className="mt-1 text-xs" style={{ color: 'var(--color-text-light)' }}>
-                        {[resource.subject, resource.grade ? `Lớp ${resource.grade}` : null, resource.book_series].filter(Boolean).join(' · ') || 'Tài nguyên chung'}
+                        {[
+                          resource.subject,
+                          resource.grade ? `Lớp ${resource.grade}` : null,
+                          resource.book_series ? DEFAULT_BOOK_SERIES : null,
+                        ].filter(Boolean).join(' · ') || 'Tài nguyên chung'}
                       </p>
                     </div>
                   </div>
@@ -731,16 +731,17 @@ function LearningResourcesSection({
                   <span className="border px-2.5 py-1 text-xs font-semibold" style={{ backgroundColor: 'var(--color-bg-muted)', borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}>
                     {resourceTypeLabels[resource.resource_type]}
                   </span>
-                  {hasLink ? (
-                    <button
-                      type="button"
-                      onClick={() => onOpenResource(resource)}
-                    className="inline-flex min-h-10 items-center justify-center gap-2 border px-3 text-xs font-bold transition-all"
-                    style={{ backgroundColor: 'var(--color-primary)', borderColor: 'var(--color-primary)', color: '#ffffff' }}
-                  >
-                    Mở tài nguyên
-                    <ExternalLink size={12} />
-                    </button>
+                  {href ? (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex min-h-11 items-center justify-center gap-2 border px-3 text-xs font-bold transition-all"
+                      style={{ backgroundColor: 'var(--color-primary)', borderColor: 'var(--color-primary)', color: '#ffffff' }}
+                    >
+                      {resource.resource_type === 'pdf' ? 'Xem tài liệu' : 'Mở tài nguyên'}
+                      <ExternalLink size={12} />
+                    </a>
                   ) : (
                     <span className="text-xs font-semibold text-text-light">Chưa có tài nguyên đính kèm</span>
                   )}
@@ -751,110 +752,11 @@ function LearningResourcesSection({
         </div>
       ) : (
         <div className="border px-4 py-5 text-sm" style={{ backgroundColor: 'var(--color-bg-muted)', borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}>
-          Chưa có tài nguyên đã xuất bản cho lựa chọn này. Trang vẫn giữ danh mục chương trình tĩnh bên dưới để bạn tiếp tục tra cứu.
+          {hasError
+            ? 'Chưa tải được tài nguyên học tập. Vui lòng thử lại sau.'
+            : 'Tài nguyên đã xác minh cho lựa chọn này đang được cập nhật.'}
         </div>
       )}
     </section>
-  );
-}
-
-function TextbookCover({
-  book,
-  gradeLabel,
-  seriesLabel,
-}: {
-  book: TextbookItem;
-  gradeLabel: string;
-  seriesLabel: string;
-}) {
-  const [imageFailed, setImageFailed] = useState(!book.cover);
-  const showImage = Boolean(book.cover) && !imageFailed;
-
-  return (
-    <div
-      className="relative aspect-[3/4] overflow-hidden border"
-      style={{ backgroundColor: 'var(--color-bg-muted)', borderColor: 'var(--color-border)' }}
-    >
-      {showImage ? (
-        <img
-          src={book.cover}
-          alt={`${book.subject} ${seriesLabel} ${gradeLabel}`}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          loading="lazy"
-          onError={() => setImageFailed(true)}
-        />
-      ) : (
-        <FallbackBookCover subject={book.subject} seriesLabel={seriesLabel} />
-      )}
-
-      <span
-        aria-hidden="true"
-        className="absolute bottom-0 left-0 top-0 w-2"
-        style={{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 88%, var(--color-text))' }}
-      />
-      <div
-        className="absolute right-2 top-2 border px-2 py-1 text-[10px] font-bold"
-        style={{
-          backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 94%, transparent)',
-          borderColor: 'var(--color-border)',
-          color: 'var(--color-primary)',
-        }}
-      >
-        {gradeLabel}
-      </div>
-    </div>
-  );
-}
-
-function FallbackBookCover({
-  subject,
-  seriesLabel,
-}: {
-  subject: string;
-  seriesLabel: string;
-}) {
-  return (
-    <div
-      className="relative flex h-full flex-col justify-between overflow-hidden p-3 sm:p-4"
-      style={{
-        backgroundColor: 'var(--color-bg-card)',
-        backgroundImage:
-          'linear-gradient(135deg, color-mix(in srgb, var(--color-primary-light) 68%, transparent) 0 34%, transparent 34% 100%), radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--color-border) 48%, transparent) 1px, transparent 0)',
-        backgroundSize: '100% 100%, 18px 18px',
-      }}
-    >
-      <span
-        aria-hidden="true"
-        className="absolute left-0 top-0 h-full w-2"
-        style={{ backgroundColor: 'var(--color-primary)' }}
-      />
-      <span
-        aria-hidden="true"
-        className="absolute right-3 top-11 h-10 w-10 rotate-6 border"
-        style={{
-          borderColor: 'color-mix(in srgb, var(--color-accent) 42%, transparent)',
-          backgroundColor: 'color-mix(in srgb, var(--color-accent-light) 70%, transparent)',
-        }}
-      />
-
-      <div className="relative pl-3 pr-6">
-        <p className="line-clamp-2 text-[10px] font-bold uppercase leading-4 tracking-[0.12em] text-text-light">
-          {seriesLabel}
-        </p>
-        <h4 className="mt-4 font-display text-lg font-bold leading-tight text-text sm:text-xl">
-          {subject}
-        </h4>
-      </div>
-
-      <div className="relative flex items-end justify-between gap-3 pl-3">
-        <span
-          className="border px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em]"
-          style={{ borderColor: 'var(--color-border-strong)', color: 'var(--color-primary)' }}
-        >
-          Tài liệu
-        </span>
-        <Book size={24} style={{ color: 'var(--color-primary)' }} />
-      </div>
-    </div>
   );
 }

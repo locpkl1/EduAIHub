@@ -4,12 +4,14 @@ import {
   CheckCircle2,
   Edit3,
   ExternalLink,
+  FileText,
   Library,
   Loader2,
   Plus,
   Search,
   Star,
   Trash2,
+  Upload,
   X,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -23,11 +25,22 @@ import type {
   ResourceType,
 } from '../../types/database';
 import StatusBadge from '../../components/admin/StatusBadge';
+import { DEFAULT_BOOK_SERIES } from '../../data/educationData';
+import {
+  getSafeResourceUrl,
+  isSafeLocalPdfUrl,
+  MAX_PDF_SIZE_BYTES,
+  removeLearningResourcePdf,
+  uploadLearningResourcePdf,
+  validatePdfFile,
+  validateResourceUrl,
+} from '../../lib/resourceFiles';
 
 type StatusFilter = 'all' | ContentStatus;
 type GradeFilter = 'all' | '10' | '11' | '12';
 type ResourceTypeFilter = 'all' | ResourceType;
 type FeaturedFilter = 'all' | 'featured';
+type ResourceSourceMode = 'url' | 'upload';
 
 interface ResourceFormState {
   title: string;
@@ -42,8 +55,6 @@ interface ResourceFormState {
   status: ContentStatus;
   featured: boolean;
 }
-
-const bookSeriesOptions = ['Chân Trời Sáng Tạo', 'Cánh Diều', 'Kết Nối Tri Thức'];
 
 const resourceTypeLabels: Record<ResourceType, string> = {
   link: 'Link',
@@ -61,7 +72,7 @@ const emptyForm: ResourceFormState = {
   file_url: '',
   subject: '',
   grade: '',
-  book_series: '',
+  book_series: DEFAULT_BOOK_SERIES,
   curriculum_item_id: '',
   status: 'draft',
   featured: false,
@@ -103,7 +114,7 @@ function buildFormFromResource(resource: LearningResource): ResourceFormState {
     file_url: resource.file_url ?? '',
     subject: resource.subject ?? '',
     grade: resource.grade ? String(resource.grade) as ResourceFormState['grade'] : '',
-    book_series: resource.book_series ?? '',
+    book_series: DEFAULT_BOOK_SERIES,
     curriculum_item_id: resource.curriculum_item_id ?? '',
     status: resource.status,
     featured: resource.featured,
@@ -165,6 +176,11 @@ export default function AdminResources() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<LearningResource | null>(null);
   const [form, setForm] = useState<ResourceFormState>(emptyForm);
+  const [sourceMode, setSourceMode] = useState<ResourceSourceMode>('url');
+  const [resourceUrl, setResourceUrl] = useState('');
+  const [selectedPdf, setSelectedPdf] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const fetchResources = useCallback(async () => {
     if (!isSupabaseConfigured) {
@@ -224,6 +240,10 @@ export default function AdminResources() {
   function openCreateForm() {
     setEditingResource(null);
     setForm(emptyForm);
+    setSourceMode('url');
+    setResourceUrl('');
+    setSelectedPdf(null);
+    setFileError(null);
     setFormOpen(true);
     setFeedback(null);
     setError(null);
@@ -232,28 +252,46 @@ export default function AdminResources() {
   function openEditForm(resource: LearningResource) {
     setEditingResource(resource);
     setForm(buildFormFromResource(resource));
+    const storedUrl = resource.external_url?.trim() || resource.file_url?.trim() || '';
+    const usesUploadedFile = Boolean(resource.file_url && !isSafeLocalPdfUrl(resource.file_url));
+    setSourceMode(usesUploadedFile ? 'upload' : 'url');
+    setResourceUrl(storedUrl);
+    setSelectedPdf(null);
+    setFileError(null);
     setFormOpen(true);
     setFeedback(null);
     setError(null);
   }
 
   function closeForm(force = false) {
-    if (saving && !force) return;
+    if ((saving || uploading) && !force) return;
     setFormOpen(false);
     setEditingResource(null);
     setForm(emptyForm);
+    setSourceMode('url');
+    setResourceUrl('');
+    setSelectedPdf(null);
+    setFileError(null);
   }
 
-  function buildPayload(): LearningResourceInsert | LearningResourceUpdate {
+  function buildPayload(uploadedFileUrl?: string): LearningResourceInsert | LearningResourceUpdate {
+    const normalizedResourceUrl = resourceUrl.trim();
+    const localPdfUrl = sourceMode === 'url' && isSafeLocalPdfUrl(normalizedResourceUrl);
+    const storedFileUrl = sourceMode === 'upload'
+      ? uploadedFileUrl || form.file_url.trim() || null
+      : localPdfUrl
+        ? normalizedResourceUrl
+        : null;
+
     return {
       title: form.title.trim(),
       description: normalizeOptional(form.description),
-      resource_type: form.resource_type,
-      external_url: normalizeOptional(form.external_url),
-      file_url: normalizeOptional(form.file_url),
+      resource_type: sourceMode === 'upload' || localPdfUrl ? 'pdf' : form.resource_type,
+      external_url: sourceMode === 'url' && !localPdfUrl ? normalizeOptional(normalizedResourceUrl) : null,
+      file_url: storedFileUrl,
       subject: normalizeOptional(form.subject),
       grade: parseGrade(form.grade),
-      book_series: normalizeOptional(form.book_series),
+      book_series: DEFAULT_BOOK_SERIES,
       curriculum_item_id: normalizeOptional(form.curriculum_item_id),
       status: form.status,
       featured: form.featured,
@@ -262,12 +300,52 @@ export default function AdminResources() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSaving(true);
     setError(null);
     setFeedback(null);
+    setFileError(null);
+
+    if (sourceMode === 'url') {
+      const urlError = validateResourceUrl(resourceUrl);
+      if (urlError) {
+        setFileError(urlError);
+        return;
+      }
+    } else if (!selectedPdf && !form.file_url.trim()) {
+      setFileError('Hãy chọn một file PDF để tải lên.');
+      return;
+    }
+
+    if (sourceMode === 'upload' && selectedPdf) {
+      const validationError = await validatePdfFile(selectedPdf);
+      if (validationError) {
+        setFileError(validationError);
+        return;
+      }
+    }
+
+    if (sourceMode === 'upload' && !user) {
+      setFileError('Bạn cần đăng nhập bằng tài khoản quản trị để tải PDF.');
+      return;
+    }
+
+    setSaving(true);
+    let uploadedPath: string | null = null;
+    let uploadAttempted = false;
+    let uploadCompleted = false;
 
     try {
-      const payload = buildPayload();
+      let uploadedFileUrl: string | undefined;
+      if (sourceMode === 'upload' && selectedPdf && user) {
+        uploadAttempted = true;
+        setUploading(true);
+        const uploaded = await uploadLearningResourcePdf(selectedPdf, user.id);
+        uploadedPath = uploaded.path;
+        uploadedFileUrl = uploaded.publicUrl;
+        uploadCompleted = true;
+        setUploading(false);
+      }
+
+      const payload = buildPayload(uploadedFileUrl);
 
       if (editingResource) {
         const { error: updateError } = await supabase
@@ -290,10 +368,31 @@ export default function AdminResources() {
       await fetchResources();
     } catch (saveError) {
       console.error('Error saving learning resource:', saveError);
-      setError('Không thể lưu tài nguyên. Vui lòng kiểm tra thông tin và thử lại.');
+      if (uploadedPath) {
+        await removeLearningResourcePdf(uploadedPath);
+      }
+      setError(uploadAttempted && !uploadCompleted
+        ? 'Không thể tải PDF lên. Hãy kiểm tra cấu hình Storage, file và thử lại.'
+        : 'Không thể lưu tài nguyên. Vui lòng kiểm tra thông tin và thử lại.');
     } finally {
+      setUploading(false);
       setSaving(false);
     }
+  }
+
+  async function handlePdfSelection(file: File | null) {
+    setFileError(null);
+    setSelectedPdf(null);
+    if (!file) return;
+
+    const validationError = await validatePdfFile(file);
+    if (validationError) {
+      setFileError(validationError);
+      return;
+    }
+
+    setSelectedPdf(file);
+    setForm((current) => ({ ...current, resource_type: 'pdf' }));
   }
 
   async function updateResourceStatus(resource: LearningResource, status: ContentStatus) {
@@ -346,7 +445,7 @@ export default function AdminResources() {
   }
 
   function openResourceLink(resource: LearningResource) {
-    const href = resource.external_url?.trim() || resource.file_url?.trim();
+    const href = getSafeResourceUrl(resource);
     if (!href) {
       setError('Tài nguyên này chưa có liên kết để mở.');
       return;
@@ -481,13 +580,13 @@ export default function AdminResources() {
                 {editingResource ? 'Sửa tài nguyên' : 'Thêm tài nguyên'}
               </h3>
               <p className="mt-1 text-sm text-text-muted">
-                Trang này quản lý metadata và URL tài nguyên học tập. Không dùng upload file trực tiếp trong Admin Center.
+                Dùng URL nguồn chính thống, file local trong public/resources hoặc tải PDF bạn có quyền sử dụng.
               </p>
             </div>
             <button
               type="button"
               onClick={() => closeForm()}
-              className="flex h-9 w-9 items-center justify-center rounded-full border text-text-muted hover:bg-bg-muted"
+              className="flex h-11 w-11 items-center justify-center rounded-full border text-text-muted hover:bg-bg-muted"
               style={{ borderColor: 'var(--color-border)' }}
               aria-label="Hủy"
             >
@@ -514,12 +613,122 @@ export default function AdminResources() {
                 placeholder="Mô tả ngắn về cách dùng tài nguyên này..."
               />
             </label>
+            <div className="space-y-3 lg:col-span-2">
+              <span className="text-sm font-bold text-text">Nguồn tài nguyên</span>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSourceMode('url');
+                    setSelectedPdf(null);
+                    setFileError(null);
+                  }}
+                  aria-pressed={sourceMode === 'url'}
+                  className="flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-bold"
+                  style={{
+                    backgroundColor: sourceMode === 'url' ? 'var(--color-primary)' : 'var(--color-bg-muted)',
+                    borderColor: sourceMode === 'url' ? 'var(--color-primary)' : 'var(--color-border)',
+                    color: sourceMode === 'url' ? '#ffffff' : 'var(--color-text-muted)',
+                  }}
+                >
+                  <ExternalLink size={16} /> URL tài nguyên
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSourceMode('upload');
+                    setForm((current) => ({ ...current, resource_type: 'pdf' }));
+                    setFileError(null);
+                  }}
+                  aria-pressed={sourceMode === 'upload'}
+                  className="flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-bold"
+                  style={{
+                    backgroundColor: sourceMode === 'upload' ? 'var(--color-primary)' : 'var(--color-bg-muted)',
+                    borderColor: sourceMode === 'upload' ? 'var(--color-primary)' : 'var(--color-border)',
+                    color: sourceMode === 'upload' ? '#ffffff' : 'var(--color-text-muted)',
+                  }}
+                >
+                  <Upload size={16} /> Upload PDF
+                </button>
+              </div>
+            </div>
+
+            {sourceMode === 'url' ? (
+              <label className="space-y-1.5 lg:col-span-2">
+                <span className="text-sm font-bold text-text">URL tài nguyên</span>
+                <input
+                  type="text"
+                  value={resourceUrl}
+                  onChange={(event) => {
+                    setResourceUrl(event.target.value);
+                    if (fileError) setFileError(null);
+                  }}
+                  className="input-field"
+                  placeholder="https://nguon-chinh-thong.vn/... hoặc /resources/tai-lieu.pdf"
+                  required
+                />
+                <span className="block text-xs leading-5 text-text-muted">
+                  Chấp nhận HTTPS, HTTP hoặc PDF local có dạng /resources/&lt;filename&gt;.pdf. Không chấp nhận javascript:, data: hay đường dẫn tương đối khác.
+                </span>
+              </label>
+            ) : (
+              <div className="space-y-3 rounded-xl border p-4 lg:col-span-2" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-muted)' }}>
+                <div className="flex items-start gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary">
+                    <FileText size={19} />
+                  </span>
+                  <div>
+                    <p className="text-sm font-bold text-text">Chọn tài liệu PDF</p>
+                    <p className="mt-1 text-xs leading-5 text-text-muted">
+                      Tối đa {MAX_PDF_SIZE_BYTES / 1024 / 1024} MB. Hệ thống kiểm tra đuôi file, MIME type và chữ ký %PDF- trước khi upload.
+                    </p>
+                  </div>
+                </div>
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={(event) => void handlePdfSelection(event.target.files?.[0] ?? null)}
+                  disabled={saving || uploading}
+                  className="block min-h-11 w-full cursor-pointer rounded-xl border bg-bg-card px-3 py-2 text-sm text-text file:mr-3 file:rounded-full file:border-0 file:bg-primary file:px-4 file:py-2 file:text-xs file:font-bold file:text-white"
+                  style={{ borderColor: 'var(--color-border)' }}
+                  aria-label="Chọn file PDF"
+                />
+                {selectedPdf && (
+                  <p className="text-sm font-semibold text-secondary" role="status">
+                    Đã chọn: {selectedPdf.name} · {(selectedPdf.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                )}
+                {!selectedPdf && form.file_url && getSafeResourceUrl({ file_url: form.file_url }) && (
+                  <a
+                    href={getSafeResourceUrl({ file_url: form.file_url }) ?? undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-primary"
+                  >
+                    <ExternalLink size={15} /> Xem PDF hiện tại
+                  </a>
+                )}
+                {uploading && (
+                  <p className="flex items-center gap-2 text-sm font-bold text-primary" role="status">
+                    <Loader2 size={16} className="animate-spin" /> Đang tải PDF lên Storage…
+                  </p>
+                )}
+              </div>
+            )}
+
+            {fileError && (
+              <p className="rounded-xl border px-4 py-3 text-sm font-semibold text-red-700 lg:col-span-2" style={{ borderColor: 'color-mix(in srgb, #dc2626 35%, transparent)', backgroundColor: 'color-mix(in srgb, #dc2626 8%, transparent)' }} role="alert">
+                {fileError}
+              </p>
+            )}
+
             <label className="space-y-1.5">
               <span className="text-sm font-bold text-text">Loại tài nguyên</span>
               <select
                 value={form.resource_type}
                 onChange={(event) => setForm((current) => ({ ...current, resource_type: event.target.value as ResourceType }))}
                 className="input-field pr-10"
+                disabled={sourceMode === 'upload'}
                 required
               >
                 <option value="link">Link</option>
@@ -540,26 +749,6 @@ export default function AdminResources() {
                 <option value="published">Đã xuất bản</option>
                 <option value="archived">Đã lưu trữ</option>
               </select>
-            </label>
-            <label className="space-y-1.5">
-              <span className="text-sm font-bold text-text">Link nguồn chính thống</span>
-              <input
-                type="url"
-                value={form.external_url}
-                onChange={(event) => setForm((current) => ({ ...current, external_url: event.target.value }))}
-                className="input-field"
-                placeholder="https://..."
-              />
-            </label>
-            <label className="space-y-1.5">
-              <span className="text-sm font-bold text-text">File URL</span>
-              <input
-                type="url"
-                value={form.file_url}
-                onChange={(event) => setForm((current) => ({ ...current, file_url: event.target.value }))}
-                className="input-field"
-                placeholder="https://..."
-              />
             </label>
             <label className="space-y-1.5">
               <span className="text-sm font-bold text-text">Môn học</span>
@@ -583,21 +772,12 @@ export default function AdminResources() {
                 <option value="12">Lớp 12</option>
               </select>
             </label>
-            <label className="space-y-1.5">
+            <div className="space-y-1.5">
               <span className="text-sm font-bold text-text">Bộ sách</span>
-              <select
-                value={form.book_series}
-                onChange={(event) => setForm((current) => ({ ...current, book_series: event.target.value }))}
-                className="input-field pr-10"
-              >
-                <option value="">Không gắn bộ sách</option>
-                {bookSeriesOptions.map((series) => (
-                  <option key={series} value={series}>
-                    {series}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <div className="input-field flex items-center bg-bg-muted font-semibold text-text-muted">
+                {DEFAULT_BOOK_SERIES}
+              </div>
+            </div>
             <label className="space-y-1.5">
               <span className="text-sm font-bold text-text">Curriculum item ID</span>
               <input
@@ -621,11 +801,11 @@ export default function AdminResources() {
             </label>
 
             <div className="flex flex-col gap-3 border-t pt-5 sm:flex-row lg:col-span-2" style={{ borderColor: 'var(--color-border)' }}>
-              <button type="submit" disabled={saving} className="btn-primary gap-2">
+              <button type="submit" disabled={saving || uploading} className="btn-primary min-h-11 gap-2">
                 {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
-                {editingResource ? 'Lưu thay đổi' : 'Thêm tài nguyên'}
+                {uploading ? 'Đang tải PDF…' : editingResource ? 'Lưu thay đổi' : 'Thêm tài nguyên'}
               </button>
-              <button type="button" onClick={() => closeForm()} disabled={saving} className="btn-outline rounded-full">
+              <button type="button" onClick={() => closeForm()} disabled={saving || uploading} className="btn-outline min-h-11 rounded-full">
                 Hủy
               </button>
             </div>

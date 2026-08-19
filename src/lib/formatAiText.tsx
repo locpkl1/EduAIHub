@@ -13,6 +13,38 @@ type TableBlock = {
 };
 type MarkdownBlock = TextBlock | HeadingBlock | ListBlock | CodeBlock | TableBlock;
 
+export type EduAiMessagePart =
+  | { type: 'text'; content: string }
+  | { type: 'prompt'; content: string };
+
+const EDUAI_PROMPT_PATTERN = /<EDUAI_PROMPT>([\s\S]*?)<\/EDUAI_PROMPT>/gi;
+const EDUAI_PROMPT_MARKER_PATTERN = /<\/?EDUAI_PROMPT>/gi;
+
+export function parseEduAiMessage(text: string): EduAiMessagePart[] {
+  const parts: EduAiMessagePart[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  EDUAI_PROMPT_PATTERN.lastIndex = 0;
+  while ((match = EDUAI_PROMPT_PATTERN.exec(text)) !== null) {
+    const before = text.slice(lastIndex, match.index).replace(EDUAI_PROMPT_MARKER_PATTERN, '').trim();
+    const prompt = match[1].trim();
+
+    if (before) parts.push({ type: 'text', content: before });
+    if (prompt) parts.push({ type: 'prompt', content: prompt });
+    lastIndex = match.index + match[0].length;
+  }
+
+  const after = text.slice(lastIndex).replace(EDUAI_PROMPT_MARKER_PATTERN, '').trim();
+  if (after) parts.push({ type: 'text', content: after });
+
+  return parts.length > 0 ? parts : [{ type: 'text', content: text.replace(EDUAI_PROMPT_MARKER_PATTERN, '').trim() }];
+}
+
+export function stripEduAiPromptMarkers(text: string): string {
+  return text.replace(EDUAI_PROMPT_MARKER_PATTERN, '').trim();
+}
+
 function isBlank(line: string) {
   return !line.trim();
 }

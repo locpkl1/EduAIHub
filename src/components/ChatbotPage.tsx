@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Check,
   Copy,
+  BookmarkPlus,
+  Loader2,
   MessageSquare,
   PanelLeft,
   Plus,
@@ -18,7 +20,7 @@ import {
   type StudyContext,
   type UserLearningContext,
 } from '../lib/cozeClient';
-import { formatAiText, looksLikePrompt, userRequestedSave } from '../lib/formatAiText';
+import { formatAiText, parseEduAiMessage, stripEduAiPromptMarkers } from '../lib/formatAiText';
 
 type ChatMessage = { id: string; role: 'user' | 'ai'; text: string };
 type ChatSession = {
@@ -28,6 +30,11 @@ type ChatSession = {
   conversationId: string | null;
   createdAt: string;
   updatedAt?: string;
+};
+
+type PromptSaveState = {
+  status: 'saving' | 'success' | 'error';
+  message?: string;
 };
 
 type StoredChatMessage = {
@@ -142,7 +149,6 @@ export interface ChatbotPageProps {
   starterPrompts: string[];
   sidebar?: ReactNode;
   botKey: CozeBotKey;
-  autoSavePrompts?: boolean;
   saveSubject?: string;
   saveBookSeries?: string;
   saveChapter?: string;
@@ -158,7 +164,6 @@ export default function ChatbotPage({
   starterPrompts,
   sidebar,
   botKey,
-  autoSavePrompts = false,
   saveSubject = '',
   saveBookSeries = '',
   saveChapter = '',
@@ -180,14 +185,17 @@ export default function ChatbotPage({
   });
 
   const activeSession = sessions.find((s) => s.id === activeSessionId) ?? null;
-  const messages = activeSession?.messages ?? [];
+  const messages = useMemo(() => activeSession?.messages ?? [], [activeSession]);
 
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [promptSaveStates, setPromptSaveStates] = useState<Record<string, PromptSaveState>>({});
 
   const endRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const sendingRef = useRef(false);
+  const savingPromptIdsRef = useRef(new Set<string>());
   const sessionsRef = useRef(sessions);
   sessionsRef.current = sessions;
   const storageKey = `eduaihub_chat_sessions_${botKey}_${user?.id || 'guest'}`;
@@ -255,24 +263,60 @@ export default function ChatbotPage({
     });
   }
 
-  async function maybeSavePrompt(userText: string, aiContent: string) {
-    if (!autoSavePrompts || isGuest || !user) return;
-    if (!userRequestedSave(userText) && !looksLikePrompt(aiContent)) return;
+  async function savePrompt(promptContent: string, cardId: string) {
+    if (savingPromptIdsRef.current.has(cardId)) return;
 
-    const { error } = await supabase.from('saved_prompts').insert({
-      user_id: user.id,
-      purpose: userText.substring(0, 80),
-      prompt_content: aiContent,
-      subject: saveSubject || studyContext?.subject || '',
-      book_series: saveBookSeries || studyContext?.textbookSeries || '',
-      chapter: saveChapter || studyContext?.lesson || studyContext?.chapter || '',
-    });
+    if (isGuest || !user) {
+      setPromptSaveStates((prev) => ({
+        ...prev,
+        [cardId]: { status: 'error', message: 'Đăng nhập để lưu prompt vào thư viện của bạn.' },
+      }));
+      return;
+    }
 
-    if (error) console.error('Error saving prompt:', error);
+    const content = promptContent.trim();
+    if (!content) {
+      setPromptSaveStates((prev) => ({
+        ...prev,
+        [cardId]: { status: 'error', message: 'Prompt đang trống nên chưa thể lưu.' },
+      }));
+      return;
+    }
+
+    savingPromptIdsRef.current.add(cardId);
+    setPromptSaveStates((prev) => ({ ...prev, [cardId]: { status: 'saving' } }));
+
+    try {
+      const purpose = content.split('\n').find((line) => line.trim())?.replace(/^#+\s*/, '').slice(0, 80)
+        || 'Prompt từ chatbot';
+      const { error } = await supabase.from('saved_prompts').insert({
+        user_id: user.id,
+        purpose,
+        prompt_content: content,
+        subject: saveSubject || studyContext?.subject || '',
+        book_series: saveBookSeries || studyContext?.textbookSeries || '',
+        chapter: saveChapter || studyContext?.lesson || studyContext?.chapter || '',
+      });
+
+      if (error) throw error;
+      setPromptSaveStates((prev) => ({
+        ...prev,
+        [cardId]: { status: 'success', message: 'Đã lưu vào Kho Prompt.' },
+      }));
+    } catch (error) {
+      console.error('Error saving prompt:', error);
+      setPromptSaveStates((prev) => ({
+        ...prev,
+        [cardId]: { status: 'error', message: 'Không thể lưu prompt. Vui lòng thử lại.' },
+      }));
+    } finally {
+      savingPromptIdsRef.current.delete(cardId);
+    }
   }
 
   async function handleSend() {
-    if (!input.trim() || loading) return;
+    if (!input.trim() || sendingRef.current) return;
+    sendingRef.current = true;
     const text = input.trim();
 
     let sessionId = activeSessionId;
@@ -332,16 +376,15 @@ export default function ChatbotPage({
         prev.map((s) =>
           s.id === sessionId
             ? {
-                ...s,
-                conversationId: conversation_id,
-                messages: [...s.messages, aiMsg].slice(-MAX_MESSAGES_PER_SESSION),
-                updatedAt: nowIso(),
-              }
+              ...s,
+              conversationId: conversation_id,
+              messages: [...s.messages, aiMsg].slice(-MAX_MESSAGES_PER_SESSION),
+              updatedAt: nowIso(),
+            }
             : s
         )
       );
 
-      await maybeSavePrompt(text, content);
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại.';
       const aiMsg: ChatMessage = { id: genId(), role: 'ai', text: errMsg };
@@ -353,21 +396,27 @@ export default function ChatbotPage({
         )
       );
     } finally {
+      sendingRef.current = false;
       setLoading(false);
     }
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.nativeEvent.isComposing) return;
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   }
 
-  function handleCopy(text: string, id: string) {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
+  async function handleCopy(text: string, id: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      setCopiedId(null);
+    }
   }
 
   return (
@@ -387,360 +436,459 @@ export default function ChatbotPage({
           boxShadow: '0 22px 70px -54px rgba(0,0,0,0.5)',
         }}
       >
-      {sidebarOpen && (
-        <button
-          type="button"
-          aria-label="Đóng lịch sử"
-          className="absolute inset-0 z-30 bg-text/25 backdrop-blur-[2px] sm:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <header
-          className="shrink-0 border-b px-2.5 py-2 sm:px-4"
-          style={{
-            backgroundColor: 'color-mix(in srgb, var(--color-bg) 82%, transparent)',
-            borderColor: 'color-mix(in srgb, var(--color-border) 62%, transparent)',
-            backdropFilter: 'blur(14px)',
-          }}
-        >
-          <div
-            className="flex min-w-0 items-center gap-2 rounded-[24px] border px-2 py-2 sm:gap-3 sm:px-3"
-            style={{
-              backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 88%, transparent)',
-              borderColor: 'color-mix(in srgb, var(--color-border) 72%, transparent)',
-              boxShadow: '0 14px 34px -32px rgba(0,0,0,0.5)',
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => setSidebarOpen((v) => !v)}
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:h-10 sm:w-10"
-              style={{ backgroundColor: 'color-mix(in srgb, var(--color-bg-muted) 72%, transparent)' }}
-              aria-expanded={sidebarOpen}
-              aria-label={sidebarToggleLabel}
-              title={sidebarToggleLabel}
-            >
-              <PanelLeft size={16} />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate('/ai-tools')}
-              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-sm font-bold text-text-muted transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:h-10"
-              aria-label="Quay lại trang Công Cụ AI"
-            >
-              <ArrowLeft size={14} />
-              <span className="hidden sm:inline">Công Cụ AI</span>
-            </button>
-
-            <div className="hidden h-6 w-px shrink-0 bg-border/70 sm:block" />
-
-            <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl"
-              style={{
-                backgroundColor: `color-mix(in srgb, ${primaryColor} 13%, var(--color-bg-card))`,
-                border: `1px solid color-mix(in srgb, ${primaryColor} 28%, var(--color-border))`,
-              }}
-            >
-              {icon}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-display text-sm font-bold leading-tight text-text sm:text-base">{title}</p>
-              <p className="hidden truncate text-xs leading-5 text-text-muted md:block">{subtitle}</p>
-            </div>
-
-            <div
-              className="ml-auto inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border px-2.5 sm:px-3"
-              style={{
-                backgroundColor: 'color-mix(in srgb, var(--color-bg-muted) 70%, transparent)',
-                borderColor: 'color-mix(in srgb, var(--color-border) 74%, transparent)',
-              }}
-            >
-              <span className="h-2 w-2 rounded-full animate-pulse-dot" style={{ backgroundColor: 'var(--color-success)' }} />
-              <span className="hidden text-[10px] font-bold uppercase tracking-[0.14em] text-text-light sm:inline">Sẵn sàng</span>
-            </div>
-          </div>
-        </header>
-
-        <div className="relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
-          <aside
-            aria-hidden={!sidebarOpen}
-            className={`absolute bottom-3 left-3 top-3 z-40 flex min-h-0 w-[min(292px,calc(100vw-24px))] shrink-0 flex-col overflow-hidden rounded-[24px] border transition-[transform,width,opacity] duration-200 sm:static sm:z-auto sm:h-auto sm:rounded-none sm:border-y-0 sm:border-l-0 ${
-              sidebarOpen
-                ? 'translate-x-0 sm:w-[248px] sm:opacity-100 lg:w-[268px]'
-                : 'pointer-events-none -translate-x-[calc(100%+24px)] sm:w-0 sm:translate-x-0 sm:opacity-0'
-            }`}
-            style={{
-              backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 92%, var(--color-bg))',
-              borderColor: 'color-mix(in srgb, var(--color-border) 68%, transparent)',
-              boxShadow: sidebarOpen ? '14px 0 34px -30px rgba(0,0,0,0.4)' : 'none',
-            }}
-          >
-            <div className="shrink-0 p-3.5" style={{ borderBottom: '1px solid color-mix(in srgb, var(--color-border) 62%, transparent)' }}>
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate font-display text-sm font-bold text-text">Phiên học</p>
-                  <p className="mt-0.5 text-[11px] text-text-light">{sessions.length} phiên trò chuyện</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={createNewSession}
-                  className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-bold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                  style={{ backgroundColor: primaryColor, boxShadow: `0 12px 26px -20px ${primaryColor}` }}
-                  title="Cuộc trò chuyện mới"
-                >
-                  <Plus size={13} />
-                  Mới
-                </button>
-              </div>
-              <p className="mt-3 rounded-2xl px-3 py-2.5 text-xs leading-5 text-text-muted" style={{ backgroundColor: 'color-mix(in srgb, var(--color-bg-muted) 74%, transparent)' }}>
-                Mỗi phiên là một góc học riêng cho câu hỏi, prompt và phản hồi AI.
-              </p>
-            </div>
-
-            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2.5">
-              {sessions.length === 0 && (
-                <div
-                  className="rounded-2xl border px-3 py-4 text-left text-xs leading-5 text-text-muted"
-                  style={{
-                    backgroundColor: 'color-mix(in srgb, var(--color-bg-muted) 76%, transparent)',
-                    borderColor: 'color-mix(in srgb, var(--color-border) 62%, transparent)',
-                  }}
-                >
-                  Chưa có phiên nào. Bắt đầu bằng một câu hỏi nhỏ để mở trang học đầu tiên.
-                </div>
-              )}
-              {sessions.map((s) => {
-                const active = s.id === activeSessionId;
-                return (
-                  <div
-                    key={s.id}
-                    className="group flex cursor-pointer items-center gap-2 rounded-[18px] border p-2.5 text-sm transition-all hover:-translate-y-0.5"
-                    style={{
-                      backgroundColor: active
-                        ? `color-mix(in srgb, ${primaryColor} 12%, var(--color-bg-card))`
-                        : 'color-mix(in srgb, var(--color-bg-card) 54%, transparent)',
-                      borderColor: active
-                        ? `color-mix(in srgb, ${primaryColor} 30%, var(--color-border))`
-                        : 'color-mix(in srgb, var(--color-border) 48%, transparent)',
-                      color: active ? 'var(--color-text)' : 'var(--color-text-muted)',
-                      boxShadow: active ? '0 14px 30px -28px rgba(0,0,0,0.45)' : 'none',
-                    }}
-                    onClick={() => {
-                      setActiveSessionId(s.id);
-                      if (window.innerWidth < 640) setSidebarOpen(false);
-                    }}
-                  >
-                    <span
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                      style={{
-                        backgroundColor: active
-                          ? `color-mix(in srgb, ${primaryColor} 16%, var(--color-bg-card))`
-                          : 'color-mix(in srgb, var(--color-bg-muted) 82%, transparent)',
-                      }}
-                    >
-                      <MessageSquare size={14} className="opacity-75" />
-                    </span>
-                    <span className="min-w-0 flex-1 truncate text-xs font-bold">{s.title}</span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteSession(s.id);
-                      }}
-                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-text-light opacity-100 transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
-                      aria-label="Xóa phiên"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </aside>
-
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-
-        {sidebar && (
-          <div
-            className="max-h-[42dvh] min-h-0 shrink-0 overflow-y-auto overflow-x-hidden border-b px-3 py-3 sm:max-h-[34dvh] sm:px-4 lg:hidden"
-            style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-card)' }}
-          >
-            {sidebar}
-          </div>
+        {sidebarOpen && (
+          <button
+            type="button"
+            aria-label="Đóng lịch sử"
+            className="absolute inset-0 z-30 bg-text/25 backdrop-blur-[2px] sm:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
         )}
 
-        <div className="flex min-h-0 flex-1 overflow-hidden">
-          {sidebar && (
-            <aside
-              className="hidden w-72 shrink-0 overflow-y-auto border-r lg:block"
-              style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
-            >
-              {sidebar}
-            </aside>
-          )}
-
-          <section className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <header
+            className="shrink-0 border-b px-2.5 py-2 sm:px-4"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--color-bg) 82%, transparent)',
+              borderColor: 'color-mix(in srgb, var(--color-border) 62%, transparent)',
+              backdropFilter: 'blur(14px)',
+            }}
+          >
             <div
-              className="min-h-0 flex-1 overflow-y-auto"
+              className="flex min-w-0 items-center gap-2 rounded-[24px] border px-2 py-2 sm:gap-3 sm:px-3"
               style={{
-                backgroundImage:
-                  'linear-gradient(180deg, color-mix(in srgb, var(--color-bg-card) 82%, transparent), transparent 15%, transparent 86%, color-mix(in srgb, var(--color-bg-card) 72%, transparent)), radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--color-bg-card) 76%, transparent), transparent 42%), repeating-linear-gradient(180deg, transparent 0, transparent 31px, color-mix(in srgb, var(--color-border) 36%, transparent) 32px)',
-                backgroundSize: '100% 100%, 100% 100%, 100% 32px',
-                backgroundPosition: 'center top, center top, 0 0',
-                backgroundColor: 'var(--color-bg)',
+                backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 88%, transparent)',
+                borderColor: 'color-mix(in srgb, var(--color-border) 72%, transparent)',
+                boxShadow: '0 14px 34px -32px rgba(0,0,0,0.5)',
               }}
             >
-              {messages.length === 0 ? (
-                <EmptyChatState
-                  title={title}
-                  subtitle={subtitle}
-                  icon={icon}
-                  starterPrompts={starterPrompts}
-                  primaryColor={primaryColor}
-                  onPick={setInput}
-                />
-              ) : (
-                <div className="mx-auto w-full max-w-[800px] space-y-7 px-3 py-5 sm:px-5 sm:py-6">
-                  {messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex min-w-0 gap-2 sm:gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      {msg.role === 'ai' && (
-                        <div
-                          className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full sm:h-8 sm:w-8"
-                          style={{
-                            backgroundColor: `color-mix(in srgb, ${primaryColor} 13%, var(--color-bg-card))`,
-                            border: `1px solid color-mix(in srgb, ${primaryColor} 32%, var(--color-border))`,
-                          }}
-                        >
-                          <div style={{ transform: 'scale(0.68)' }}>{icon}</div>
-                        </div>
-                      )}
+              <button
+                type="button"
+                onClick={() => setSidebarOpen((v) => !v)}
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--color-bg-muted) 72%, transparent)' }}
+                aria-expanded={sidebarOpen}
+                aria-label={sidebarToggleLabel}
+                title={sidebarToggleLabel}
+              >
+                <PanelLeft size={16} />
+              </button>
 
-                      <div
-                        className={`group min-w-0 max-w-[calc(100%-2.25rem)] px-4 py-3 text-sm leading-7 [overflow-wrap:anywhere] sm:px-5 sm:py-3.5 sm:max-w-[80%] lg:max-w-[74%] ${
-                          msg.role === 'user' ? 'text-white' : 'text-text'
-                        }`}
-                        style={
-                          msg.role === 'user'
-                            ? {
-                                background: `linear-gradient(135deg, ${primaryColor}, color-mix(in srgb, ${primaryColor} 82%, var(--color-text)))`,
-                                borderRadius: '22px 22px 8px 22px',
-                                boxShadow: '0 16px 30px -25px rgba(0,0,0,0.46)',
-                              }
-                            : {
-                                backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 88%, transparent)',
-                                border: '1px solid color-mix(in srgb, var(--color-border) 54%, transparent)',
-                                borderRadius: '24px 24px 24px 10px',
-                                boxShadow: '0 18px 38px -34px rgba(0,0,0,0.44)',
-                              }
-                        }
-                      >
-                        {msg.role === 'user' ? <p className="whitespace-pre-wrap">{msg.text}</p> : formatAiText(msg.text)}
-                        {msg.role === 'ai' && (
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(msg.text, msg.id)}
-                            className="mt-3 ml-auto flex min-h-8 items-center gap-1.5 rounded-full border px-3 text-[11px] font-bold opacity-85 transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:opacity-65 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
-                            style={{
-                              backgroundColor: 'var(--color-bg-card)',
-                              borderColor: 'var(--color-border)',
-                              color: 'var(--color-text-muted)',
-                            }}
-                            aria-label="Sao chép phản hồi AI"
-                          >
-                            {copiedId === msg.id ? <><Check size={10} /> Đã sao chép</> : <><Copy size={10} /> Sao chép</>}
-                          </button>
-                        )}
-                      </div>
+              <button
+                type="button"
+                onClick={() => navigate('/ai-tools')}
+                className="inline-flex h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-full px-2.5 text-sm font-bold text-text-muted transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                aria-label="Quay lại trang Công Cụ AI"
+              >
+                <ArrowLeft size={14} />
+                <span className="hidden sm:inline">Công Cụ AI</span>
+              </button>
 
-                      {msg.role === 'user' && (
-                        <div
-                          className="mt-1 hidden h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white sm:flex sm:h-8 sm:w-8"
-                          style={{ backgroundColor: primaryColor }}
-                        >
-                          {userInitials}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+              <div className="hidden h-6 w-px shrink-0 bg-border/70 sm:block" />
 
-                  {loading && <TypingIndicator icon={icon} primaryColor={primaryColor} />}
-                  <div ref={endRef} className="h-4" />
-                </div>
-              )}
-            </div>
+              <div
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl"
+                style={{
+                  backgroundColor: `color-mix(in srgb, ${primaryColor} 13%, var(--color-bg-card))`,
+                  border: `1px solid color-mix(in srgb, ${primaryColor} 28%, var(--color-border))`,
+                }}
+              >
+                {icon}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-display text-sm font-bold leading-tight text-text sm:text-base">{title}</p>
+                <p className="hidden truncate text-xs leading-5 text-text-muted md:block">{subtitle}</p>
+              </div>
 
-            <div
-              className="shrink-0 border-t px-3 pb-[calc(0.9rem+env(safe-area-inset-bottom))] pt-3 sm:px-4"
-              style={{
-                borderColor: 'color-mix(in srgb, var(--color-border) 68%, transparent)',
-                backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 74%, transparent)',
-                backdropFilter: 'blur(16px)',
-              }}
-            >
-              <div className="mx-auto w-full max-w-[800px]">
-                <div
-                  className="flex min-w-0 items-end gap-2 p-2.5 sm:gap-3 sm:p-3"
-                  style={{
-                    backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 96%, transparent)',
-                    border: '1px solid color-mix(in srgb, var(--color-border) 66%, transparent)',
-                    borderRadius: '30px',
-                    boxShadow: '0 20px 52px -38px rgba(0,0,0,0.52)',
-                  }}
-                  onFocusCapture={(e) => {
-                    (e.currentTarget as HTMLElement).style.borderColor = primaryColor;
-                    (e.currentTarget as HTMLElement).style.boxShadow = `0 0 0 3px color-mix(in srgb, ${primaryColor} 14%, transparent), 0 22px 56px -40px rgba(0,0,0,0.52)`;
-                  }}
-                  onBlurCapture={(e) => {
-                    (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)';
-                    (e.currentTarget as HTMLElement).style.boxShadow = 'none';
-                  }}
-                >
-                  <textarea
-                    ref={textareaRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Nhắn tin... Enter để gửi, Shift+Enter xuống dòng"
-                    rows={1}
-                    className="min-w-0 flex-1 resize-none bg-transparent px-2.5 py-2 text-sm outline-none sm:px-3"
-                    style={{
-                      color: 'var(--color-text)',
-                      minHeight: '48px',
-                      maxHeight: '160px',
-                      lineHeight: '1.55',
-                    }}
-                    aria-label="Nội dung tin nhắn gửi chatbot"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSend}
-                    disabled={!input.trim() || loading}
-                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40"
-                    style={{ backgroundColor: input.trim() && !loading ? primaryColor : 'var(--color-border-strong)' }}
-                    aria-label="Gửi tin nhắn"
-                    title="Gửi"
-                  >
-                    <Send size={17} />
-                  </button>
-                </div>
-                <p className="mt-2 text-center text-[11px] leading-5 text-text-light">
-                  AI có thể mắc lỗi. Hãy kiểm chứng thông tin quan trọng và giữ vai trò người học chủ động.
-                </p>
+              <div
+                className="ml-auto inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border px-2.5 sm:px-3"
+                style={{
+                  backgroundColor: 'color-mix(in srgb, var(--color-bg-muted) 70%, transparent)',
+                  borderColor: 'color-mix(in srgb, var(--color-border) 74%, transparent)',
+                }}
+              >
+                <span className="h-2 w-2 rounded-full animate-pulse-dot" style={{ backgroundColor: 'var(--color-success)' }} />
+                <span className="hidden text-[10px] font-bold uppercase tracking-[0.14em] text-text-light sm:inline">Sẵn sàng</span>
               </div>
             </div>
-          </section>
+          </header>
+
+          <div className="relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
+            <aside
+              aria-hidden={!sidebarOpen}
+              className={`absolute bottom-3 left-3 top-3 z-40 flex min-h-0 w-[min(292px,calc(100vw-24px))] shrink-0 flex-col overflow-hidden rounded-[24px] border transition-[transform,width,opacity] duration-200 sm:static sm:z-auto sm:h-auto sm:rounded-none sm:border-y-0 sm:border-l-0 ${sidebarOpen
+                ? 'translate-x-0 sm:w-[248px] sm:opacity-100 lg:w-[268px]'
+                : 'pointer-events-none -translate-x-[calc(100%+24px)] sm:w-0 sm:translate-x-0 sm:opacity-0'
+                }`}
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 92%, var(--color-bg))',
+                borderColor: 'color-mix(in srgb, var(--color-border) 68%, transparent)',
+                boxShadow: sidebarOpen ? '14px 0 34px -30px rgba(0,0,0,0.4)' : 'none',
+              }}
+            >
+              <div className="shrink-0 p-3.5" style={{ borderBottom: '1px solid color-mix(in srgb, var(--color-border) 62%, transparent)' }}>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-display text-sm font-bold text-text">Phiên học</p>
+                    <p className="mt-0.5 text-[11px] text-text-light">{sessions.length} phiên trò chuyện</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={createNewSession}
+                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-bold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    style={{ backgroundColor: primaryColor, boxShadow: `0 12px 26px -20px ${primaryColor}` }}
+                    title="Cuộc trò chuyện mới"
+                  >
+                    <Plus size={13} />
+                    Mới
+                  </button>
+                </div>
+                <p className="mt-3 rounded-2xl px-3 py-2.5 text-xs leading-5 text-text-muted" style={{ backgroundColor: 'color-mix(in srgb, var(--color-bg-muted) 74%, transparent)' }}>
+                  Mỗi phiên là một góc học riêng cho câu hỏi, prompt và phản hồi AI.
+                </p>
+              </div>
+
+              <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2.5">
+                {sessions.length === 0 && (
+                  <div
+                    className="rounded-2xl border px-3 py-4 text-left text-xs leading-5 text-text-muted"
+                    style={{
+                      backgroundColor: 'color-mix(in srgb, var(--color-bg-muted) 76%, transparent)',
+                      borderColor: 'color-mix(in srgb, var(--color-border) 62%, transparent)',
+                    }}
+                  >
+                    Chưa có phiên nào. Bắt đầu bằng một câu hỏi nhỏ để mở trang học đầu tiên.
+                  </div>
+                )}
+                {sessions.map((s) => {
+                  const active = s.id === activeSessionId;
+                  return (
+                    <div
+                      key={s.id}
+                      className="group flex cursor-pointer items-center gap-2 rounded-[18px] border p-2.5 text-sm transition-all hover:-translate-y-0.5"
+                      style={{
+                        backgroundColor: active
+                          ? `color-mix(in srgb, ${primaryColor} 12%, var(--color-bg-card))`
+                          : 'color-mix(in srgb, var(--color-bg-card) 54%, transparent)',
+                        borderColor: active
+                          ? `color-mix(in srgb, ${primaryColor} 30%, var(--color-border))`
+                          : 'color-mix(in srgb, var(--color-border) 48%, transparent)',
+                        color: active ? 'var(--color-text)' : 'var(--color-text-muted)',
+                        boxShadow: active ? '0 14px 30px -28px rgba(0,0,0,0.45)' : 'none',
+                      }}
+                      onClick={() => {
+                        setActiveSessionId(s.id);
+                        if (window.innerWidth < 640) setSidebarOpen(false);
+                      }}
+                    >
+                      <span
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                        style={{
+                          backgroundColor: active
+                            ? `color-mix(in srgb, ${primaryColor} 16%, var(--color-bg-card))`
+                            : 'color-mix(in srgb, var(--color-bg-muted) 82%, transparent)',
+                        }}
+                      >
+                        <MessageSquare size={14} className="opacity-75" />
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-xs font-bold">{s.title}</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteSession(s.id);
+                        }}
+                        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-text-light opacity-100 transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+                        aria-label="Xóa phiên"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </aside>
+
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+
+              {sidebar && (
+                <div
+                  className="max-h-[42dvh] min-h-0 shrink-0 overflow-y-auto overflow-x-hidden border-b px-3 py-3 sm:max-h-[34dvh] sm:px-4 lg:hidden"
+                  style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-card)' }}
+                >
+                  {sidebar}
+                </div>
+              )}
+
+              <div className="flex min-h-0 flex-1 overflow-hidden">
+                {sidebar && (
+                  <aside
+                    className="hidden w-72 shrink-0 overflow-y-auto border-r lg:block"
+                    style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
+                  >
+                    {sidebar}
+                  </aside>
+                )}
+
+                <section className="flex min-h-0 min-w-0 flex-1 flex-col">
+                  <div
+                    className="min-h-0 flex-1 overscroll-contain overflow-y-auto"
+                    style={{
+                      backgroundImage:
+                        'linear-gradient(180deg, color-mix(in srgb, var(--color-bg-card) 82%, transparent), transparent 15%, transparent 86%, color-mix(in srgb, var(--color-bg-card) 72%, transparent)), radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--color-bg-card) 76%, transparent), transparent 42%), repeating-linear-gradient(180deg, transparent 0, transparent 31px, color-mix(in srgb, var(--color-border) 36%, transparent) 32px)',
+                      backgroundSize: '100% 100%, 100% 100%, 100% 32px',
+                      backgroundPosition: 'center top, center top, 0 0',
+                      backgroundColor: 'var(--color-bg)',
+                    }}
+                  >
+                    {messages.length === 0 ? (
+                      <EmptyChatState
+                        title={title}
+                        subtitle={subtitle}
+                        icon={icon}
+                        starterPrompts={starterPrompts}
+                        primaryColor={primaryColor}
+                        onPick={setInput}
+                      />
+                    ) : (
+                      <div className="mx-auto w-full max-w-[800px] space-y-7 px-3 py-5 sm:px-5 sm:py-6">
+                        {messages.map((msg) => (
+                          <div
+                            key={msg.id}
+                            className={`flex min-w-0 gap-2 sm:gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                          >
+                            {msg.role === 'ai' && (
+                              <div
+                                className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full sm:h-8 sm:w-8"
+                                style={{
+                                  backgroundColor: `color-mix(in srgb, ${primaryColor} 13%, var(--color-bg-card))`,
+                                  border: `1px solid color-mix(in srgb, ${primaryColor} 32%, var(--color-border))`,
+                                }}
+                              >
+                                <div style={{ transform: 'scale(0.68)' }}>{icon}</div>
+                              </div>
+                            )}
+
+                            <div
+                              className={`group min-w-0 max-w-[calc(100%-2.25rem)] px-4 py-3 text-sm leading-7 [overflow-wrap:anywhere] sm:px-5 sm:py-3.5 sm:max-w-[80%] lg:max-w-[74%] ${msg.role === 'user' ? 'text-white' : 'text-text'
+                                }`}
+                              style={
+                                msg.role === 'user'
+                                  ? {
+                                    background: `linear-gradient(135deg, ${primaryColor}, color-mix(in srgb, ${primaryColor} 82%, var(--color-text)))`,
+                                    borderRadius: '22px 22px 8px 22px',
+                                    boxShadow: '0 16px 30px -25px rgba(0,0,0,0.46)',
+                                  }
+                                  : {
+                                    backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 88%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--color-border) 54%, transparent)',
+                                    borderRadius: '24px 24px 24px 10px',
+                                    boxShadow: '0 18px 38px -34px rgba(0,0,0,0.44)',
+                                  }
+                              }
+                            >
+                              {msg.role === 'user' ? (
+                                <p className="whitespace-pre-wrap">{msg.text}</p>
+                              ) : (
+                                <div className="space-y-4">
+                                  {parseEduAiMessage(msg.text).map((part, partIndex) => {
+                                    if (part.type === 'text') {
+                                      return <div key={`text-${partIndex}`}>{formatAiText(part.content)}</div>;
+                                    }
+
+                                    const cardId = `${msg.id}-prompt-${partIndex}`;
+                                    return (
+                                      <PromptCard
+                                        key={cardId}
+                                        content={part.content}
+                                        copied={copiedId === cardId}
+                                        saveState={promptSaveStates[cardId]}
+                                        onCopy={() => handleCopy(part.content, cardId)}
+                                        onSave={() => savePrompt(part.content, cardId)}
+                                      />
+                                    );
+                                  })}
+                                </div>
+                              )}
+                              {msg.role === 'ai' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopy(stripEduAiPromptMarkers(msg.text), msg.id)}
+                                  className="mt-3 ml-auto flex min-h-8 items-center gap-1.5 rounded-full border px-3 text-[11px] font-bold opacity-85 transition-colors hover:bg-bg-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:opacity-65 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+                                  style={{
+                                    backgroundColor: 'var(--color-bg-card)',
+                                    borderColor: 'var(--color-border)',
+                                    color: 'var(--color-text-muted)',
+                                  }}
+                                  aria-label="Sao chép phản hồi AI"
+                                >
+                                  {copiedId === msg.id ? <><Check size={10} /> Đã sao chép</> : <><Copy size={10} /> Sao chép</>}
+                                </button>
+                              )}
+                            </div>
+
+                            {msg.role === 'user' && (
+                              <div
+                                className="mt-1 hidden h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white sm:flex sm:h-8 sm:w-8"
+                                style={{ backgroundColor: primaryColor }}
+                              >
+                                {userInitials}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+
+                        {loading && <TypingIndicator icon={icon} primaryColor={primaryColor} />}
+                        <div ref={endRef} className="h-4" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div
+                    className="shrink-0 border-t px-3 pb-[calc(0.9rem+env(safe-area-inset-bottom))] pt-3 sm:px-4"
+                    style={{
+                      borderColor: 'color-mix(in srgb, var(--color-border) 68%, transparent)',
+                      backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 74%, transparent)',
+                      backdropFilter: 'blur(16px)',
+                    }}
+                  >
+                    <div className="mx-auto w-full max-w-[800px]">
+                      <div
+                        className="flex min-w-0 items-end gap-2 p-2.5 sm:gap-3 sm:p-3"
+                        style={{
+                          backgroundColor: 'color-mix(in srgb, var(--color-bg-card) 96%, transparent)',
+                          border: '1px solid color-mix(in srgb, var(--color-border) 66%, transparent)',
+                          borderRadius: '30px',
+                          boxShadow: '0 20px 52px -38px rgba(0,0,0,0.52)',
+                        }}
+                        onFocusCapture={(e) => {
+                          (e.currentTarget as HTMLElement).style.borderColor = primaryColor;
+                          (e.currentTarget as HTMLElement).style.boxShadow = `0 0 0 3px color-mix(in srgb, ${primaryColor} 14%, transparent), 0 22px 56px -40px rgba(0,0,0,0.52)`;
+                        }}
+                        onBlurCapture={(e) => {
+                          (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)';
+                          (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+                        }}
+                      >
+                        <textarea
+                          ref={textareaRef}
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          onKeyDown={handleKeyDown}
+                          placeholder="Nhắn tin... Enter để gửi, Shift+Enter xuống dòng"
+                          rows={1}
+                          className="min-w-0 flex-1 resize-none bg-transparent px-2.5 py-2 text-sm outline-none sm:px-3"
+                          style={{
+                            color: 'var(--color-text)',
+                            minHeight: '48px',
+                            maxHeight: '160px',
+                            lineHeight: '1.55',
+                          }}
+                          aria-label="Nội dung tin nhắn gửi chatbot"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSend}
+                          disabled={!input.trim() || loading}
+                          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40"
+                          style={{ backgroundColor: input.trim() && !loading ? primaryColor : 'var(--color-border-strong)' }}
+                          aria-label="Gửi tin nhắn"
+                          title="Gửi"
+                        >
+                          <Send size={17} />
+                        </button>
+                      </div>
+                      <p className="mt-2 text-center text-[11px] leading-5 text-text-light">
+                        AI có thể mắc lỗi. Hãy kiểm chứng thông tin quan trọng và giữ vai trò người học chủ động.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      </div>
-      </div>
-      </div>
     </div>
+  );
+}
+
+function PromptCard({
+  content,
+  copied,
+  saveState,
+  onCopy,
+  onSave,
+}: {
+  content: string;
+  copied: boolean;
+  saveState?: PromptSaveState;
+  onCopy: () => void;
+  onSave: () => void;
+}) {
+  const saving = saveState?.status === 'saving';
+  const saved = saveState?.status === 'success';
+
+  return (
+    <section
+      className="my-4 min-w-0 overflow-hidden rounded-2xl border"
+      style={{
+        backgroundColor: 'color-mix(in srgb, var(--color-primary-light) 52%, var(--color-bg-card))',
+        borderColor: 'color-mix(in srgb, var(--color-primary) 34%, var(--color-border))',
+      }}
+      aria-label="Prompt hoàn chỉnh"
+      data-prompt-card
+    >
+      <div
+        className="flex items-center gap-2 border-b px-3 py-2.5 sm:px-4"
+        style={{ borderColor: 'color-mix(in srgb, var(--color-primary) 22%, var(--color-border))' }}
+      >
+        <BookmarkPlus size={15} className="shrink-0 text-primary" />
+        <p className="min-w-0 flex-1 text-xs font-bold uppercase tracking-[0.14em] text-primary">
+          Prompt hoàn chỉnh
+        </p>
+      </div>
+
+      <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-words px-3 py-4 font-mono-code text-xs leading-6 text-text sm:px-4">
+        {content}
+      </pre>
+
+      <div
+        className="flex flex-wrap items-center gap-2 border-t px-3 py-3 sm:px-4"
+        style={{ borderColor: 'color-mix(in srgb, var(--color-primary) 22%, var(--color-border))' }}
+      >
+        <button
+          type="button"
+          onClick={onCopy}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-4 text-xs font-bold text-text-muted transition-colors hover:bg-bg-card hover:text-text"
+          style={{ borderColor: 'var(--color-border)' }}
+          aria-label="Sao chép prompt"
+        >
+          {copied ? <Check size={14} /> : <Copy size={14} />}
+          {copied ? 'Đã sao chép' : 'Copy'}
+        </button>
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={saving || saved}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-xs font-bold text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-70"
+          style={{ backgroundColor: saved ? 'var(--color-success)' : 'var(--color-primary)' }}
+          aria-label="Lưu prompt"
+        >
+          {saving ? <Loader2 size={14} className="animate-spin" /> : saved ? <Check size={14} /> : <BookmarkPlus size={14} />}
+          {saving ? 'Đang lưu...' : saved ? 'Đã lưu' : 'Lưu Prompt'}
+        </button>
+        {saveState?.message && (
+          <p
+            className={`w-full text-xs leading-5 ${saveState.status === 'error' ? 'text-accent' : 'text-success'}`}
+            role={saveState.status === 'error' ? 'alert' : 'status'}
+            aria-live="polite"
+          >
+            {saveState.message}
+          </p>
+        )}
+      </div>
+    </section>
   );
 }
 

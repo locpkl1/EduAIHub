@@ -2,6 +2,7 @@ import type { StudyContext, UserLearningContext } from './cozeClient';
 
 const NOT_PROVIDED = 'Chưa cung cấp';
 const NOT_SELECTED = 'Chưa chọn';
+const DEFAULT_BOOK_SERIES = 'Kết nối tri thức với cuộc sống';
 
 export function buildCozeCustomVariables(args: {
   userContext?: UserLearningContext;
@@ -24,9 +25,11 @@ export function buildCozeCustomVariables(args: {
     ai_experience_level: user?.aiExperienceLevel || NOT_PROVIDED,
 
     subject: study?.subject || NOT_SELECTED,
-    textbook_series: study?.textbookSeries || NOT_SELECTED,
-    chapter: study?.chapter || NOT_SELECTED,
-    lesson: study?.lesson || NOT_SELECTED,
+    textbook_series: DEFAULT_BOOK_SERIES,
+    knowledge_area: study?.knowledgeArea || study?.chapter || NOT_SELECTED,
+    topic: study?.topic || study?.lesson || NOT_SELECTED,
+    chapter: study?.chapter || study?.knowledgeArea || NOT_SELECTED,
+    lesson: study?.lesson || study?.topic || NOT_SELECTED,
     study_learning_goal: study?.learningGoal || NOT_PROVIDED,
     current_level: study?.currentLevel || NOT_PROVIDED,
   };

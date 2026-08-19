@@ -1,16 +1,31 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
+  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   BookOpen,
+  Check,
   ChevronRight,
+  Clipboard,
   Home,
+  Lightbulb,
   NotebookPen,
+  PencilLine,
+  Quote,
   SearchCheck,
   Sparkles,
 } from 'lucide-react';
 import { CTASection, EditorialCard, SectionHeading } from '../components/ui';
-import { getAdjacentGuideLessons, getGuideLesson, guideLessons, type GuideAccent, type GuideLesson } from '../data/guideLessons';
+import {
+  getAdjacentGuideLessons,
+  getGuideLesson,
+  guideLessons,
+  type GuideAccent,
+  type GuideCalloutTone,
+  type GuideContentBlock,
+  type GuideLesson,
+} from '../data/guideLessons';
 
 const accentText: Record<GuideAccent, string> = {
   blue: 'var(--color-primary)',
@@ -39,6 +54,132 @@ function NumberStamp({ lesson }: { lesson: GuideLesson }) {
       {String(lesson.number).padStart(2, '0')}
     </span>
   );
+}
+
+const calloutStyles: Record<GuideCalloutTone, { background: string; border: string; icon: typeof Lightbulb }> = {
+  principle: {
+    background: 'var(--color-primary-light)',
+    border: 'var(--color-primary)',
+    icon: Lightbulb,
+  },
+  warning: {
+    background: 'var(--color-accent-light)',
+    border: 'var(--color-accent)',
+    icon: AlertTriangle,
+  },
+  try: {
+    background: 'var(--color-secondary-light)',
+    border: 'var(--color-secondary)',
+    icon: PencilLine,
+  },
+};
+
+function PromptExample({ title, content, explanation }: Extract<GuideContentBlock, { type: 'prompt' }>) {
+  const [copied, setCopied] = useState(false);
+
+  async function copyPrompt() {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <div className="min-w-0 border bg-bg-muted p-4 sm:p-5" style={{ borderColor: 'var(--color-border-strong)' }}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">{title}</p>
+        <button
+          type="button"
+          onClick={copyPrompt}
+          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 border px-3 text-sm font-bold text-text transition-colors hover:border-primary hover:text-primary"
+          style={{ borderColor: 'var(--color-border)' }}
+          aria-label={`Sao chép prompt: ${title}`}
+        >
+          {copied ? <Check size={15} /> : <Clipboard size={15} />}
+          {copied ? 'Đã sao chép' : 'Sao chép'}
+        </button>
+      </div>
+      <p className="mt-4 whitespace-pre-wrap break-words text-sm font-semibold leading-8 text-text sm:text-base">{content}</p>
+      {explanation && <p className="mt-4 text-sm leading-7 text-text-muted">{explanation}</p>}
+      <p className="mt-4 border-t pt-3 text-xs leading-6 text-text-light" style={{ borderColor: 'var(--color-border)' }}>
+        Hãy xem prompt như một mẫu để chỉnh sửa, không phải câu lệnh phải sao chép nguyên xi.
+      </p>
+    </div>
+  );
+}
+
+function ContentCallout({ tone, title, content }: Extract<GuideContentBlock, { type: 'callout' }>) {
+  const style = calloutStyles[tone];
+  const Icon = style.icon;
+
+  return (
+    <div className="border-l-4 p-4 sm:p-5" style={{ backgroundColor: style.background, borderColor: style.border }}>
+      <div className="flex items-start gap-3">
+        <Icon className="mt-0.5 shrink-0" size={19} style={{ color: style.border }} />
+        <div className="min-w-0">
+          <h3 className="font-display text-lg font-bold leading-tight text-text">{title}</h3>
+          <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-text-muted">{content}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ContentBlock({ block }: { block: GuideContentBlock }) {
+  switch (block.type) {
+    case 'paragraph':
+      return <p className="text-sm leading-7 text-text-muted sm:text-base sm:leading-8">{block.content}</p>;
+    case 'subheading':
+      return <h3 className="pt-2 font-display text-xl font-bold leading-tight text-text">{block.content}</h3>;
+    case 'list': {
+      const ListTag = block.ordered ? 'ol' : 'ul';
+      return (
+        <ListTag className={`grid gap-3 ${block.ordered ? 'list-none' : ''}`}>
+          {block.items.map((item, index) => (
+            <li key={`${index}-${item}`} className="flex min-w-0 items-start gap-3 text-sm leading-7 text-text-muted sm:text-base">
+              <span
+                className="mt-1 flex h-6 min-w-6 shrink-0 items-center justify-center px-1 font-mono text-[11px] font-bold text-primary"
+                style={{ backgroundColor: 'var(--color-primary-light)' }}
+              >
+                {block.ordered ? index + 1 : '•'}
+              </span>
+              <span className="min-w-0 break-words">{item}</span>
+            </li>
+          ))}
+        </ListTag>
+      );
+    }
+    case 'quote':
+      return (
+        <blockquote className="relative border-l-4 bg-bg-muted py-4 pl-12 pr-4 text-base font-semibold leading-8 text-text sm:pr-5">
+          <Quote className="absolute left-4 top-5 text-text-light" size={20} />
+          {block.content}
+        </blockquote>
+      );
+    case 'prompt':
+      return <PromptExample {...block} />;
+    case 'comparison':
+      return (
+        <div className="min-w-0">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+            <div className="min-w-0 border bg-bg-muted p-4" style={{ borderColor: 'var(--color-border)' }}>
+              <p className="text-xs font-bold uppercase tracking-[0.15em] text-text-light">{block.beforeLabel || 'Cách chưa tốt'}</p>
+              <p className="mt-3 whitespace-pre-wrap break-words text-sm font-semibold leading-7 text-text">{block.before}</p>
+            </div>
+            <div className="min-w-0 border p-4" style={{ backgroundColor: 'var(--color-secondary-light)', borderColor: 'var(--color-secondary)' }}>
+              <p className="text-xs font-bold uppercase tracking-[0.15em] text-success">{block.afterLabel || 'Cách cải thiện'}</p>
+              <p className="mt-3 whitespace-pre-wrap break-words text-sm font-semibold leading-7 text-text">{block.after}</p>
+            </div>
+          </div>
+          {block.explanation && <p className="mt-3 text-sm leading-7 text-text-muted">{block.explanation}</p>}
+        </div>
+      );
+    case 'callout':
+      return <ContentCallout {...block} />;
+  }
 }
 
 function LessonNotFound() {
@@ -130,6 +271,22 @@ export default function GuideLessonDetail() {
         <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
           <div className="grid gap-9 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-start">
             <div className="space-y-8">
+              {lesson.objectives && (
+                <section className="border bg-bg-card p-5 shadow-card sm:p-7" style={{ borderColor: 'var(--color-border)' }}>
+                  <SectionHeading eyebrow="Đích đến" title="Sau bài này, bạn sẽ biết" />
+                  <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+                    {lesson.objectives.map((objective) => (
+                      <li key={objective} className="flex items-start gap-3 text-sm leading-7 text-text-muted">
+                        <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary">
+                          <Check size={12} />
+                        </span>
+                        <span>{objective}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
               {lesson.sections.map((section, index) => (
                 <section key={section.heading} className="border bg-bg-card p-5 shadow-card sm:p-7" style={{ borderColor: 'var(--color-border)' }}>
                   <div className="mb-4 flex items-center gap-3">
@@ -141,13 +298,13 @@ export default function GuideLessonDetail() {
                     </span>
                     <h2 className="font-display text-2xl font-bold leading-tight text-text">{section.heading}</h2>
                   </div>
-                  <div className="space-y-4">
+                  {section.body && <div className="space-y-4">
                     {section.body.map((paragraph) => (
                       <p key={paragraph} className="text-sm leading-7 text-text-muted sm:text-base">
                         {paragraph}
                       </p>
                     ))}
-                  </div>
+                  </div>}
                   {section.bullets && (
                     <ul className="mt-5 grid gap-3 sm:grid-cols-2">
                       {section.bullets.map((bullet) => (
@@ -158,29 +315,15 @@ export default function GuideLessonDetail() {
                       ))}
                     </ul>
                   )}
+                  {section.blocks && (
+                    <div className={`${section.body || section.bullets ? 'mt-5' : ''} space-y-5`}>
+                      {section.blocks.map((block, blockIndex) => (
+                        <ContentBlock key={`${block.type}-${blockIndex}`} block={block} />
+                      ))}
+                    </div>
+                  )}
                 </section>
               ))}
-
-              {lesson.examplePrompt && (
-                <section className="paper-surface border p-5 shadow-card sm:p-7" style={{ borderColor: 'var(--color-border-strong)' }}>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-text-light">{lesson.examplePrompt.label}</p>
-                  <p className="mt-4 text-sm font-semibold leading-8 text-text sm:text-base">"{lesson.examplePrompt.content}"</p>
-                </section>
-              )}
-
-              {lesson.callout && (
-                <section
-                  className="border-l-4 px-5 py-5 shadow-card sm:px-7"
-                  style={{
-                    backgroundColor: 'var(--color-accent-light)',
-                    borderColor: 'var(--color-accent)',
-                    color: 'var(--color-text)',
-                  }}
-                >
-                  <h2 className="font-display text-xl font-bold leading-tight">{lesson.callout.title}</h2>
-                  <p className="mt-3 text-sm font-semibold leading-7">{lesson.callout.body}</p>
-                </section>
-              )}
 
               <section className="border bg-bg-card p-5 shadow-card sm:p-7" style={{ borderColor: 'var(--color-border)' }}>
                 <SectionHeading eyebrow="Ghi nhớ" title="Key takeaways" description="Ba ý ngắn để bạn tự kiểm tra sau khi đọc xong bài này." />
@@ -198,6 +341,32 @@ export default function GuideLessonDetail() {
                   ))}
                 </ul>
               </section>
+
+              {lesson.selfCheck && (
+                <section className="border bg-bg-card p-5 shadow-card sm:p-7" style={{ borderColor: 'var(--color-border)' }}>
+                  <SectionHeading
+                    eyebrow="Dừng một phút"
+                    title="Tự kiểm tra"
+                    description="Không cần chấm điểm. Hãy trả lời bằng lời của bạn trước khi chuyển bài."
+                  />
+                  <ol className="mt-6 grid gap-4">
+                    {lesson.selfCheck.map((question, index) => (
+                      <li key={question} className="flex items-start gap-3 text-sm leading-7 text-text-muted sm:text-base">
+                        <span className="flex h-7 min-w-7 shrink-0 items-center justify-center bg-bg-muted font-mono text-xs font-bold text-text">
+                          {index + 1}
+                        </span>
+                        <span>{question}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              )}
+
+              {lesson.transition && (
+                <p className="border-l-4 border-primary pl-4 text-sm font-semibold leading-7 text-text-muted sm:text-base">
+                  {lesson.transition}
+                </p>
+              )}
             </div>
 
             <aside className="space-y-4 lg:sticky lg:top-28">

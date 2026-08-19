@@ -74,7 +74,7 @@ export default function Modal({
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 z-10 p-2 transition-colors"
+            className="absolute right-2 top-2 z-10 flex h-11 w-11 items-center justify-center rounded-full transition-colors"
             style={{ color: 'var(--color-text-muted)' }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--color-bg-muted)';
