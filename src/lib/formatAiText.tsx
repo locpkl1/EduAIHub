@@ -273,45 +273,71 @@ function renderCode(block: CodeBlock, key: number) {
   );
 }
 
+function isScoreHeader(header: string) {
+  const normalized = header.replace(/[*_`]/g, '').trim().toLowerCase();
+  return /^(?:điểm(?: số)?|score)(?:\s*\([^)]*\))?$/.test(normalized);
+}
+
 function renderTable(block: TableBlock, key: number) {
   const columnCount = Math.max(block.headers.length, ...block.rows.map((row) => row.length), 1);
   const columns = Array.from({ length: columnCount });
+  const isRubricTable = columnCount === 3 && isScoreHeader(block.headers[1] ?? '');
 
   return (
     <div
       key={key}
-      className="my-4 overflow-x-auto rounded-xl border"
+      className="my-4 w-full max-w-full overflow-x-auto rounded-xl border"
       style={{ borderColor: 'color-mix(in srgb, var(--color-border) 78%, transparent)' }}
     >
-      <table className="w-full min-w-[520px] border-collapse text-sm">
+      <table
+        className={`w-full border-collapse text-sm ${isRubricTable
+          ? 'min-w-[680px] table-fixed lg:min-w-full'
+          : 'min-w-[520px] table-auto'
+          }`}
+      >
+        {isRubricTable && (
+          <colgroup>
+            <col style={{ width: '29%' }} />
+            <col style={{ width: '14%' }} />
+            <col style={{ width: '57%' }} />
+          </colgroup>
+        )}
         <thead>
           <tr style={{ backgroundColor: 'color-mix(in srgb, var(--color-bg-muted) 78%, var(--color-bg-card))' }}>
-            {columns.map((_, columnIndex) => (
-              <th
-                key={columnIndex}
-                className="px-3 py-2.5 text-left align-top text-xs font-bold uppercase tracking-[0.08em] text-text"
-                style={{ textAlign: block.alignments[columnIndex] ?? 'left' }}
-              >
-                {renderInline(block.headers[columnIndex] ?? '')}
-              </th>
-            ))}
+            {columns.map((_, columnIndex) => {
+              const isScoreColumn = isRubricTable && columnIndex === 1;
+              return (
+                <th
+                  key={columnIndex}
+                  className={`px-3 py-2.5 align-top text-xs font-bold uppercase tracking-[0.08em] text-text ${isScoreColumn ? 'whitespace-nowrap text-center' : isRubricTable ? 'break-words text-left' : 'text-left'
+                    }`}
+                  style={{ textAlign: isScoreColumn ? 'center' : block.alignments[columnIndex] ?? 'left' }}
+                >
+                  {renderInline(block.headers[columnIndex] ?? '')}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
           {block.rows.map((row, rowIndex) => (
             <tr key={rowIndex}>
-              {columns.map((_, columnIndex) => (
-                <td
-                  key={columnIndex}
-                  className="border-t px-3 py-2.5 align-top leading-6 text-text-muted"
-                  style={{
-                    borderColor: 'color-mix(in srgb, var(--color-border) 70%, transparent)',
-                    textAlign: block.alignments[columnIndex] ?? 'left',
-                  }}
-                >
-                  {renderInline(row[columnIndex] ?? '')}
-                </td>
-              ))}
+              {columns.map((_, columnIndex) => {
+                const isScoreColumn = isRubricTable && columnIndex === 1;
+                return (
+                  <td
+                    key={columnIndex}
+                    className={`border-t px-3 py-2.5 align-top leading-6 text-text-muted ${isScoreColumn ? 'whitespace-nowrap text-center' : isRubricTable ? 'break-words' : ''
+                      }`}
+                    style={{
+                      borderColor: 'color-mix(in srgb, var(--color-border) 70%, transparent)',
+                      textAlign: isScoreColumn ? 'center' : block.alignments[columnIndex] ?? 'left',
+                    }}
+                  >
+                    {renderInline(row[columnIndex] ?? '')}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>
@@ -324,7 +350,7 @@ export function formatAiText(text: string): ReactNode {
   const blocks = parseMarkdown(text);
 
   return (
-    <div className="ai-markdown space-y-3 text-sm leading-7 text-text">
+    <div className="ai-markdown min-w-0 w-full max-w-none space-y-3 text-sm leading-7 text-text">
       {blocks.length > 0
         ? blocks.map((block, index) => {
             switch (block.type) {

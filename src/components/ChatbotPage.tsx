@@ -23,6 +23,9 @@ import {
 import { formatAiText, parseEduAiMessage, stripEduAiPromptMarkers } from '../lib/formatAiText';
 
 type ChatMessage = { id: string; role: 'user' | 'ai'; text: string };
+
+const CHAT_RAIL_CLASS =
+  'mx-auto w-full md:w-[94%] lg:w-[calc(100%-2rem)] lg:max-w-[920px] xl:w-[calc(100%-3rem)] xl:max-w-[960px]';
 type ChatSession = {
   id: string;
   title: string;
@@ -651,7 +654,7 @@ export default function ChatbotPage({
                         onPick={setInput}
                       />
                     ) : (
-                      <div className="mx-auto w-full max-w-[800px] space-y-7 px-3 py-5 sm:px-5 sm:py-6">
+                      <div className={`${CHAT_RAIL_CLASS} space-y-7 px-3 py-5 sm:px-5 sm:py-6 lg:px-0`}>
                         {messages.map((msg) => (
                           <div
                             key={msg.id}
@@ -670,7 +673,9 @@ export default function ChatbotPage({
                             )}
 
                             <div
-                              className={`group min-w-0 max-w-[calc(100%-2.25rem)] px-4 py-3 text-sm leading-7 [overflow-wrap:anywhere] sm:px-5 sm:py-3.5 sm:max-w-[80%] lg:max-w-[74%] ${msg.role === 'user' ? 'text-white' : 'text-text'
+                              className={`group min-w-0 px-4 py-3 text-sm leading-7 [overflow-wrap:anywhere] sm:px-5 sm:py-3.5 ${msg.role === 'user'
+                                ? 'max-w-[calc(100%-2.25rem)] text-white sm:max-w-[min(80%,600px)]'
+                                : 'w-full flex-1 text-text'
                                 }`}
                               style={
                                 msg.role === 'user'
@@ -690,10 +695,10 @@ export default function ChatbotPage({
                               {msg.role === 'user' ? (
                                 <p className="whitespace-pre-wrap">{msg.text}</p>
                               ) : (
-                                <div className="space-y-4">
+                                <div className="min-w-0 w-full space-y-4">
                                   {parseEduAiMessage(msg.text).map((part, partIndex) => {
                                     if (part.type === 'text') {
-                                      return <div key={`text-${partIndex}`}>{formatAiText(part.content)}</div>;
+                                      return <div key={`text-${partIndex}`} className="min-w-0 w-full">{formatAiText(part.content)}</div>;
                                     }
 
                                     const cardId = `${msg.id}-prompt-${partIndex}`;
@@ -752,7 +757,7 @@ export default function ChatbotPage({
                       backdropFilter: 'blur(16px)',
                     }}
                   >
-                    <div className="mx-auto w-full max-w-[800px]">
+                    <div className={CHAT_RAIL_CLASS}>
                       <div
                         className="flex min-w-0 items-end gap-2 p-2.5 sm:gap-3 sm:p-3"
                         style={{
