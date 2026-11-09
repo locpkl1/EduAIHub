@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { AlertCircle, GraduationCap, Loader2, Sparkles } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/authContextCore';
 import {
   aiExperienceLevelOptions,
   commonProblemOptions,
