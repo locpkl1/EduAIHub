@@ -1,23 +1,9 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
+import { useEffect, useState, useMemo, type ReactNode } from 'react';
+import { AuthContext, isProfileIncomplete, getAuthUserMeta } from './authContextCore';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured, supabaseConfigError } from '../lib/supabase';
 import ProfileCompletionModal from '../components/ProfileCompletionModal';
 import type { Profile, ProfileUpdateData } from '../types/database';
-
-interface AuthContextType {
-  session: Session | null;
-  user: User | null;
-  profile: Profile | null;
-  displayName: string;
-  avatarUrl: string;
-  loading: boolean;
-  isGuest: boolean;
-  isProfileIncomplete: boolean;
-  signInWithGoogle: () => Promise<void>;
-  signOut: () => Promise<void>;
-  updateProfile: (data: ProfileUpdateData) => Promise<void>;
-  dismissProfileModal: () => void;
-}
 
 function profileDismissKey(userId: string) {
   return `eduaihub_profile_onboarding_dismissed_v2_${userId}`;
@@ -43,29 +29,7 @@ function isProfileDismissedForNow(userId: string) {
   return true;
 }
 
-export function isProfileIncomplete(profile: Profile | null): boolean {
-  if (!profile) return false;
-  return !profile.onboarding_completed || profile.grade == null || !profile.school?.trim();
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
 const AUTH_LOADING_TIMEOUT_MS = 3000;
-
-/** Lấy tên và ảnh từ Google OAuth (user_metadata) */
-export function getAuthUserMeta(authUser: User) {
-  const meta = authUser.user_metadata ?? {};
-  const displayName =
-    (typeof meta.full_name === 'string' && meta.full_name) ||
-    (typeof meta.name === 'string' && meta.name) ||
-    authUser.email?.split('@')[0] ||
-    'Người dùng';
-  const avatarUrl =
-    (typeof meta.avatar_url === 'string' && meta.avatar_url) ||
-    (typeof meta.picture === 'string' && meta.picture) ||
-    '';
-  return { displayName, avatarUrl };
-}
 
 function buildProfileFromAuth(authUser: User): Profile {
   const { displayName, avatarUrl } = getAuthUserMeta(authUser);
@@ -361,12 +325,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       <ProfileCompletionModal />
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }

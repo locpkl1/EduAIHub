@@ -5,4 +5,5 @@ export { default as LoadingState } from './LoadingState';
 export { default as PageShell } from './PageShell';
 export { default as SectionHeading } from './SectionHeading';
 export { default as ShapeAccent } from './ShapeAccent';
-export { default as ThemeToggle, useThemeMode } from './ThemeToggle';
+export { default as ThemeToggle } from './ThemeToggle';
+export { useThemeMode } from '../../hooks/useThemeMode';

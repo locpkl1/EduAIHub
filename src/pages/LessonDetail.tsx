@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, ChevronRight, FileText, Star } from 'lucide-react';
-import { lessons, tagColorMap, type Lesson } from './Lessons';
+import { lessons, tagColorMap, type Lesson } from '../data/lessons';
 import { fetchPublishedContentPostBySlug, type PublishedContentPost } from '../lib/publicContentApi';
 
 export default function LessonDetail() {
