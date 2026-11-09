@@ -1,5 +1,5 @@
 import { isSupabaseConfigured, supabase } from './supabase';
-import type { ContentPost, CurriculumItem, LearningResource, PromptTemplate } from '../types/database';
+import type { ContentPost, LearningResource, PromptTemplate } from '../types/database';
 
 export type PublishedContentPost = Pick<
   ContentPost,
@@ -31,20 +31,6 @@ export type PublishedPromptTemplate = Pick<
   | 'why_effective'
   | 'tags'
   | 'featured'
-  | 'updated_at'
->;
-
-export type PublishedCurriculumItem = Pick<
-  CurriculumItem,
-  | 'id'
-  | 'grade'
-  | 'book_series'
-  | 'subject'
-  | 'chapter_title'
-  | 'lesson_title'
-  | 'description'
-  | 'suggested_prompt'
-  | 'sort_order'
   | 'updated_at'
 >;
 
@@ -91,19 +77,6 @@ const publishedPromptTemplateFields = [
   'why_effective',
   'tags',
   'featured',
-  'updated_at',
-].join(',');
-
-const publishedCurriculumItemFields = [
-  'id',
-  'grade',
-  'book_series',
-  'subject',
-  'chapter_title',
-  'lesson_title',
-  'description',
-  'suggested_prompt',
-  'sort_order',
   'updated_at',
 ].join(',');
 
@@ -162,23 +135,6 @@ export async function fetchPublishedPromptTemplates(): Promise<PublishedPromptTe
 
   if (error) throw error;
   return (data ?? []) as unknown as PublishedPromptTemplate[];
-}
-
-export async function fetchPublishedCurriculumItems(): Promise<PublishedCurriculumItem[]> {
-  if (!isSupabaseConfigured) return [];
-
-  const { data, error } = await supabase
-    .from('curriculum_items')
-    .select(publishedCurriculumItemFields)
-    .eq('status', 'published')
-    .order('grade', { ascending: true })
-    .order('book_series', { ascending: true })
-    .order('subject', { ascending: true })
-    .order('sort_order', { ascending: true })
-    .order('updated_at', { ascending: false });
-
-  if (error) throw error;
-  return (data ?? []) as unknown as PublishedCurriculumItem[];
 }
 
 export async function fetchPublishedLearningResources(): Promise<PublishedLearningResource[]> {

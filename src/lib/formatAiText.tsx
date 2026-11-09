@@ -371,17 +371,3 @@ export function formatAiText(text: string): ReactNode {
     </div>
   );
 }
-
-/** Heuristic: AI response likely contains a usable prompt template */
-export function looksLikePrompt(content: string): boolean {
-  if (/```[\s\S]*?```/.test(content)) return true;
-  const lower = content.toLowerCase();
-  return (
-    /\b(bạn là|you are|act as|vai trò|nhiệm vụ|your role)\b/i.test(content) &&
-    content.length >= 80
-  ) || /\b(prompt|đề bài)\b/i.test(lower) && content.length >= 60;
-}
-
-export function userRequestedSave(userText: string): boolean {
-  return /\b(lưu|save)\b/i.test(userText);
-}
