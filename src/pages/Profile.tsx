@@ -1,74 +1,15 @@
-import { useState, useEffect, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AlertCircle, User, GraduationCap, School, Save, Loader2, LogIn, ArrowLeft, Shield } from 'lucide-react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
+import { AlertCircle, User, Save, Loader2, LogIn } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import {
-  aiExperienceLevelOptions,
-  commonProblemOptions,
-  learningGoalOptions,
-  preferredLearningStyleOptions,
-  strengthOptions,
-  weaknessOptions,
-} from '../data/profileOptions';
+import ProfileCompletionModal from '../components/ProfileCompletionModal';
+import ProfileFields from '../components/profile/ProfileFields';
+import { profileSections, type ProfileSection, type ProfileSetters } from '../components/profile/profileFormModel';
 import { getProfileSaveErrorMessage } from '../lib/profileSaveError';
 import type { Grade } from '../types/database';
 
-const GRADE_OPTIONS: Grade[] = [10, 11, 12];
-
-function getInitials(name: string) {
-  return name.split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? '').join('') || '?';
-}
-
-function toggleValue(values: string[], value: string) {
-  return values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
-}
-
-function ChoiceGroup({
-  label,
-  options,
-  values,
-  onChange,
-}: {
-  label: string;
-  options: string[];
-  values: string[];
-  onChange: (values: string[]) => void;
-}) {
-  return (
-    <div>
-      <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--color-text-light)' }}>
-        {label}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {options.map((option) => {
-          const active = values.includes(option);
-          return (
-            <button
-              key={option}
-              type="button"
-              onClick={() => onChange(toggleValue(values, option))}
-              className="rounded-full border px-3.5 py-2 text-xs font-semibold transition-all duration-150 hover:-translate-y-0.5"
-              style={{
-                backgroundColor: active
-                  ? 'var(--color-primary)'
-                  : 'color-mix(in srgb, var(--color-bg-muted) 76%, var(--color-bg-card))',
-                borderColor: active ? 'var(--color-primary)' : 'color-mix(in srgb, var(--color-border) 72%, transparent)',
-                color: active ? '#ffffff' : 'var(--color-text-muted)',
-                boxShadow: active ? '0 10px 22px -16px var(--color-primary)' : 'none',
-              }}
-            >
-              {option}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 export default function Profile() {
   const { user, profile, displayName, avatarUrl, loading, isGuest, signInWithGoogle, updateProfile } = useAuth();
-  const navigate = useNavigate();
+
 
   const [fullName, setFullName] = useState('');
   const [grade, setGrade] = useState<Grade | ''>('');
@@ -84,9 +25,23 @@ export default function Profile() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [imgErr, setImgErr] = useState(false);
+  const [setupOpen, setSetupOpen] = useState(false);
+  const [section, setSection] = useState<ProfileSection | null>(null);
+  const editorHeading = useRef<HTMLHeadingElement>(null);
+  const groupTriggers = useRef<Partial<Record<ProfileSection, HTMLButtonElement | null>>>({});
+  useEffect(() => { if (section) { editorHeading.current?.focus({ preventScroll: true }); editorHeading.current?.scrollIntoView({ block: 'start', behavior: 'instant' }); } }, [section]);
 
+  const hydratedVersion = useRef('');
+  const draftOwner = useRef<string | null>(null);
+  const draftDirty = useRef(false);
   useEffect(() => {
     if (profile) {
+      if (draftOwner.current === profile.id && draftDirty.current) return;
+      draftOwner.current = profile.id;
+      draftDirty.current = false;
+      const version = `${profile.id}:${profile.updated_at}`;
+      if (hydratedVersion.current === version) return;
+      hydratedVersion.current = version;
       setFullName(profile.full_name?.trim() || displayName || '');
       setGrade(profile.grade ?? '');
       setSchool(profile.school?.trim() || '');
@@ -121,6 +76,7 @@ export default function Profile() {
         ai_experience_level: aiExperienceLevel,
         onboarding_completed: true,
       });
+      draftDirty.current = false;
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (saveError) {
@@ -134,7 +90,7 @@ export default function Profile() {
   }
 
   // Loading state
-  if (loading) {
+  if (loading && !user) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--color-primary)' }} />
@@ -148,7 +104,7 @@ export default function Profile() {
       <div className="max-w-2xl mx-auto px-4 py-20 text-center">
         <div
           className="w-16 h-16 flex items-center justify-center mx-auto mb-6"
-          style={{ backgroundColor: 'var(--color-primary-light)', clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))' }}
+          style={{ backgroundColor: 'var(--color-primary-light)' }}
         >
           <User size={28} style={{ color: 'var(--color-primary)' }} />
         </div>
@@ -173,367 +129,37 @@ export default function Profile() {
     );
   }
 
-  return (
-    <div style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
-      {/* Page header */}
-      <div
-        className="border-b py-10"
-        style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-card)' }}
-      >
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-1.5 text-sm mb-5 transition-colors"
-            style={{ color: 'var(--color-text-muted)' }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-text)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-text-muted)')}
-          >
-            <ArrowLeft size={14} />
-            Quay lại
-          </button>
-
-          <div className="flex items-center gap-5">
-            {/* Avatar */}
-            <div className="flex-shrink-0 relative">
-              {avatarUrl && !imgErr ? (
-                <img
-                  src={avatarUrl}
-                  alt={displayName}
-                  referrerPolicy="no-referrer"
-                  onError={() => setImgErr(true)}
-                  className="w-16 h-16 object-cover"
-                  style={{ clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))' }}
-                />
-              ) : (
-                <div
-                  className="w-16 h-16 flex items-center justify-center font-display font-bold text-xl"
-                  style={{
-                    backgroundColor: 'var(--color-primary)',
-                    color: '#ffffff',
-                    clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))',
-                  }}
-                >
-                  {getInitials(displayName || '')}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <span className="section-label mb-2 inline-flex">Hồ Sơ Học Sinh</span>
-              <h1
-                className="font-display font-bold text-2xl sm:text-3xl mt-1"
-                style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}
-              >
-                {displayName || 'Người dùng'}
-              </h1>
-              <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                {user?.email}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="grid md:grid-cols-3 gap-8">
-
-          {/* Left: Stats */}
-          <div className="md:col-span-1 space-y-4">
-            {/* Info card */}
-            <div
-              className="border p-5"
-              style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
-            >
-              <h3 className="font-display font-bold text-sm uppercase tracking-wider mb-4" style={{ color: 'var(--color-text-muted)', letterSpacing: '0.1em' }}>
-                Tóm tắt hồ sơ
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-8 h-8 flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: 'var(--color-primary-light)' }}
-                  >
-                    <GraduationCap size={14} style={{ color: 'var(--color-primary)' }} />
-                  </div>
-                  <div>
-                    <p className="text-xs" style={{ color: 'var(--color-text-light)' }}>Khối lớp</p>
-                    <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
-                      {profile?.grade ? `Lớp ${profile.grade}` : 'Chưa cập nhật'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-8 h-8 flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: 'var(--color-primary-light)' }}
-                  >
-                    <School size={14} style={{ color: 'var(--color-primary)' }} />
-                  </div>
-                  <div>
-                    <p className="text-xs" style={{ color: 'var(--color-text-light)' }}>Trường THPT</p>
-                    <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
-                      {profile?.school?.trim() || 'Chưa cập nhật'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-8 h-8 flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: 'var(--color-bg-muted)' }}
-                  >
-                    <Shield size={14} style={{ color: 'var(--color-text-muted)' }} />
-                  </div>
-                  <div>
-                    <p className="text-xs" style={{ color: 'var(--color-text-light)' }}>Tài khoản</p>
-                    <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Google</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Member since */}
-            <div
-              className="border p-5"
-              style={{ backgroundColor: 'var(--color-bg-muted)', borderColor: 'var(--color-border)' }}
-            >
-              <p className="text-xs uppercase tracking-wider font-bold mb-1" style={{ color: 'var(--color-text-light)', letterSpacing: '0.1em' }}>
-                Ngày tham gia
-              </p>
-              <p className="font-display font-bold text-base" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
-                {profile?.created_at
-                  ? new Date(profile.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: 'long', year: 'numeric' })
-                  : '—'}
-              </p>
-            </div>
-          </div>
-
-          {/* Right: Edit form */}
-          <div className="md:col-span-2">
-            <div
-              className="overflow-hidden rounded-2xl border"
-              style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
-            >
-              <div
-                className="px-6 py-4 border-b"
-                style={{ borderColor: 'var(--color-border)' }}
-              >
-                <h2 className="font-display font-bold text-base" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
-                  Cập nhật thông tin
-                </h2>
-                <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                  Thông tin sẽ được dùng để cá nhân hóa trải nghiệm học tập
-                </p>
-              </div>
-
-              <form onSubmit={handleSubmit} className="px-6 py-6 space-y-5">
-                {/* Full name */}
-                <div>
-                  <label
-                    htmlFor="profile-name"
-                    className="block text-sm font-semibold mb-2"
-                    style={{ color: 'var(--color-text)' }}
-                  >
-                    Tên hiển thị
-                  </label>
-                  <input
-                    id="profile-name"
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Nhập tên của bạn"
-                    className="input-field rounded-xl"
-                    required
-                  />
-                </div>
-
-                {/* Grade */}
-                <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
-                    Khối đang học
-                  </label>
-                  <div className="flex gap-3">
-                    {GRADE_OPTIONS.map((g) => (
-                      <button
-                        key={g}
-                        type="button"
-                        onClick={() => setGrade(g)}
-                        className="flex-1 rounded-xl border-2 py-2.5 text-sm font-semibold transition-all duration-150 hover:-translate-y-0.5"
-                        style={
-                          grade === g
-                            ? { backgroundColor: 'var(--color-primary)', color: '#ffffff', borderColor: 'var(--color-primary)' }
-                            : { backgroundColor: 'transparent', color: 'var(--color-text-muted)', borderColor: 'var(--color-border)' }
-                        }
-                      >
-                        Lớp {g}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* School */}
-                <div>
-                  <label
-                    htmlFor="profile-school"
-                    className="block text-sm font-semibold mb-2"
-                    style={{ color: 'var(--color-text)' }}
-                  >
-                    Tên trường THPT
-                  </label>
-                  <input
-                    id="profile-school"
-                    type="text"
-                    value={school}
-                    onChange={(e) => setSchool(e.target.value)}
-                    placeholder="VD: THPT Nguyễn Huệ"
-                    className="input-field rounded-xl"
-                    required
-                  />
-                </div>
-
-                <div
-                  className="space-y-5 border-t pt-5"
-                  style={{ borderColor: 'var(--color-border)' }}
-                >
-                  <div>
-                    <h3 className="font-display text-base font-bold" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
-                      Cá nhân hóa học tập với AI
-                    </h3>
-                    <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                      Dữ liệu này giúp chatbot hiểu cách bạn học và phản hồi sát hơn.
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="profile-personal-background"
-                      className="mb-2 block text-sm font-semibold"
-                      style={{ color: 'var(--color-text)' }}
-                    >
-                      Hiện tại bạn đang gặp khó khăn gì trong học tập hoặc khi dùng AI?
-                    </label>
-                    <textarea
-                      id="profile-personal-background"
-                      value={personalBackground}
-                      onChange={(e) => setPersonalBackground(e.target.value)}
-                      placeholder="Ví dụ: Em hay trì hoãn, không biết bắt đầu học từ đâu, dùng AI hay bị chép đáp án..."
-                      rows={4}
-                      className="input-field resize-none rounded-xl"
-                    />
-                  </div>
-
-                  <div className="grid gap-4 lg:grid-cols-2">
-                    <ChoiceGroup label="Điểm mạnh" options={strengthOptions} values={strengths} onChange={setStrengths} />
-                    <ChoiceGroup label="Điểm yếu" options={weaknessOptions} values={weaknesses} onChange={setWeaknesses} />
-                  </div>
-
-                  <ChoiceGroup
-                    label="Vấn đề hay gặp khi dùng AI"
-                    options={commonProblemOptions}
-                    values={commonProblems}
-                    onChange={setCommonProblems}
-                  />
-
-                  <ChoiceGroup
-                    label="Mục tiêu học tập"
-                    options={learningGoalOptions}
-                    values={learningGoals}
-                    onChange={setLearningGoals}
-                  />
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <label
-                        htmlFor="profile-learning-style"
-                        className="mb-2 block text-sm font-semibold"
-                        style={{ color: 'var(--color-text)' }}
-                      >
-                        Phong cách học mong muốn
-                      </label>
-                      <select
-                        id="profile-learning-style"
-                        value={preferredLearningStyle}
-                        onChange={(e) => setPreferredLearningStyle(e.target.value)}
-                        className="input-field rounded-xl"
-                      >
-                        <option value="">Chọn cách học</option>
-                        {preferredLearningStyleOptions.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="profile-ai-experience"
-                        className="mb-2 block text-sm font-semibold"
-                        style={{ color: 'var(--color-text)' }}
-                      >
-                        Mức độ dùng AI
-                      </label>
-                      <select
-                        id="profile-ai-experience"
-                        value={aiExperienceLevel}
-                        onChange={(e) => setAiExperienceLevel(e.target.value)}
-                        className="input-field rounded-xl"
-                      >
-                        <option value="">Chọn mức độ</option>
-                        {aiExperienceLevelOptions.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {error && (
-                  <div
-                    className="flex items-start gap-2 rounded-2xl border px-4 py-3 text-sm"
-                    style={{ color: '#b91c1c', backgroundColor: '#fef2f2', borderColor: '#fecaca' }}
-                  >
-                    <AlertCircle size={17} className="mt-0.5 shrink-0" />
-                    <p>{error}</p>
-                  </div>
-                )}
-
-                {saved && (
-                  <p
-                    className="text-sm border px-4 py-3 font-medium"
-                    style={{ color: 'var(--color-success)', backgroundColor: 'var(--color-bg-muted)', borderColor: 'var(--color-border)' }}
-                  >
-                    Thông tin đã được lưu thành công.
-                  </p>
-                )}
-
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    disabled={!fullName.trim() || !grade || !school.trim() || saving}
-                    className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 size={15} className="animate-spin" />
-                        Đang lưu...
-                      </>
-                    ) : (
-                      <>
-                        <Save size={15} />
-                        Lưu thông tin
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
+  const values = { fullName, grade, school, personalBackground, strengths, weaknesses, commonProblems, learningGoals, preferredLearningStyle, aiExperienceLevel };
+  const setters: ProfileSetters = {
+    fullName: value => { draftDirty.current = true; setSaved(false); setFullName(value); },
+    grade: value => { draftDirty.current = true; setSaved(false); setGrade(value); },
+    school: value => { draftDirty.current = true; setSaved(false); setSchool(value); },
+    personalBackground: value => { draftDirty.current = true; setSaved(false); setPersonalBackground(value); },
+    strengths: value => { draftDirty.current = true; setSaved(false); setStrengths(value); },
+    weaknesses: value => { draftDirty.current = true; setSaved(false); setWeaknesses(value); },
+    commonProblems: value => { draftDirty.current = true; setSaved(false); setCommonProblems(value); },
+    learningGoals: value => { draftDirty.current = true; setSaved(false); setLearningGoals(value); },
+    preferredLearningStyle: value => { draftDirty.current = true; setSaved(false); setPreferredLearningStyle(value); },
+    aiExperienceLevel: value => { draftDirty.current = true; setSaved(false); setAiExperienceLevel(value); }
+  };
+  return <div className="page-container max-w-5xl py-8 sm:py-12">
+    <header className="flex items-start gap-4 border-b border-border pb-6">
+      {avatarUrl && !imgErr ? <img src={avatarUrl} alt="" width={64} height={64} onError={() => setImgErr(true)} referrerPolicy="no-referrer" className="h-16 w-16 shrink-0 rounded-full object-cover" /> : <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary-text" aria-hidden="true"><User size={26} /></span>}
+      <div className="min-w-0"><h1 className="page-title">Hồ sơ học tập</h1><p className="mt-3 break-words font-semibold">{displayName || fullName || 'Học sinh'}</p><p className="mt-1 break-words text-sm text-text-muted">{profile?.grade ? `Lớp ${profile.grade}` : 'Chưa chọn lớp'} · {profile?.school || 'Chưa có trường'}</p><p className="mt-1 break-all text-sm text-text-muted">{user?.email}</p></div>
+    </header>
+    <ProfileCompletionModal isOpen={setupOpen} onSaved={() => { draftDirty.current = false; hydratedVersion.current = ''; setSaved(true); }} onClose={() => setSetupOpen(false)} />
+    <button type="button" className="btn-ghost mt-4" disabled={loading || saving} onClick={() => setSetupOpen(true)}>Thiết lập hồ sơ từng bước</button>
+    <p className="my-6 text-base leading-7 text-text-muted">Chọn phần bạn muốn cập nhật. Các thông tin khác được giữ nguyên trong bản chỉnh sửa.</p>
+    <div className="grid gap-3 sm:grid-cols-3" aria-label="Nhóm chỉnh sửa hồ sơ">
+      {profileSections.map(item => <button key={item.id} ref={node => { groupTriggers.current[item.id] = node; }} type="button" aria-expanded={section === item.id} aria-controls={section === item.id ? 'profile-editor' : undefined} onClick={() => { setSection(item.id); setSaved(false); }} className={`min-w-0 rounded-card border p-4 text-left ${section === item.id ? 'border-primary bg-primary-light' : 'border-border-interactive bg-bg-card hover:border-primary'}`}><span className="block font-display text-lg font-bold">{item.title}</span><span className="mt-2 block text-sm leading-6 text-text-muted">{item.id === 'goals' && learningGoals.length ? `${learningGoals.slice(0, 2).join(' · ')}${learningGoals.length > 2 ? ` · +${learningGoals.length - 2}` : ''}` : item.description}</span></button>)}
     </div>
-  );
+    {section && <form onSubmit={handleSubmit} id="profile-editor" className="mt-6 rounded-card border border-border bg-bg-card p-4 sm:p-6">
+      <h2 ref={editorHeading} tabIndex={-1} className="mb-5 text-2xl font-bold">{profileSections.find(item => item.id === section)?.title}</h2>
+      <fieldset disabled={saving} className="min-w-0"><ProfileFields prefix="profile" section={section} values={values} setters={setters} /></fieldset>
+      {error && <p role="alert" className="mt-5 flex gap-2 rounded-card bg-accent-light p-4 text-sm text-accent"><AlertCircle size={18} className="shrink-0" />{error}</p>}
+      {saved && <p role="status" className="mt-5 text-sm text-success">Thông tin đã được lưu thành công.</p>}
+      {(!fullName.trim() || !grade || !school.trim()) && section !== 'basic' && <p className="mt-4 text-sm text-accent">Hoàn thiện tên, lớp và trường trong Thông tin cơ bản trước khi lưu.</p>}
+      <div className="mt-6 flex flex-wrap gap-3 border-t border-border pt-4"><button type="submit" disabled={!fullName.trim() || !grade || !school.trim() || saving} className="btn-primary">{saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} {saving ? 'Đang lưu…' : 'Lưu thông tin'}</button><button type="button" className="btn-ghost" disabled={saving} onClick={() => { setSection(null); groupTriggers.current[section]?.focus({ preventScroll: true }); }}>Thu gọn</button></div>
+    </form>}
+  </div>;
 }

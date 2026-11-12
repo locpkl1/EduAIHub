@@ -15,7 +15,7 @@ export default function ThemeToggle({ className = '', showLabel = false }: Theme
     <button
       type="button"
       onClick={toggleTheme}
-      className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 ${className}`}
+      className={`inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-control border px-3 text-sm font-semibold transition-colors ${className}`}
       style={{
         backgroundColor: 'var(--color-bg-muted)',
         borderColor: 'var(--color-border)',
@@ -28,8 +28,7 @@ export default function ThemeToggle({ className = '', showLabel = false }: Theme
         className="flex h-5 w-5 items-center justify-center rounded-full"
         style={{
           backgroundColor: isDark ? 'var(--color-primary)' : 'var(--color-bg-card)',
-          color: isDark ? '#ffffff' : 'var(--color-primary)',
-          boxShadow: '0 1px 8px color-mix(in srgb, var(--color-primary) 18%, transparent)',
+          color: isDark ? 'var(--foreground-on-primary)' : 'var(--color-primary)',
         }}
       >
         {isDark ? <Sun size={13} /> : <Moon size={13} />}

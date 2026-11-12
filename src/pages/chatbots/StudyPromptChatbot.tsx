@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type ReactNode } from 'react';
+import { cloneElement, useEffect, useId, useState, type ReactElement } from 'react';
 import { BookOpen, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import ChatbotPage from '../../components/ChatbotPage';
 import { useAuth } from '../../contexts/AuthContext';
@@ -87,7 +87,7 @@ function StudySidebar({
   ].filter(Boolean).join(' · ');
 
   return (
-    <div className="min-h-0 overflow-visible p-3 sm:p-4 lg:h-full lg:overflow-y-auto">
+    <div className="min-h-0 p-3 sm:p-4">
       <button
         type="button"
         onClick={onToggleContext}
@@ -97,7 +97,7 @@ function StudySidebar({
         className={`flex min-h-11 w-full items-start gap-3 p-3 text-left transition-colors hover:bg-primary-light focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:p-4 ${isContextOpen ? 'mb-4' : ''}`}
         style={{
           backgroundColor: 'var(--color-bg-muted)',
-          borderLeft: '4px solid var(--color-primary)',
+          borderLeft: '1px solid var(--color-primary)',
         }}
       >
         <BookOpen size={16} className="mt-0.5 shrink-0 text-primary" />
@@ -116,7 +116,7 @@ function StudySidebar({
           )}
         </span>
         <span
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-primary"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-primary-text"
           aria-hidden="true"
           style={{ backgroundColor: 'var(--color-primary-light)' }}
         >
@@ -143,10 +143,11 @@ function StudySidebar({
                   setSelectedChapter('');
                   setSelectedLesson('');
                 }}
-                className="min-h-11 py-2 text-xs font-bold transition-colors"
+                aria-pressed={selectedGrade === g.value}
+                className="min-h-11 rounded-control py-2 text-sm font-bold transition-colors"
                 style={
                   selectedGrade === g.value
-                    ? { backgroundColor: 'var(--color-primary)', color: '#ffffff' }
+                    ? { backgroundColor: 'var(--color-primary)', color: 'var(--foreground-on-primary)' }
                     : { backgroundColor: 'var(--color-bg-muted)', color: 'var(--color-text-muted)' }
                 }
               >
@@ -166,7 +167,7 @@ function StudySidebar({
               setSelectedChapter('');
               setSelectedLesson('');
             }}
-            className="input-field min-h-11 py-2 text-xs"
+            className="input-field min-h-11 py-2"
           >
             <option value="">Chọn môn học</option>
             {subjects.map((s) => (
@@ -186,7 +187,7 @@ function StudySidebar({
                   setSelectedKnowledgeArea(e.target.value);
                   setSelectedTopic('');
                 }}
-                className="input-field min-h-11 py-2 text-xs"
+                className="input-field min-h-11 py-2"
               >
                 <option value="">Chọn mảng kiến thức</option>
                 {curriculum?.knowledgeAreas?.map((area) => (
@@ -226,7 +227,7 @@ function StudySidebar({
                     setSelectedChapter(e.target.value);
                     setSelectedLesson('');
                   }}
-                  className="input-field min-h-11 py-2 text-xs"
+                  className="input-field min-h-11 py-2"
                 >
                   <option value="">Chọn chương</option>
                   {curriculum?.chapters.map((chapter) => (
@@ -292,7 +293,7 @@ function StudySidebar({
           <select
             value={currentLevel}
             onChange={(e) => setCurrentLevel(e.target.value)}
-            className="input-field min-h-11 py-2 text-xs"
+            className="input-field min-h-11 py-2"
           >
             <option value="">Chọn trình độ</option>
             {CURRENT_LEVEL_OPTIONS.map((level) => (
@@ -358,14 +359,15 @@ function StudySidebar({
   );
 }
 
-function FieldLabel({ label, children }: { label: string; children: ReactNode }) {
+function FieldLabel({ label, children }: { label: string; children: ReactElement<{ id?: string }> }) {
+  const fieldId = useId();
   return (
-    <label className="block">
-      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.14em] text-text-light">
+    <div className="block">
+      <label htmlFor={fieldId} className="mb-2 block text-xs font-bold uppercase tracking-[0.14em] text-text-light">
         {label}
-      </span>
-      {children}
-    </label>
+      </label>
+      {cloneElement(children, { id: fieldId })}
+    </div>
   );
 }
 

@@ -124,7 +124,7 @@ function buildFormFromResource(resource: LearningResource): ResourceFormState {
 function ResourceTypeBadge({ type }: { type: ResourceType }) {
   const accent =
     type === 'link'
-      ? { bg: 'var(--color-primary-light)', color: 'var(--color-primary)' }
+      ? { bg: 'var(--color-primary-light)', color: 'var(--color-primary-text)' }
       : type === 'pdf'
         ? { bg: 'var(--color-accent-light)', color: 'var(--color-accent)' }
         : type === 'image'
@@ -133,7 +133,7 @@ function ResourceTypeBadge({ type }: { type: ResourceType }) {
 
   return (
     <span
-      className="inline-flex rounded-full px-2.5 py-1 text-xs font-bold"
+      className="inline-flex rounded-control px-2.5 py-1 text-xs font-bold"
       style={{ backgroundColor: accent.bg, color: accent.color }}
     >
       {resourceTypeLabels[type]}
@@ -146,7 +146,7 @@ function FeaturedBadge({ featured }: { featured: boolean }) {
 
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold"
+      className="inline-flex items-center gap-1.5 rounded-control border px-2.5 py-1 text-xs font-bold"
       style={{
         backgroundColor: 'var(--color-accent-light)',
         borderColor: 'color-mix(in srgb, var(--color-accent) 28%, transparent)',
@@ -457,17 +457,12 @@ export default function AdminResources() {
   return (
     <div className="space-y-6">
       <section
-        className="relative overflow-hidden rounded-2xl border bg-bg-card p-6 shadow-card sm:p-8"
+        className="relative overflow-hidden rounded-card border bg-bg-card p-6 sm:p-8"
         style={{ borderColor: 'var(--color-border-strong)' }}
       >
-        <div
-          className="absolute -right-12 -top-12 h-32 w-32 rounded-full"
-          style={{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 12%, transparent)' }}
-        />
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
-            <span className="section-label">Tài nguyên học tập</span>
-            <h2 className="mt-4 font-display text-3xl font-extrabold leading-tight text-text sm:text-4xl">
+            <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-text sm:text-4xl">
               Quản lý tài nguyên
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-text-muted sm:text-base">
@@ -486,7 +481,7 @@ export default function AdminResources() {
 
       {(feedback || error) && (
         <div
-          className="rounded-xl border px-4 py-3 text-sm font-semibold"
+          className="rounded-card border px-4 py-3 text-sm font-semibold"
           style={{
             backgroundColor: feedback ? 'var(--color-secondary-light)' : 'var(--color-accent-light)',
             borderColor: feedback
@@ -499,7 +494,7 @@ export default function AdminResources() {
         </div>
       )}
 
-      <section className="rounded-2xl border bg-bg-card p-4 shadow-card" style={{ borderColor: 'var(--color-border)' }}>
+      <section className="rounded-card border bg-bg-card p-4" style={{ borderColor: 'var(--color-border)' }}>
         <div className="grid gap-3 xl:grid-cols-[1fr_auto_auto_auto_auto_auto] xl:items-center">
           <label className="relative block">
             <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-light" />
@@ -573,10 +568,10 @@ export default function AdminResources() {
       </section>
 
       {formOpen && (
-        <section className="rounded-2xl border bg-bg-card p-5 shadow-card" style={{ borderColor: 'var(--color-border-strong)' }}>
+        <section className="rounded-card border bg-bg-card p-5" style={{ borderColor: 'var(--color-border-strong)' }}>
           <div className="mb-5 flex items-start justify-between gap-3">
             <div>
-              <h3 className="font-display text-xl font-extrabold text-text">
+              <h3 className="font-display text-xl font-bold text-text">
                 {editingResource ? 'Sửa tài nguyên' : 'Thêm tài nguyên'}
               </h3>
               <p className="mt-1 text-sm text-text-muted">
@@ -586,7 +581,7 @@ export default function AdminResources() {
             <button
               type="button"
               onClick={() => closeForm()}
-              className="flex h-11 w-11 items-center justify-center rounded-full border text-text-muted hover:bg-bg-muted"
+              className="flex h-11 w-11 items-center justify-center rounded-control border text-text-muted hover:bg-bg-muted"
               style={{ borderColor: 'var(--color-border)' }}
               aria-label="Hủy"
             >
@@ -624,11 +619,11 @@ export default function AdminResources() {
                     setFileError(null);
                   }}
                   aria-pressed={sourceMode === 'url'}
-                  className="flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-bold"
+                  className="flex min-h-11 items-center justify-center gap-2 rounded-control border px-4 text-sm font-bold"
                   style={{
                     backgroundColor: sourceMode === 'url' ? 'var(--color-primary)' : 'var(--color-bg-muted)',
                     borderColor: sourceMode === 'url' ? 'var(--color-primary)' : 'var(--color-border)',
-                    color: sourceMode === 'url' ? '#ffffff' : 'var(--color-text-muted)',
+                    color: sourceMode === 'url' ? 'var(--foreground-on-primary)' : 'var(--color-text-muted)',
                   }}
                 >
                   <ExternalLink size={16} /> URL tài nguyên
@@ -641,11 +636,11 @@ export default function AdminResources() {
                     setFileError(null);
                   }}
                   aria-pressed={sourceMode === 'upload'}
-                  className="flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-bold"
+                  className="flex min-h-11 items-center justify-center gap-2 rounded-control border px-4 text-sm font-bold"
                   style={{
                     backgroundColor: sourceMode === 'upload' ? 'var(--color-primary)' : 'var(--color-bg-muted)',
                     borderColor: sourceMode === 'upload' ? 'var(--color-primary)' : 'var(--color-border)',
-                    color: sourceMode === 'upload' ? '#ffffff' : 'var(--color-text-muted)',
+                    color: sourceMode === 'upload' ? 'var(--foreground-on-primary)' : 'var(--color-text-muted)',
                   }}
                 >
                   <Upload size={16} /> Upload PDF
@@ -672,9 +667,9 @@ export default function AdminResources() {
                 </span>
               </label>
             ) : (
-              <div className="space-y-3 rounded-xl border p-4 lg:col-span-2" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-muted)' }}>
+              <div className="space-y-3 rounded-card border p-4 lg:col-span-2" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-muted)' }}>
                 <div className="flex items-start gap-3">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-primary-light text-primary">
                     <FileText size={19} />
                   </span>
                   <div>
@@ -689,7 +684,7 @@ export default function AdminResources() {
                   accept="application/pdf,.pdf"
                   onChange={(event) => void handlePdfSelection(event.target.files?.[0] ?? null)}
                   disabled={saving || uploading}
-                  className="block min-h-11 w-full cursor-pointer rounded-xl border bg-bg-card px-3 py-2 text-sm text-text file:mr-3 file:rounded-full file:border-0 file:bg-primary file:px-4 file:py-2 file:text-xs file:font-bold file:text-white"
+                  className="block min-h-11 w-full cursor-pointer rounded-input border bg-bg-card px-3 py-2 text-sm text-text file:mr-3 file:rounded-input file:border-0 file:bg-primary file:px-4 file:py-2 file:text-xs file:font-bold file:text-on-primary"
                   style={{ borderColor: 'var(--color-border)' }}
                   aria-label="Chọn file PDF"
                 />
@@ -717,7 +712,7 @@ export default function AdminResources() {
             )}
 
             {fileError && (
-              <p className="rounded-xl border px-4 py-3 text-sm font-semibold text-red-700 lg:col-span-2" style={{ borderColor: 'color-mix(in srgb, #dc2626 35%, transparent)', backgroundColor: 'color-mix(in srgb, #dc2626 8%, transparent)' }} role="alert">
+              <p className="rounded-card border px-4 py-3 text-sm font-semibold text-accent lg:col-span-2" style={{ borderColor: 'color-mix(in srgb, #dc2626 35%, transparent)', backgroundColor: 'color-mix(in srgb, #dc2626 8%, transparent)' }} role="alert">
                 {fileError}
               </p>
             )}
@@ -787,7 +782,7 @@ export default function AdminResources() {
                 placeholder="UUID tùy chọn"
               />
             </label>
-            <label className="flex items-center gap-3 rounded-xl border px-4 py-3" style={{ borderColor: 'var(--color-border)' }}>
+            <label className="flex items-center gap-3 rounded-card border px-4 py-3" style={{ borderColor: 'var(--color-border)' }}>
               <input
                 type="checkbox"
                 checked={form.featured}
@@ -805,7 +800,7 @@ export default function AdminResources() {
                 {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
                 {uploading ? 'Đang tải PDF…' : editingResource ? 'Lưu thay đổi' : 'Thêm tài nguyên'}
               </button>
-              <button type="button" onClick={() => closeForm()} disabled={saving || uploading} className="btn-outline min-h-11 rounded-full">
+              <button type="button" onClick={() => closeForm()} disabled={saving || uploading} className="btn-outline min-h-11 rounded-control">
                 Hủy
               </button>
             </div>
@@ -813,10 +808,10 @@ export default function AdminResources() {
         </section>
       )}
 
-      <section className="rounded-2xl border bg-bg-card shadow-card" style={{ borderColor: 'var(--color-border)' }}>
+      <section className="rounded-card border bg-bg-card" style={{ borderColor: 'var(--color-border)' }}>
         <div className="flex items-center justify-between gap-3 border-b px-5 py-4" style={{ borderColor: 'var(--color-border)' }}>
           <div>
-            <h3 className="font-display text-lg font-extrabold text-text">Danh sách tài nguyên</h3>
+            <h3 className="font-display text-lg font-bold text-text">Danh sách tài nguyên</h3>
             <p className="text-sm text-text-muted">{filteredResources.length} tài nguyên đang hiển thị</p>
           </div>
           <Library size={18} className="text-text-light" />
@@ -829,10 +824,10 @@ export default function AdminResources() {
           </div>
         ) : resources.length === 0 ? (
           <div className="px-5 py-16 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-light text-primary">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-card bg-primary-light text-primary">
               <Library size={24} />
             </div>
-            <h3 className="mt-4 font-display text-xl font-extrabold text-text">Chưa có tài nguyên nào</h3>
+            <h3 className="mt-4 font-display text-xl font-bold text-text">Chưa có tài nguyên nào</h3>
             <p className="mx-auto mt-2 max-w-md text-sm text-text-muted">
               Thêm tài nguyên đầu tiên bằng metadata và URL nguồn chính thống hoặc tài liệu tự biên soạn.
             </p>
@@ -891,7 +886,7 @@ export default function AdminResources() {
                           <button
                             type="button"
                             onClick={() => openEditForm(resource)}
-                            className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                            className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                           >
                             <Edit3 size={13} />
                             Sửa
@@ -900,7 +895,7 @@ export default function AdminResources() {
                             type="button"
                             onClick={() => openResourceLink(resource)}
                             disabled={!hasLink}
-                            className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                            className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                           >
                             <ExternalLink size={13} />
                             Mở liên kết
@@ -910,7 +905,7 @@ export default function AdminResources() {
                               type="button"
                               onClick={() => updateResourceStatus(resource, 'draft')}
                               disabled={busy}
-                              className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                              className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                             >
                               {busy ? <Loader2 size={13} className="animate-spin" /> : <X size={13} />}
                               Gỡ xuất bản
@@ -920,7 +915,7 @@ export default function AdminResources() {
                               type="button"
                               onClick={() => updateResourceStatus(resource, 'published')}
                               disabled={busy}
-                              className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                              className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                             >
                               {busy ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}
                               Xuất bản
@@ -930,7 +925,7 @@ export default function AdminResources() {
                             type="button"
                             onClick={() => updateResourceStatus(resource, 'archived')}
                             disabled={busy || resource.status === 'archived'}
-                            className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                            className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                           >
                             <Archive size={13} />
                             Lưu trữ
@@ -939,7 +934,7 @@ export default function AdminResources() {
                             type="button"
                             onClick={() => deleteResource(resource)}
                             disabled={busy}
-                            className="btn-ghost gap-1 rounded-full px-3 py-1.5 text-accent hover:text-accent"
+                            className="btn-ghost gap-1 rounded-control px-3 py-1.5 text-accent hover:text-accent"
                           >
                             {busy ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
                             Xóa

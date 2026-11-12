@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#172554" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="robots" content="noindex" />
+    <meta name="eduaihub-offline-notice" content="v1" />
+    <title>Chưa có kết nối — EduAI-Hub</title>
+    <style>
+      :root { color-scheme: light dark; font-family: system-ui, sans-serif; color: #172554; background: #f8f3e7; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100dvh; display: grid; place-items: center; padding: 28px; }
+      main { width: 100%; max-width: 36rem; }
+      .brand { font-weight: 700; }
+      h1 { font-size: clamp(1.75rem, 6vw, 2.5rem); line-height: 1.2; margin: 32px 0 20px; }
+      p { line-height: 1.7; }
+      button { margin-top: 16px; min-height: 48px; padding: 12px 24px; border: 0; border-radius: 12px; background: #172554; color: #fffaf0; font: inherit; font-weight: 600; cursor: pointer; }
+      button:focus-visible { outline: 3px solid #b54a25; outline-offset: 4px; }
+      @media (prefers-color-scheme: dark) { :root { background: #141820; color: #f8f3e7; } button { background: #d5e0ff; color: #172554; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="brand">EduAI-Hub</p>
+      <h1>Chưa có kết nối Internet</h1>
+      <p>Hãy kiểm tra Wi-Fi hoặc dữ liệu di động, rồi thử tải lại trang.</p>
+      <p>Đăng nhập, chatbot AI và dữ liệu trên máy chủ cần kết nối Internet. Trang này không hiển thị hồ sơ hoặc lịch sử trò chuyện đã lưu.</p>
+      <button type="button" onclick="window.location.reload()">Thử tải lại</button>
+    </main>
+  </body>
+</html>

@@ -1,8 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Layout from './components/Layout';
-import LandingPage from './pages/LandingPage';
-import Dashboard from './pages/Dashboard';
+import RouteScrollManager from './components/RouteScrollManager';
+import HomeEntry from './components/HomeEntry';
+import DashboardEntry from './components/DashboardEntry';
+import LearningAccessGuard from './components/LearningAccessGuard';
+import About from './pages/About';
 import Guides from './pages/Guides';
 import GuideLessonDetail from './pages/GuideLessonDetail';
 import AiTools from './pages/AiTools';
@@ -25,26 +28,30 @@ import AdminResources from './pages/admin/AdminResources';
 function App() {
   return (
     <BrowserRouter>
+      <RouteScrollManager />
       <AuthProvider>
         <Routes>
           <Route element={<Layout />}>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/guides" element={<Guides />} />
-            <Route path="/guides/:slug" element={<GuideLessonDetail />} />
-            <Route path="/ai-tools" element={<AiTools />} />
-            <Route path="/ai-tools/hoc-tu-duy-prompt" element={<PromptThinkingChatbot />} />
-            <Route path="/ai-tools/goi-y-prompt-hoc-tap" element={<StudyPromptMentorChatbot />} />
-            <Route path="/ai-tools/danh-gia-prompt" element={<PromptEvaluatorChatbot />} />
-            <Route path="/ai-tools/huong-dan-ai" element={<PromptThinkingChatbot />} />
-            <Route path="/ai-tools/prompt-hoc-tap" element={<StudyPromptMentorChatbot />} />
-            <Route path="/ai-tools/prompt-da-dung" element={<PromptEvaluatorChatbot />} />
-            <Route path="/lessons" element={<Lessons />} />
-            <Route path="/lessons/:id" element={<LessonDetail />} />
-            <Route path="/prompt-creator" element={<Navigate to="/ai-tools/prompt-hoc-tap" replace />} />
-            <Route path="/prompts" element={<PromptLibrary />} />
+            <Route path="/" element={<HomeEntry />} />
+            <Route path="/about" element={<About />} />
             <Route path="/textbooks" element={<Textbooks />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route element={<LearningAccessGuard />}>
+              <Route path="/dashboard" element={<DashboardEntry />} />
+              <Route path="/guides" element={<Guides />} />
+              <Route path="/guides/:slug" element={<GuideLessonDetail />} />
+              <Route path="/ai-tools" element={<AiTools />} />
+              <Route path="/ai-tools/hoc-tu-duy-prompt" element={<PromptThinkingChatbot />} />
+              <Route path="/ai-tools/goi-y-prompt-hoc-tap" element={<StudyPromptMentorChatbot />} />
+              <Route path="/ai-tools/danh-gia-prompt" element={<PromptEvaluatorChatbot />} />
+              <Route path="/ai-tools/huong-dan-ai" element={<PromptThinkingChatbot />} />
+              <Route path="/ai-tools/prompt-hoc-tap" element={<StudyPromptMentorChatbot />} />
+              <Route path="/ai-tools/prompt-da-dung" element={<PromptEvaluatorChatbot />} />
+              <Route path="/lessons" element={<Lessons />} />
+              <Route path="/lessons/:id" element={<LessonDetail />} />
+              <Route path="/prompt-creator" element={<Navigate to="/ai-tools/prompt-hoc-tap" replace />} />
+              <Route path="/prompts" element={<PromptLibrary />} />
+              <Route path="/profile" element={<Profile />} />
+            </Route>
           </Route>
           <Route
             path="/admin"

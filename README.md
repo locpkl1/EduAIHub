@@ -10,7 +10,7 @@ EduAI-Hub hướng đến một cách học chủ động: xác định điều 
 - **Ba trợ lý Coze:** Học Tư Duy Prompt, Gợi Ý Prompt Học Tập và Đánh Giá Prompt.
 - **Kho Prompt:** tham khảo và quản lý các prompt đã lưu.
 - **Bài học:** nội dung hướng dẫn học cùng AI, gồm bài viết được quản lý qua Admin Center.
-- **Bản đồ chương trình và tài nguyên:** tìm mạch kiến thức, đối chiếu nguồn học liệu phù hợp.
+- **Tài nguyên học tập:** tìm danh mục sách theo lớp, môn và mở các nguồn học liệu đang có.
 - **Dashboard:** truy cập và quản lý prompt cá nhân. Đăng nhập Google qua Supabase để dùng các tính năng cần tài khoản.
 
 ## Công nghệ và cấu trúc

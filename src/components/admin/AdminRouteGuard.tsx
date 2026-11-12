@@ -16,35 +16,22 @@ interface GuardStateProps {
   children?: ReactNode;
 }
 
-function GuardState({ eyebrow, title, description, icon: Icon, children }: GuardStateProps) {
+function GuardState({ title, description, icon: Icon, children }: GuardStateProps) {
   return (
-    <div
-      className="min-h-screen px-4 py-10 text-text"
-      style={{
-        backgroundColor: 'var(--color-bg)',
-        backgroundImage:
-          'radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--color-border) 55%, transparent) 1px, transparent 0)',
-        backgroundSize: '28px 28px',
-      }}
-    >
+    <main id="main-content" className="min-h-screen bg-bg px-4 py-10 text-text">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-3xl items-center justify-center">
         <section
-          className="relative overflow-hidden rounded-2xl border p-6 shadow-card sm:p-8"
+          className="relative overflow-hidden rounded-card border p-6 sm:p-8"
           style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border-strong)' }}
         >
-          <div
-            className="absolute -right-12 -top-12 h-32 w-32 rounded-full"
-            style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 16%, transparent)' }}
-          />
           <div className="relative">
             <span
-              className="inline-flex h-12 w-12 items-center justify-center rounded-2xl"
-              style={{ backgroundColor: 'var(--color-primary)', color: '#ffffff' }}
+              className="inline-flex h-12 w-12 items-center justify-center rounded-control"
+              style={{ backgroundColor: 'var(--color-primary)', color: 'var(--foreground-on-primary)' }}
             >
               <Icon size={22} />
             </span>
-            <p className="mt-5 text-xs font-bold uppercase tracking-[0.18em] text-text-light">{eyebrow}</p>
-            <h1 className="mt-2 font-display text-3xl font-extrabold leading-tight text-text sm:text-4xl">
+            <h1 className="mt-2 font-display text-3xl font-bold leading-tight text-text sm:text-4xl">
               {title}
             </h1>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-text-muted sm:text-base">
@@ -54,7 +41,7 @@ function GuardState({ eyebrow, title, description, icon: Icon, children }: Guard
           </div>
         </section>
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -90,7 +77,7 @@ export default function AdminRouteGuard({ children }: AdminRouteGuardProps) {
           <LogIn size={16} />
           Đăng nhập bằng Google
         </button>
-        <Link to="/" className="btn-outline gap-2 rounded-full">
+        <Link to="/" className="btn-outline gap-2 rounded-control">
           <ArrowLeft size={16} />
           Về trang chủ
         </Link>

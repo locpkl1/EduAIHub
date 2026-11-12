@@ -306,17 +306,12 @@ export default function AdminCurriculum() {
   return (
     <div className="space-y-6">
       <section
-        className="relative overflow-hidden rounded-2xl border bg-bg-card p-6 shadow-card sm:p-8"
+        className="relative overflow-hidden rounded-card border bg-bg-card p-6 sm:p-8"
         style={{ borderColor: 'var(--color-border-strong)' }}
       >
-        <div
-          className="absolute -right-12 -top-12 h-32 w-32 rounded-full"
-          style={{ backgroundColor: 'color-mix(in srgb, var(--color-secondary) 16%, transparent)' }}
-        />
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
-            <span className="section-label">Bản đồ chương trình học</span>
-            <h2 className="mt-4 font-display text-3xl font-extrabold leading-tight text-text sm:text-4xl">
+            <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-text sm:text-4xl">
               Quản lý chương trình học
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-text-muted sm:text-base">
@@ -335,7 +330,7 @@ export default function AdminCurriculum() {
 
       {(feedback || error) && (
         <div
-          className="rounded-xl border px-4 py-3 text-sm font-semibold"
+          className="rounded-card border px-4 py-3 text-sm font-semibold"
           style={{
             backgroundColor: feedback ? 'var(--color-secondary-light)' : 'var(--color-accent-light)',
             borderColor: feedback
@@ -348,7 +343,7 @@ export default function AdminCurriculum() {
         </div>
       )}
 
-      <section className="rounded-2xl border bg-bg-card p-4 shadow-card" style={{ borderColor: 'var(--color-border)' }}>
+      <section className="rounded-card border bg-bg-card p-4" style={{ borderColor: 'var(--color-border)' }}>
         <div className="grid gap-3 xl:grid-cols-[1fr_auto_auto_auto] xl:items-center">
           <label className="relative block">
             <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-light" />
@@ -400,10 +395,10 @@ export default function AdminCurriculum() {
       </section>
 
       {formOpen && (
-        <section className="rounded-2xl border bg-bg-card p-5 shadow-card" style={{ borderColor: 'var(--color-border-strong)' }}>
+        <section className="rounded-card border bg-bg-card p-5" style={{ borderColor: 'var(--color-border-strong)' }}>
           <div className="mb-5 flex items-start justify-between gap-3">
             <div>
-              <h3 className="font-display text-xl font-extrabold text-text">
+              <h3 className="font-display text-xl font-bold text-text">
                 {editingItem ? 'Sửa mục chương trình' : 'Thêm mục chương trình'}
               </h3>
               <p className="mt-1 text-sm text-text-muted">
@@ -413,7 +408,7 @@ export default function AdminCurriculum() {
             <button
               type="button"
               onClick={() => closeForm()}
-              className="flex h-9 w-9 items-center justify-center rounded-full border text-text-muted hover:bg-bg-muted"
+              className="flex h-9 w-9 items-center justify-center rounded-control border text-text-muted hover:bg-bg-muted"
               style={{ borderColor: 'var(--color-border)' }}
               aria-label="Hủy"
             >
@@ -515,7 +510,7 @@ export default function AdminCurriculum() {
                 {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
                 {editingItem ? 'Lưu thay đổi' : 'Thêm mục chương trình'}
               </button>
-              <button type="button" onClick={() => closeForm()} disabled={saving} className="btn-outline rounded-full">
+              <button type="button" onClick={() => closeForm()} disabled={saving} className="btn-outline rounded-control">
                 Hủy
               </button>
             </div>
@@ -523,10 +518,10 @@ export default function AdminCurriculum() {
         </section>
       )}
 
-      <section className="rounded-2xl border bg-bg-card shadow-card" style={{ borderColor: 'var(--color-border)' }}>
+      <section className="rounded-card border bg-bg-card" style={{ borderColor: 'var(--color-border)' }}>
         <div className="flex items-center justify-between gap-3 border-b px-5 py-4" style={{ borderColor: 'var(--color-border)' }}>
           <div>
-            <h3 className="font-display text-lg font-extrabold text-text">Danh sách mục chương trình</h3>
+            <h3 className="font-display text-lg font-bold text-text">Danh sách mục chương trình</h3>
             <p className="text-sm text-text-muted">{filteredItems.length} mục đang hiển thị</p>
           </div>
           <BookMarked size={18} className="text-text-light" />
@@ -539,10 +534,10 @@ export default function AdminCurriculum() {
           </div>
         ) : items.length === 0 ? (
           <div className="px-5 py-16 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary-light text-secondary">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-card bg-secondary-light text-secondary">
               <BookMarked size={24} />
             </div>
-            <h3 className="mt-4 font-display text-xl font-extrabold text-text">Chưa có mục chương trình nào</h3>
+            <h3 className="mt-4 font-display text-xl font-bold text-text">Chưa có mục chương trình nào</h3>
             <p className="mx-auto mt-2 max-w-md text-sm text-text-muted">
               Thêm mục đầu tiên để xây dựng ngữ cảnh học tập theo lớp, môn, bộ sách và bài học.
             </p>
@@ -596,7 +591,7 @@ export default function AdminCurriculum() {
                           <button
                             type="button"
                             onClick={() => openEditForm(item)}
-                            className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                            className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                           >
                             <Edit3 size={13} />
                             Sửa
@@ -604,7 +599,7 @@ export default function AdminCurriculum() {
                           <button
                             type="button"
                             onClick={() => copySuggestedPrompt(item)}
-                            className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                            className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                           >
                             {copiedId === item.id ? <Check size={13} /> : <Copy size={13} />}
                             Sao chép prompt gợi ý
@@ -614,7 +609,7 @@ export default function AdminCurriculum() {
                               type="button"
                               onClick={() => updateItemStatus(item, 'draft')}
                               disabled={busy}
-                              className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                              className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                             >
                               {busy ? <Loader2 size={13} className="animate-spin" /> : <X size={13} />}
                               Gỡ xuất bản
@@ -624,7 +619,7 @@ export default function AdminCurriculum() {
                               type="button"
                               onClick={() => updateItemStatus(item, 'published')}
                               disabled={busy}
-                              className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                              className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                             >
                               {busy ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}
                               Xuất bản
@@ -634,7 +629,7 @@ export default function AdminCurriculum() {
                             type="button"
                             onClick={() => updateItemStatus(item, 'archived')}
                             disabled={busy || item.status === 'archived'}
-                            className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                            className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                           >
                             <Archive size={13} />
                             Lưu trữ
@@ -643,7 +638,7 @@ export default function AdminCurriculum() {
                             type="button"
                             onClick={() => deleteItem(item)}
                             disabled={busy}
-                            className="btn-ghost gap-1 rounded-full px-3 py-1.5 text-accent hover:text-accent"
+                            className="btn-ghost gap-1 rounded-control px-3 py-1.5 text-accent hover:text-accent"
                           >
                             {busy ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
                             Xóa

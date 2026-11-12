@@ -1,14 +1,13 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   CalendarDays,
-  Check,
-  Copy,
   Eye,
   Loader2,
   Pencil,
   Trash2,
 } from 'lucide-react';
 import Modal from '../Modal';
+import CopyButton from '../ui/CopyButton';
 import { DEFAULT_BOOK_SERIES, isTargetBookSeries } from '../../data/educationData';
 import type { SavedPrompt } from '../../types/database';
 
@@ -48,73 +47,6 @@ function formatSavedDate(value: string) {
   }).format(date);
 }
 
-async function copyPromptText(text: string) {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return;
-  }
-
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  textarea.setAttribute('readonly', '');
-  textarea.style.position = 'fixed';
-  textarea.style.opacity = '0';
-  document.body.appendChild(textarea);
-  textarea.select();
-  const copied = document.execCommand('copy');
-  document.body.removeChild(textarea);
-
-  if (!copied) throw new Error('Clipboard unavailable');
-}
-
-function CopyPromptButton({
-  content,
-  compact = false,
-  className = '',
-}: {
-  content: string;
-  compact?: boolean;
-  className?: string;
-}) {
-  const [status, setStatus] = useState<'idle' | 'copied' | 'error'>('idle');
-  const resetTimer = useRef<number | null>(null);
-
-  useEffect(() => () => {
-    if (resetTimer.current) window.clearTimeout(resetTimer.current);
-  }, []);
-
-  async function handleCopy(event: MouseEvent<HTMLButtonElement>) {
-    event.stopPropagation();
-    try {
-      await copyPromptText(content);
-      setStatus('copied');
-    } catch {
-      setStatus('error');
-    }
-
-    if (resetTimer.current) window.clearTimeout(resetTimer.current);
-    resetTimer.current = window.setTimeout(() => setStatus('idle'), 2200);
-  }
-
-  const label = status === 'copied' ? 'Đã sao chép' : status === 'error' ? 'Thử lại' : 'Sao chép';
-
-  return (
-    <button
-      type="button"
-      onClick={handleCopy}
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-bold transition-colors ${className}`}
-      style={{
-        backgroundColor: status === 'copied' ? 'var(--color-success)' : 'var(--color-primary)',
-        color: '#ffffff',
-      }}
-      aria-label={status === 'error' ? 'Không thể sao chép, nhấn để thử lại' : `${label} prompt`}
-    >
-      {status === 'copied' ? <Check size={16} /> : <Copy size={16} />}
-      {!compact && label}
-    </button>
-  );
-}
-
 function SavedPromptCard({
   prompt,
   onOpen,
@@ -137,8 +69,7 @@ function SavedPromptCard({
       <button type="button" onClick={onOpen} className="min-h-11 min-w-0 text-left">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <span className="section-label mb-2 inline-flex">Prompt cá nhân</span>
-            <h3 className="font-display text-lg font-extrabold leading-snug text-text">
+            <h3 className="font-display text-lg font-bold leading-snug text-text">
               {promptTitle(prompt)}
             </h3>
           </div>
@@ -161,11 +92,11 @@ function SavedPromptCard({
           <CalendarDays size={14} /> {savedDate ? `Đã lưu ${savedDate}` : 'Prompt đã lưu'}
         </span>
         <div className="flex items-center gap-1.5">
-          <CopyPromptButton content={prompt.prompt_content} compact />
+          <CopyButton text={prompt.prompt_content} label="Sao chép" />
           <button
             type="button"
             onClick={onEdit}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border text-text-muted transition-colors hover:text-primary"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-control border text-text-muted transition-colors hover:text-primary"
             style={{ borderColor: 'var(--color-border)' }}
             aria-label="Chỉnh sửa prompt"
             title="Chỉnh sửa"
@@ -175,7 +106,7 @@ function SavedPromptCard({
           <button
             type="button"
             onClick={onDelete}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border text-text-muted transition-colors hover:text-red-600"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-control border text-text-muted transition-colors hover:text-red-600"
             style={{ borderColor: 'var(--color-border)' }}
             aria-label="Xóa prompt"
             title="Xóa"
@@ -260,11 +191,10 @@ function SavedPromptDetailModal({
   }
 
   return (
-    <Modal isOpen onClose={busy ? () => undefined : onClose} size="lg" showCloseButton={!busy}>
+    <Modal isOpen onClose={busy ? () => undefined : onClose} size="lg" showCloseButton={!busy} label={mode === 'edit' ? 'Chỉnh sửa prompt' : mode === 'delete' ? 'Xác nhận xóa prompt' : promptTitle(prompt)}>
       <div className="flex min-h-0 max-h-[90vh] flex-col">
         <header className="border-b px-5 py-5 pr-14 sm:px-7 sm:py-6" style={{ borderColor: 'var(--color-border)' }}>
-          <span className="section-label mb-3 inline-flex">Prompt cá nhân</span>
-          <h2 className="font-display text-2xl font-extrabold leading-tight text-text sm:text-3xl">
+          <h2 className="font-display text-2xl font-bold leading-tight text-text sm:text-3xl">
             {mode === 'edit' ? 'Chỉnh sửa prompt' : mode === 'delete' ? 'Xóa prompt này?' : promptTitle(prompt)}
           </h2>
           {mode === 'view' && (
@@ -282,7 +212,7 @@ function SavedPromptDetailModal({
                 Nội dung prompt
               </label>
               <p className="mt-1 text-xs leading-5 text-text-muted">
-                Tiêu đề đang được gợi từ ngữ cảnh đã lưu; cơ sở dữ liệu không có cột tiêu đề riêng.
+                Sửa nội dung rồi chọn Lưu thay đổi. Ngữ cảnh đã lưu vẫn được giữ nguyên.
               </p>
               <textarea
                 id={`saved-prompt-${prompt.id}`}
@@ -301,7 +231,7 @@ function SavedPromptDetailModal({
               <p className="text-sm leading-6 text-text-muted">
                 Prompt sẽ bị xóa khỏi Kho Prompt và Dashboard của bạn. Hành động này không thể hoàn tác.
               </p>
-              <div className="rounded-xl border p-4" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-muted)' }}>
+              <div className="rounded-card border p-4" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-muted)' }}>
                 <p className="font-display font-bold text-text">{promptTitle(prompt)}</p>
                 <p className="mt-2 line-clamp-4 whitespace-pre-wrap break-words text-sm leading-6 text-text-muted">
                   {prompt.prompt_content}
@@ -311,18 +241,18 @@ function SavedPromptDetailModal({
           ) : (
             <div>
               {successMessage && (
-                <p className="mb-4 rounded-lg px-4 py-3 text-sm font-semibold" style={{ backgroundColor: 'var(--color-secondary-light)', color: 'var(--color-secondary)' }} role="status">
+                <p className="mb-4 rounded-card px-4 py-3 text-sm font-semibold" style={{ backgroundColor: 'var(--color-secondary-light)', color: 'var(--color-secondary)' }} role="status">
                   {successMessage}
                 </p>
               )}
-              <pre className="max-h-[48vh] overflow-y-auto whitespace-pre-wrap break-words rounded-xl border p-4 font-mono-code text-sm leading-7 text-text sm:p-5" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-muted)' }}>
+              <pre className="max-h-[48vh] overflow-y-auto whitespace-pre-wrap break-words rounded-card border p-4 font-sans text-base leading-8 text-text sm:p-5" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-muted)' }}>
                 {prompt.prompt_content}
               </pre>
             </div>
           )}
 
           {operationError && (
-            <p className="mt-4 rounded-lg border px-4 py-3 text-sm leading-6 text-red-700" style={{ borderColor: 'color-mix(in srgb, #dc2626 35%, transparent)', backgroundColor: 'color-mix(in srgb, #dc2626 8%, transparent)' }} role="alert">
+            <p className="mt-4 rounded-card border px-4 py-3 text-sm leading-6 text-accent" style={{ borderColor: 'color-mix(in srgb, #dc2626 35%, transparent)', backgroundColor: 'color-mix(in srgb, #dc2626 8%, transparent)' }} role="alert">
               {operationError}
             </p>
           )}
@@ -337,7 +267,7 @@ function SavedPromptDetailModal({
               <button type="button" onClick={() => changeMode('edit')} className="btn-outline min-h-11 justify-center gap-2">
                 <Pencil size={16} /> Chỉnh sửa
               </button>
-              <CopyPromptButton content={prompt.prompt_content} />
+              <CopyButton text={prompt.prompt_content} />
             </>
           )}
 
@@ -362,7 +292,7 @@ function SavedPromptDetailModal({
                 type="button"
                 onClick={handleDelete}
                 disabled={deleting}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-600 px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-red-600 px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {deleting && <Loader2 size={16} className="animate-spin" />}
                 {deleting ? 'Đang xóa…' : 'Xác nhận xóa'}

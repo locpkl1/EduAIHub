@@ -94,7 +94,7 @@ export const lessons: Lesson[] = [
         },
         {
           heading: 'Quy trình kiểm chứng 3 bước',
-          body: '1) Đối chiếu với SGK ngay khi nhận thông tin quan trọng. 2) Dùng prompt "Bạn có chắc chắn về thông tin này không? Liệt kê những điểm bạn không chắc." 3) Tìm nguồn độc lập (thầy cô, tài liệu tham khảo chính thống).',
+          body: '1) Đối chiếu với SGK ngay khi nhận thông tin quan trọng. 2) Yêu cầu AI nêu điểm chưa chắc để biết phần cần kiểm tra; lời tự xác nhận của AI không phải bằng chứng độc lập. 3) Tìm nguồn độc lập (thầy cô, tài liệu tham khảo chính thống).',
         },
       ],
     },
@@ -104,7 +104,7 @@ export const lessons: Lesson[] = [
 export const allTags = ['Tất cả', 'Chiến lược', 'Kinh nghiệm', 'Tư duy phản biện'];
 
 export const tagColorMap: Record<string, { bg: string; text: string }> = {
-  primary: { bg: 'var(--color-primary-light)', text: 'var(--color-primary)' },
+  primary: { bg: 'var(--color-primary-light)', text: 'var(--color-primary-text)' },
   accent: { bg: 'var(--color-accent-light)', text: 'var(--color-accent)' },
   warning: { bg: 'color-mix(in srgb, var(--color-warning) 12%, transparent)', text: 'var(--color-warning)' },
   success: { bg: 'color-mix(in srgb, var(--color-success) 12%, transparent)', text: 'var(--color-success)' },

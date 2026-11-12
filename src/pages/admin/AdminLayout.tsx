@@ -20,18 +20,12 @@ export default function AdminLayout() {
   const userLabel = displayName || user?.email?.split('@')[0] || 'Quản trị viên';
 
   return (
-    <div
-      className="min-h-screen bg-bg text-text"
-      style={{
-        backgroundImage:
-          'radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--color-border) 45%, transparent) 1px, transparent 0)',
-        backgroundSize: '30px 30px',
-      }}
-    >
+    <div className="min-h-screen bg-bg text-text">
+      <a href="#main-content" className="skip-link">Đến nội dung chính</a>
       <AdminSidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
       <div className="lg:pl-72">
         <AdminTopbar title={title} userLabel={userLabel} onMenuClick={() => setMobileOpen(true)} />
-        <main className="px-4 py-6 sm:px-6 lg:px-8">
+        <main id="main-content" tabIndex={-1} className="px-4 py-6 sm:px-6 lg:px-8">
           <Outlet />
         </main>
       </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, ChevronRight, FileText, Star } from 'lucide-react';
 import { lessons, tagColorMap, type Lesson } from '../data/lessons';
 import { fetchPublishedContentPostBySlug, type PublishedContentPost } from '../lib/publicContentApi';
@@ -9,41 +9,25 @@ export default function LessonDetail() {
   const navigate = useNavigate();
 
   const lesson = lessons.find((l) => l.id === Number(id));
-  const [publishedPost, setPublishedPost] = useState<PublishedContentPost | null>(null);
-  const [postLoading, setPostLoading] = useState(false);
-
+  const [attempt, setAttempt] = useState(0);
+  const [postState, setPostState] = useState<{ id?: string; status: 'loading' | 'ready' | 'error'; post: PublishedContentPost | null }>({ id, status: 'loading', post: null });
+  const publishedPost = postState.id === id ? postState.post : null;
+  const postLoading = !lesson && (postState.id !== id || postState.status === 'loading');
   useEffect(() => {
+    if (!id || lesson) return;
     let cancelled = false;
+    setPostState({ id, status: 'loading', post: null });
+    fetchPublishedContentPostBySlug(id).then(post => {
+      if (!cancelled) setPostState({ id, status: 'ready', post });
+    }).catch(() => { if (!cancelled) setPostState({ id, status: 'error', post: null }); });
+    return () => { cancelled = true; };
+  }, [id, lesson, attempt]);
 
-    async function loadPost() {
-      if (!id || lesson) {
-        setPublishedPost(null);
-        setPostLoading(false);
-        return;
-      }
-
-      setPostLoading(true);
-      try {
-        const post = await fetchPublishedContentPostBySlug(id);
-        if (!cancelled) setPublishedPost(post);
-      } catch (error) {
-        console.error('Error fetching published post:', error);
-        if (!cancelled) setPublishedPost(null);
-      } finally {
-        if (!cancelled) setPostLoading(false);
-      }
-    }
-
-    loadPost();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [id, lesson]);
+  if (!lesson && postState.id === id && postState.status === 'error') return <div className="page-container section-space" role="alert"><h1 className="page-title">Chưa tải được bài viết</h1><p className="page-intro">Kiểm tra kết nối và thử lại. Lỗi tải không có nghĩa bài đã bị xóa.</p><button type="button" className="btn-primary mt-5" onClick={() => setAttempt(value => value + 1)}>Thử tải lại</button></div>;
 
   if (!lesson && postLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3" style={{ color: 'var(--color-text-muted)' }}>
+      <div role="status" className="flex flex-col items-center justify-center min-h-[50vh] gap-3" style={{ color: 'var(--color-text-muted)' }}>
         <p className="text-sm font-semibold">Đang tải bài viết...</p>
       </div>
     );
@@ -56,11 +40,11 @@ export default function LessonDetail() {
   if (!lesson) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4" style={{ color: 'var(--color-text-muted)' }}>
-        <p className="text-lg font-semibold">Bài học không tồn tại.</p>
+        <h1 className="text-2xl font-bold">Không tìm thấy bài học</h1>
         <button
           type="button"
           onClick={() => navigate('/lessons')}
-          className="btn-outline flex items-center gap-2 text-sm rounded-full"
+          className="btn-outline flex items-center gap-2 text-sm rounded-control"
         >
           <ArrowLeft size={14} />
           Về Bài Học
@@ -90,7 +74,7 @@ export default function LessonDetail() {
           <button
             type="button"
             onClick={() => navigate('/lessons')}
-            className="inline-flex items-center gap-1.5 text-sm mb-6 transition-colors rounded-full px-3 py-1.5"
+            className="inline-flex items-center gap-1.5 text-sm mb-6 transition-colors rounded-control px-3 py-1.5"
             style={{ color: 'var(--color-text-muted)', backgroundColor: 'var(--color-bg-muted)' }}
             onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-text)')}
             onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--color-text-muted)')}
@@ -100,12 +84,12 @@ export default function LessonDetail() {
           </button>
 
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: bg }}>
+            <div className="w-11 h-11 rounded-card flex items-center justify-center flex-shrink-0" style={{ backgroundColor: bg }}>
               <Icon size={22} style={{ color: text }} />
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <span
-                className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full"
+                className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-control"
                 style={{ backgroundColor: bg, color: text }}
               >
                 {lesson.tag}
@@ -117,7 +101,7 @@ export default function LessonDetail() {
             </div>
           </div>
 
-          <h1 className="font-display text-2xl sm:text-3xl font-bold leading-snug text-balance text-text">
+          <h1 className="page-title">
             {lesson.title}
           </h1>
           <p className="mt-3 text-base leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{lesson.desc}</p>
@@ -125,12 +109,13 @@ export default function LessonDetail() {
       </div>
 
       {/* Article body */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+      <div className="reading-body max-w-[72ch] mx-auto px-4 sm:px-6 py-10">
+        <p className="mb-6 text-sm text-text-muted">Hướng dẫn nhanh · <Link className="font-semibold text-primary" to={`/guides/${lesson.id === 1 ? 'tu-duy-hoc-tap-cung-ai' : lesson.id === 6 ? 'dung-tin-ai-chi-vi-thuyet-phuc' : 'prompt-la-gi-cach-giao-tiep-hieu-qua-voi-ai'}`}>Đọc sâu hơn trong cẩm nang</Link></p>
         {/* Intro blockquote */}
         <blockquote
           className="text-base leading-relaxed italic mb-10 pl-5"
           style={{
-            borderLeft: '3px solid var(--color-primary)',
+            borderLeft: '1px solid var(--color-primary)',
             color: 'var(--color-text-muted)',
           }}
         >
@@ -141,10 +126,10 @@ export default function LessonDetail() {
         <div className="space-y-10">
           {lesson.content.sections.map((section, i) => (
             <article key={i} className="space-y-4">
-              <h2 className="font-display text-lg font-bold text-text">
+              <h2 className="font-display text-2xl font-bold text-text">
                 {section.heading}
               </h2>
-              <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+              <p className="text-base leading-8" style={{ color: 'var(--color-text-muted)' }}>
                 {section.body}
               </p>
               {section.tips && section.tips.length > 0 && (
@@ -155,8 +140,8 @@ export default function LessonDetail() {
                       className="flex items-start gap-3 text-sm"
                     >
                       <span
-                        className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5"
-                        style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
+                        className="flex-shrink-0 w-5 h-5 rounded-control flex items-center justify-center text-[10px] font-bold mt-0.5"
+                        style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary-text)' }}
                       >
                         {ti + 1}
                       </span>
@@ -198,7 +183,7 @@ export default function LessonDetail() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span
-                          className="inline-flex items-center px-2 py-0.5 text-[11px] font-medium rounded-full"
+                          className="inline-flex items-center px-2 py-0.5 text-[11px] font-medium rounded-control"
                           style={{ backgroundColor: rBg, color: rText }}
                         >
                           {rel.tag}
@@ -237,7 +222,7 @@ function PublishedPostDetail({ post, onBack }: { post: PublishedContentPost; onB
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 text-sm mb-6 transition-colors rounded-full px-3 py-1.5"
+            className="inline-flex items-center gap-1.5 text-sm mb-6 transition-colors rounded-control px-3 py-1.5"
             style={{ color: 'var(--color-text-muted)', backgroundColor: 'var(--color-bg-muted)' }}
           >
             <ArrowLeft size={13} />
@@ -245,19 +230,19 @@ function PublishedPostDetail({ post, onBack }: { post: PublishedContentPost; onB
           </button>
 
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--color-primary-light)' }}>
-              <FileText size={22} style={{ color: 'var(--color-primary)' }} />
+            <div className="w-11 h-11 rounded-card flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--color-primary-light)' }}>
+              <FileText size={22} style={{ color: 'var(--color-primary-text)' }} />
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <span
-                className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full"
-                style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
+                className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-control"
+                style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary-text)' }}
               >
                 {post.category || 'Bài viết'}
               </span>
               {post.featured && (
                 <span
-                  className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full"
+                  className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-control"
                   style={{ backgroundColor: 'var(--color-accent-light)', color: 'var(--color-accent)' }}
                 >
                   <Star size={11} />
@@ -271,7 +256,7 @@ function PublishedPostDetail({ post, onBack }: { post: PublishedContentPost; onB
             </div>
           </div>
 
-          <h1 className="font-display text-2xl sm:text-3xl font-bold leading-snug text-balance text-text">
+          <h1 className="page-title">
             {post.title}
           </h1>
           {post.excerpt && (
@@ -282,17 +267,17 @@ function PublishedPostDetail({ post, onBack }: { post: PublishedContentPost; onB
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+      <div className="reading-body max-w-[72ch] mx-auto px-4 sm:px-6 py-10">
         {contentBlocks.length > 0 ? (
           <div className="space-y-5">
             {contentBlocks.map((block, index) => (
-              <p key={index} className="text-sm leading-7 whitespace-pre-line" style={{ color: 'var(--color-text-muted)' }}>
+              <p key={index} className="text-base leading-8 whitespace-pre-line" style={{ color: 'var(--color-text-muted)' }}>
                 {block}
               </p>
             ))}
           </div>
         ) : (
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-base leading-8" style={{ color: 'var(--color-text-muted)' }}>
             Nội dung bài viết đang được EduAI-Hub cập nhật.
           </p>
         )}
@@ -302,7 +287,7 @@ function PublishedPostDetail({ post, onBack }: { post: PublishedContentPost; onB
             {post.tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+                className="inline-flex items-center rounded-control px-3 py-1 text-xs font-semibold"
                 style={{ backgroundColor: 'var(--color-bg-muted)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}
               >
                 {tag}

@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, type ReactNode } from 'react';
 import { AuthContext, isProfileIncomplete, getAuthUserMeta } from './authContextCore';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured, supabaseConfigError } from '../lib/supabase';
-import ProfileCompletionModal from '../components/ProfileCompletionModal';
+import { clearLoginDestination, rememberLoginDestination } from '../lib/loginDestination';
 import type { Profile, ProfileUpdateData } from '../types/database';
 
 function profileDismissKey(userId: string) {
@@ -241,13 +241,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
       return;
     }
+    rememberLoginDestination();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: window.location.origin + '/dashboard',
       },
     });
-    if (error) throw error;
+    if (error) { clearLoginDestination(); throw error; }
   }
 
   async function signOut() {
@@ -322,7 +323,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-      <ProfileCompletionModal />
     </AuthContext.Provider>
   );
 }

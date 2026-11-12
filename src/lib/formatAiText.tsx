@@ -230,15 +230,15 @@ function renderParagraph(block: TextBlock, key: number) {
 function renderHeading(block: HeadingBlock, key: number) {
   const className =
     block.depth === 1
-      ? 'mt-5 mb-3 font-display text-base font-bold leading-6 text-text'
+      ? 'mt-6 mb-3 font-display text-2xl font-bold leading-8 text-text'
       : block.depth === 2
-        ? 'mt-4 mb-2 font-display text-sm font-bold leading-6 text-text'
-        : 'mt-4 mb-2 text-sm font-bold leading-6 text-text';
+        ? 'mt-5 mb-2 font-display text-xl font-bold leading-7 text-text'
+        : 'mt-5 mb-2 text-lg font-bold leading-7 text-text';
 
   const content = renderInline(block.text);
-  if (block.depth === 1) return <h1 key={key} className={className}>{content}</h1>;
-  if (block.depth === 2) return <h2 key={key} className={className}>{content}</h2>;
-  return <h3 key={key} className={className}>{content}</h3>;
+  if (block.depth === 1) return <h2 key={key} className={className}>{content}</h2>;
+  if (block.depth === 2) return <h3 key={key} className={className}>{content}</h3>;
+  return <h4 key={key} className={className}>{content}</h4>;
 }
 
 function renderList(block: ListBlock, key: number) {
@@ -261,7 +261,7 @@ function renderCode(block: CodeBlock, key: number) {
   return (
     <pre
       key={key}
-      className="my-3 overflow-x-auto rounded-xl p-3 font-mono-code text-xs leading-relaxed"
+      className="my-3 overflow-x-auto rounded-card p-3 font-mono-code text-sm leading-7"
       style={{
         backgroundColor: 'var(--color-bg)',
         border: '1px solid var(--color-border)',
@@ -286,7 +286,7 @@ function renderTable(block: TableBlock, key: number) {
   return (
     <div
       key={key}
-      className="my-4 w-full max-w-full overflow-x-auto rounded-xl border"
+      className="my-4 w-full max-w-full overflow-x-auto rounded-card border"
       style={{ borderColor: 'color-mix(in srgb, var(--color-border) 78%, transparent)' }}
     >
       <table
@@ -350,7 +350,7 @@ export function formatAiText(text: string): ReactNode {
   const blocks = parseMarkdown(text);
 
   return (
-    <div className="ai-markdown min-w-0 w-full max-w-none space-y-3 text-sm leading-7 text-text">
+    <div className="ai-markdown min-w-0 w-full max-w-none space-y-3 text-base leading-7 text-text">
       {blocks.length > 0
         ? blocks.map((block, index) => {
             switch (block.type) {

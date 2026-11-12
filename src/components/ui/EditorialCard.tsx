@@ -22,15 +22,14 @@ export default function EditorialCard({
 }: EditorialCardProps) {
   return (
     <div
-      className={`relative border bg-bg-card p-5 shadow-card transition-all duration-200 ${interactive ? 'hover:-translate-y-1 hover:shadow-card-hover' : ''} ${className}`}
+      className={`relative rounded-card border bg-bg-card p-5 transition-colors ${interactive ? 'hover:border-primary' : ''} ${className}`}
       style={{
         borderColor: 'var(--color-border)',
-        boxShadow: `8px 8px 0 color-mix(in srgb, ${accentMap[accent]} 16%, transparent)`,
       }}
     >
       <span
         aria-hidden="true"
-        className="absolute -left-px top-5 h-8 w-1"
+        className="absolute -left-px top-5 h-8 w-px"
         style={{ backgroundColor: accentMap[accent] }}
       />
       {children}

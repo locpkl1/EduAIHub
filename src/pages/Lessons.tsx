@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Clock, Star, Search, ChevronDown, FileText } from 'lucide-react';
 import { fetchPublishedContentPosts, type PublishedContentPost } from '../lib/publicContentApi';
 
@@ -7,12 +7,13 @@ import { lessons, allTags, tagColorMap, type Lesson } from '../data/lessons';
 export type { Lesson } from '../data/lessons';
 
 export default function Lessons() {
-  const navigate = useNavigate();
   const [activeTag, setActiveTag] = useState('Tất cả');
   const [search, setSearch] = useState('');
   const [tagsExpanded, setTagsExpanded] = useState(false);
   const [publishedPosts, setPublishedPosts] = useState<PublishedContentPost[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
+  const [postsError, setPostsError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   const TAG_VISIBLE_COUNT = 4;
 
@@ -21,11 +22,12 @@ export default function Lessons() {
 
     async function loadPublishedPosts() {
       setPostsLoading(true);
+      setPostsError(false);
       try {
         const posts = await fetchPublishedContentPosts();
         if (!cancelled) setPublishedPosts(posts);
       } catch {
-        if (!cancelled) setPublishedPosts([]);
+        if (!cancelled) setPostsError(true);
       } finally {
         if (!cancelled) setPostsLoading(false);
       }
@@ -36,7 +38,7 @@ export default function Lessons() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [attempt]);
 
   const publishedCategories = useMemo(
     () => publishedPosts.map((post) => post.category).filter((category): category is string => Boolean(category)),
@@ -52,7 +54,7 @@ export default function Lessons() {
 
   const filtered = lessons.filter((l) => {
     const matchTag = activeTag === allTags[0] || l.tag === activeTag;
-    const matchSearch = search.trim() === '' || l.title.toLowerCase().includes(search.toLowerCase()) || l.desc.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = search.trim() === '' || l.title.toLowerCase().includes(search.trim().toLowerCase()) || l.desc.toLowerCase().includes(search.trim().toLowerCase());
     return matchTag && matchSearch;
   });
 
@@ -83,14 +85,9 @@ export default function Lessons() {
         style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-card)' }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <span className="section-label mb-3 inline-flex rounded-full">Bài Học</span>
-          <h1 className="font-display text-3xl sm:text-4xl font-bold mt-3 mb-3 text-balance">
-            Kho kinh nghiệm
-            <br />
-            <span style={{ color: 'var(--color-primary)' }}>học cùng AI</span>
-          </h1>
+          <h1 className="page-title">Kinh nghiệm học cùng AI</h1>
           <p className="text-sm leading-relaxed max-w-xl" style={{ color: 'var(--color-text-muted)' }}>
-            Không phải lý thuyết khô khan. Những bài học thực tế, chiến lược cụ thể từ việc dùng AI học tập mỗi ngày.
+            Những hướng dẫn nhanh cho tình huống cụ thể. Muốn học theo lộ trình, hãy bắt đầu từ Cẩm nang AI.
           </p>
         </div>
       </div>
@@ -106,8 +103,10 @@ export default function Lessons() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm bài học..."
-              className="w-full pl-9 pr-4 py-2.5 text-sm rounded-full outline-none transition-all"
+              aria-label="Tìm bài kinh nghiệm"
+              name="lesson-search"
+              placeholder="Tìm bài học…"
+              className="w-full pl-9 pr-4 py-2.5 text-base rounded-input transition-colors"
               style={{
                 backgroundColor: 'var(--color-bg-muted)',
                 border: '1.5px solid var(--color-border)',
@@ -125,10 +124,11 @@ export default function Lessons() {
                 key={tag}
                 type="button"
                 onClick={() => setActiveTag(tag)}
-                className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all"
+                aria-pressed={activeTag === tag}
+                className="px-3.5 py-1.5 rounded-control text-xs font-semibold transition-colors"
                 style={
                   activeTag === tag
-                    ? { backgroundColor: 'var(--color-primary)', color: '#fff' }
+                    ? { backgroundColor: 'var(--color-primary)', color: 'var(--foreground-on-primary)' }
                     : { backgroundColor: 'var(--color-bg-muted)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }
                 }
               >
@@ -139,7 +139,8 @@ export default function Lessons() {
               <button
                 type="button"
                 onClick={() => setTagsExpanded((v) => !v)}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+                aria-expanded={tagsExpanded}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-control text-xs font-medium transition-colors"
                 style={{ backgroundColor: 'var(--color-bg-muted)', color: 'var(--color-text-light)', border: '1px solid var(--color-border)' }}
               >
                 {tagsExpanded ? 'Thu gọn' : `+${availableTags.length - TAG_VISIBLE_COUNT - 1} tag`}
@@ -158,33 +159,34 @@ export default function Lessons() {
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               {featured.map((lesson) => (
-                <FeaturedCard key={lesson.id} lesson={lesson} onClick={() => navigate(`/lessons/${lesson.id}`)} />
+                <FeaturedCard key={lesson.id} lesson={lesson} to={`/lessons/${lesson.id}`} />
               ))}
               {featuredPosts.map((post) => (
-                <FeaturedPostCard key={post.id} post={post} onClick={() => navigate(`/lessons/${post.slug}`)} />
+                <FeaturedPostCard key={post.id} post={post} to={`/lessons/${post.slug}`} />
               ))}
             </div>
           </div>
         )}
 
         {postsLoading && (
-          <div className="mb-5 text-xs" style={{ color: 'var(--color-text-light)' }}>
+          <div role="status" className="mb-5 text-sm" style={{ color: 'var(--color-text-light)' }}>
             Đang tải bài viết mới từ EduAI-Hub...
           </div>
         )}
 
+        {postsError && <div role="alert" className="mb-5 border-l border-accent pl-4 text-sm text-text-muted"><p>Chưa tải được bài viết xuất bản. Các bài kinh nghiệm có sẵn vẫn đọc được.</p><button type="button" className="btn-outline mt-3" onClick={() => setAttempt(value => value + 1)}>Thử tải lại</button></div>}
         {/* Regular grid */}
-        {!hasResults ? (
+        {!hasResults && !postsLoading ? (
           <div className="text-center py-16" style={{ color: 'var(--color-text-muted)' }}>
-            <p className="text-sm">Không tìm thấy bài học phù hợp.</p>
+            <p className="text-sm">Không tìm thấy bài học phù hợp.</p><button type="button" className="btn-outline mt-4" onClick={() => { setSearch(''); setActiveTag('Tất cả'); }}>Xóa tìm kiếm và bộ lọc</button>
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {(activeTag === allTags[0] && search === '' ? regular : filtered).map((lesson) => (
-              <LessonCard key={lesson.id} lesson={lesson} onClick={() => navigate(`/lessons/${lesson.id}`)} />
+              <LessonCard key={lesson.id} lesson={lesson} to={`/lessons/${lesson.id}`} />
             ))}
             {postsForGrid.map((post) => (
-              <PostCard key={post.id} post={post} onClick={() => navigate(`/lessons/${post.slug}`)} />
+              <PostCard key={post.id} post={post} to={`/lessons/${post.slug}`} />
             ))}
           </div>
         )}
@@ -201,27 +203,26 @@ function getPostMeta(post: PublishedContentPost) {
   };
 }
 
-function FeaturedPostCard({ post, onClick }: { post: PublishedContentPost; onClick: () => void }) {
+function FeaturedPostCard({ post, to }: { post: PublishedContentPost; to: string }) {
   const { category, readTime, excerpt } = getPostMeta(post);
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <Link
+      to={to}
       className="text-left card-soft-hover p-6 flex flex-col gap-4 w-full"
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--color-primary-light)' }}>
-          <FileText size={20} style={{ color: 'var(--color-primary)' }} />
+        <div className="w-10 h-10 rounded-card flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--color-primary-light)' }}>
+          <FileText size={20} style={{ color: 'var(--color-primary-text)' }} />
         </div>
         <div className="flex items-center gap-2 flex-wrap justify-end">
           <span
-            className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full"
-            style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
+            className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-control"
+            style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary-text)' }}
           >
             {category}
           </span>
           <span
-            className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full"
+            className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-control"
             style={{ backgroundColor: 'var(--color-accent-light)', color: 'var(--color-accent)' }}
           >
             Nổi bật
@@ -239,24 +240,23 @@ function FeaturedPostCard({ post, onClick }: { post: PublishedContentPost; onCli
           <Clock size={11} />
           {readTime}
         </span>
-        <span className="text-xs font-semibold" style={{ color: 'var(--color-primary)' }}>Đọc tiếp →</span>
+        <span className="text-xs font-semibold" style={{ color: 'var(--color-primary-text)' }}>Đọc tiếp →</span>
       </div>
-    </button>
+    </Link>
   );
 }
 
-function PostCard({ post, onClick }: { post: PublishedContentPost; onClick: () => void }) {
+function PostCard({ post, to }: { post: PublishedContentPost; to: string }) {
   const { category, readTime, excerpt } = getPostMeta(post);
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <Link
+      to={to}
       className="text-left card-soft-hover p-5 flex flex-col gap-3 w-full"
     >
       <div className="flex items-center justify-between gap-2">
         <span
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full"
-          style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)' }}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-control"
+          style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary-text)' }}
         >
           <FileText size={11} />
           {category}
@@ -270,33 +270,32 @@ function PostCard({ post, onClick }: { post: PublishedContentPost; onClick: () =
         {post.title}
       </h3>
       <p className="text-sm leading-relaxed flex-1 line-clamp-3" style={{ color: 'var(--color-text-muted)' }}>{excerpt}</p>
-      <span className="text-xs font-semibold mt-auto" style={{ color: 'var(--color-primary)' }}>Đọc tiếp →</span>
-    </button>
+      <span className="text-xs font-semibold mt-auto" style={{ color: 'var(--color-primary-text)' }}>Đọc tiếp →</span>
+    </Link>
   );
 }
 
-function FeaturedCard({ lesson, onClick }: { lesson: Lesson; onClick: () => void }) {
+function FeaturedCard({ lesson, to }: { lesson: Lesson; to: string }) {
   const { bg, text } = tagColorMap[lesson.tagColor];
   const Icon = lesson.icon;
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <Link
+      to={to}
       className="text-left card-soft-hover p-6 flex flex-col gap-4 w-full"
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: bg }}>
+        <div className="w-10 h-10 rounded-card flex items-center justify-center flex-shrink-0" style={{ backgroundColor: bg }}>
           <Icon size={20} style={{ color: text }} />
         </div>
         <div className="flex items-center gap-2">
           <span
-            className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full"
+            className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-control"
             style={{ backgroundColor: bg, color: text }}
           >
             {lesson.tag}
           </span>
           <span
-            className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full"
+            className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-control"
             style={{ backgroundColor: 'var(--color-accent-light)', color: 'var(--color-accent)' }}
           >
             Nổi bật
@@ -314,24 +313,23 @@ function FeaturedCard({ lesson, onClick }: { lesson: Lesson; onClick: () => void
           <Clock size={11} />
           {lesson.readTime}
         </span>
-        <span className="text-xs font-semibold" style={{ color: 'var(--color-primary)' }}>Đọc tiếp →</span>
+        <span className="text-xs font-semibold" style={{ color: 'var(--color-primary-text)' }}>Đọc tiếp →</span>
       </div>
-    </button>
+    </Link>
   );
 }
 
-function LessonCard({ lesson, onClick }: { lesson: Lesson; onClick: () => void }) {
+function LessonCard({ lesson, to }: { lesson: Lesson; to: string }) {
   const { bg, text } = tagColorMap[lesson.tagColor];
   const Icon = lesson.icon;
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <Link
+      to={to}
       className="text-left card-soft-hover p-5 flex flex-col gap-3 w-full"
     >
       <div className="flex items-center justify-between gap-2">
         <span
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-control"
           style={{ backgroundColor: bg, color: text }}
         >
           <Icon size={11} />
@@ -346,7 +344,7 @@ function LessonCard({ lesson, onClick }: { lesson: Lesson; onClick: () => void }
         {lesson.title}
       </h3>
       <p className="text-sm leading-relaxed flex-1 line-clamp-3" style={{ color: 'var(--color-text-muted)' }}>{lesson.desc}</p>
-      <span className="text-xs font-semibold mt-auto" style={{ color: 'var(--color-primary)' }}>Đọc tiếp →</span>
-    </button>
+      <span className="text-xs font-semibold mt-auto" style={{ color: 'var(--color-primary-text)' }}>Đọc tiếp →</span>
+    </Link>
   );
 }

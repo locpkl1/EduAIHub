@@ -11,35 +11,20 @@ interface EmptyStateProps {
 export default function EmptyState({ icon, title, description, action, className = '' }: EmptyStateProps) {
   return (
     <div
-      className={`paper-surface relative overflow-hidden border px-5 py-9 text-center shadow-card sm:px-6 sm:py-10 ${className}`}
+      className={`rounded-card border border-border bg-bg-card px-5 py-8 text-center sm:px-6 ${className}`}
       style={{
         borderColor: 'var(--color-border-strong)',
-        boxShadow: '6px 6px 0 color-mix(in srgb, var(--color-primary) 10%, transparent)',
       }}
     >
-      <span
-        aria-hidden="true"
-        className="absolute left-6 top-0 h-2 w-20 -translate-y-1/2 rotate-[-1.5deg]"
-        style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 32%, var(--color-bg-card))' }}
-      />
-      <span
-        aria-hidden="true"
-        className="absolute bottom-5 right-5 h-12 w-12 rotate-6 border opacity-70"
-        style={{
-          borderColor: 'color-mix(in srgb, var(--color-border-strong) 42%, transparent)',
-          backgroundColor: 'color-mix(in srgb, var(--color-secondary-light) 58%, transparent)',
-        }}
-      />
 
       <div className="relative mx-auto max-w-2xl">
         {icon && (
           <div
-            className="mx-auto mb-5 flex h-14 w-14 rotate-[-2deg] items-center justify-center border"
+            className="mx-auto mb-4 flex h-11 w-11 items-center justify-center"
             style={{
               backgroundColor: 'var(--color-primary-light)',
               borderColor: 'var(--color-border-strong)',
               color: 'var(--color-primary)',
-              boxShadow: '4px 4px 0 color-mix(in srgb, var(--color-accent) 16%, transparent)',
             }}
           >
             {icon}
