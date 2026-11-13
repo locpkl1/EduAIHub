@@ -178,7 +178,7 @@ export const guideLessons: GuideLesson[] = [
               'Công Cụ AI: ba trợ lý giúp học tư duy prompt, gợi ý prompt theo bối cảnh và đánh giá prompt bạn tự viết.',
               'Bài Học: các bài viết và kinh nghiệm độc lập cho tình huống cụ thể.',
               'Kho Prompt: nơi tham khảo, lưu và dùng lại prompt hữu ích. Mục tiêu là hiểu cấu trúc rồi chỉnh sửa, không phải chỉ copy.',
-              'Bản đồ chương trình: giúp tìm ngữ cảnh lớp, môn, mảng kiến thức và chủ đề trước khi tạo prompt học tập.',
+              'Tài nguyên học tập: giúp tìm danh mục sách theo lớp, môn và mở các nguồn tài liệu đang có.',
               'Dashboard và Hồ sơ: nơi xem hoạt động đã lưu; hồ sơ có thể chứa bối cảnh học tập bạn chủ động cung cấp.',
             ],
           },

@@ -108,7 +108,7 @@ function FeaturedBadge({ featured }: { featured: boolean }) {
 
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold"
+      className="inline-flex items-center gap-1.5 rounded-control border px-2.5 py-1 text-xs font-bold"
       style={{
         backgroundColor: 'var(--color-accent-light)',
         borderColor: 'color-mix(in srgb, var(--color-accent) 28%, transparent)',
@@ -332,17 +332,12 @@ export default function AdminPosts() {
   return (
     <div className="space-y-6">
       <section
-        className="relative overflow-hidden rounded-2xl border bg-bg-card p-6 shadow-card sm:p-8"
+        className="relative overflow-hidden rounded-card border bg-bg-card p-6 sm:p-8"
         style={{ borderColor: 'var(--color-border-strong)' }}
       >
-        <div
-          className="absolute -right-12 -top-12 h-32 w-32 rounded-full"
-          style={{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 12%, transparent)' }}
-        />
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
-            <span className="section-label">Bài viết</span>
-            <h2 className="mt-4 font-display text-3xl font-extrabold leading-tight text-text sm:text-4xl">
+            <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-text sm:text-4xl">
               Quản lý bài viết
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-text-muted sm:text-base">
@@ -358,7 +353,7 @@ export default function AdminPosts() {
 
       {(feedback || error) && (
         <div
-          className="rounded-xl border px-4 py-3 text-sm font-semibold"
+          className="rounded-card border px-4 py-3 text-sm font-semibold"
           style={{
             backgroundColor: feedback ? 'var(--color-secondary-light)' : 'var(--color-accent-light)',
             borderColor: feedback
@@ -371,7 +366,7 @@ export default function AdminPosts() {
         </div>
       )}
 
-      <section className="rounded-2xl border bg-bg-card p-4 shadow-card" style={{ borderColor: 'var(--color-border)' }}>
+      <section className="rounded-card border bg-bg-card p-4" style={{ borderColor: 'var(--color-border)' }}>
         <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:items-center">
           <label className="relative block">
             <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-light" />
@@ -408,10 +403,10 @@ export default function AdminPosts() {
       </section>
 
       {formOpen && (
-        <section className="rounded-2xl border bg-bg-card p-5 shadow-card" style={{ borderColor: 'var(--color-border-strong)' }}>
+        <section className="rounded-card border bg-bg-card p-5" style={{ borderColor: 'var(--color-border-strong)' }}>
           <div className="mb-5 flex items-start justify-between gap-3">
             <div>
-              <h3 className="font-display text-xl font-extrabold text-text">
+              <h3 className="font-display text-xl font-bold text-text">
                 {editingPost ? 'Sửa bài viết' : 'Tạo bài viết'}
               </h3>
               <p className="mt-1 text-sm text-text-muted">Dùng Markdown hoặc văn bản thuần trong phần nội dung.</p>
@@ -419,7 +414,7 @@ export default function AdminPosts() {
             <button
               type="button"
               onClick={() => closeForm()}
-              className="flex h-9 w-9 items-center justify-center rounded-full border text-text-muted hover:bg-bg-muted"
+              className="flex h-9 w-9 items-center justify-center rounded-control border text-text-muted hover:bg-bg-muted"
               style={{ borderColor: 'var(--color-border)' }}
               aria-label="Hủy"
             >
@@ -514,7 +509,7 @@ export default function AdminPosts() {
                 <option value="archived">Đã lưu trữ</option>
               </select>
             </label>
-            <label className="flex items-center gap-3 rounded-xl border px-4 py-3" style={{ borderColor: 'var(--color-border)' }}>
+            <label className="flex items-center gap-3 rounded-card border px-4 py-3" style={{ borderColor: 'var(--color-border)' }}>
               <input
                 type="checkbox"
                 checked={form.featured}
@@ -532,7 +527,7 @@ export default function AdminPosts() {
                 {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
                 {editingPost ? 'Lưu thay đổi' : 'Tạo bài viết'}
               </button>
-              <button type="button" onClick={() => closeForm()} disabled={saving} className="btn-outline rounded-full">
+              <button type="button" onClick={() => closeForm()} disabled={saving} className="btn-outline rounded-control">
                 Hủy
               </button>
             </div>
@@ -540,10 +535,10 @@ export default function AdminPosts() {
         </section>
       )}
 
-      <section className="rounded-2xl border bg-bg-card shadow-card" style={{ borderColor: 'var(--color-border)' }}>
+      <section className="rounded-card border bg-bg-card" style={{ borderColor: 'var(--color-border)' }}>
         <div className="flex items-center justify-between gap-3 border-b px-5 py-4" style={{ borderColor: 'var(--color-border)' }}>
           <div>
-            <h3 className="font-display text-lg font-extrabold text-text">Danh sách bài viết</h3>
+            <h3 className="font-display text-lg font-bold text-text">Danh sách bài viết</h3>
             <p className="text-sm text-text-muted">{filteredPosts.length} bài viết đang hiển thị</p>
           </div>
           <FileText size={18} className="text-text-light" />
@@ -556,10 +551,10 @@ export default function AdminPosts() {
           </div>
         ) : posts.length === 0 ? (
           <div className="px-5 py-16 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-light text-primary">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-card bg-primary-light text-primary">
               <FileText size={24} />
             </div>
-            <h3 className="mt-4 font-display text-xl font-extrabold text-text">Chưa có bài viết nào</h3>
+            <h3 className="mt-4 font-display text-xl font-bold text-text">Chưa có bài viết nào</h3>
             <p className="mx-auto mt-2 max-w-md text-sm text-text-muted">
               Tạo bài viết đầu tiên để chuẩn bị nội dung hướng dẫn và kinh nghiệm học cùng AI.
             </p>
@@ -618,7 +613,7 @@ export default function AdminPosts() {
                           <button
                             type="button"
                             onClick={() => openEditForm(post)}
-                            className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                            className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                           >
                             <Edit3 size={13} />
                             Sửa
@@ -628,7 +623,7 @@ export default function AdminPosts() {
                               type="button"
                               onClick={() => updatePostStatus(post, 'draft')}
                               disabled={busy}
-                              className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                              className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                             >
                               {busy ? <Loader2 size={13} className="animate-spin" /> : <X size={13} />}
                               Gỡ xuất bản
@@ -638,7 +633,7 @@ export default function AdminPosts() {
                               type="button"
                               onClick={() => updatePostStatus(post, 'published')}
                               disabled={busy}
-                              className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                              className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                             >
                               {busy ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}
                               Xuất bản
@@ -648,7 +643,7 @@ export default function AdminPosts() {
                             type="button"
                             onClick={() => updatePostStatus(post, 'archived')}
                             disabled={busy || post.status === 'archived'}
-                            className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                            className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                           >
                             <Archive size={13} />
                             Lưu trữ
@@ -657,7 +652,7 @@ export default function AdminPosts() {
                             type="button"
                             onClick={() => deletePost(post)}
                             disabled={busy}
-                            className="btn-ghost gap-1 rounded-full px-3 py-1.5 text-accent hover:text-accent"
+                            className="btn-ghost gap-1 rounded-control px-3 py-1.5 text-accent hover:text-accent"
                           >
                             {busy ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
                             Xóa

@@ -199,16 +199,11 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8">
       <section
-        className="relative overflow-hidden rounded-2xl border p-6 shadow-card sm:p-8"
+        className="relative overflow-hidden rounded-card border p-6 sm:p-8"
         style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border-strong)' }}
       >
-        <div
-          className="absolute -right-10 -top-10 h-28 w-28 rounded-full"
-          style={{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 12%, transparent)' }}
-        />
         <div className="relative max-w-3xl">
-          <span className="section-label">Không gian biên tập</span>
-          <h2 className="mt-4 font-display text-3xl font-extrabold leading-tight text-text sm:text-4xl">
+          <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-text sm:text-4xl">
             Quản trị nội dung học AI cho học sinh THPT
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-text-muted sm:text-base">
@@ -219,7 +214,7 @@ export default function AdminDashboard() {
 
       {notice && (
         <div
-          className="flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm"
+          className="flex items-start gap-3 rounded-card border px-4 py-3 text-sm"
           style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}
         >
           <AlertCircle className="mt-0.5 shrink-0 text-accent" size={17} />
@@ -242,12 +237,12 @@ export default function AdminDashboard() {
 
       <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <div
-          className="rounded-2xl border bg-bg-card shadow-card"
+          className="rounded-card border bg-bg-card"
           style={{ borderColor: 'var(--color-border)' }}
         >
           <div className="flex items-center justify-between gap-3 border-b px-5 py-4" style={{ borderColor: 'var(--color-border)' }}>
             <div>
-              <h3 className="font-display text-lg font-extrabold text-text">Nội dung gần đây</h3>
+              <h3 className="font-display text-lg font-bold text-text">Nội dung gần đây</h3>
               <p className="text-sm text-text-muted">Các mục mới cập nhật từ 4 bảng CMS chính.</p>
             </div>
             <Rows3 size={18} className="text-text-light" />
@@ -293,8 +288,8 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        <div className="rounded-2xl border bg-bg-card p-5 shadow-card" style={{ borderColor: 'var(--color-border)' }}>
-          <h3 className="font-display text-lg font-extrabold text-text">Thao tác nhanh</h3>
+        <div className="rounded-card border bg-bg-card p-5" style={{ borderColor: 'var(--color-border)' }}>
+          <h3 className="font-display text-lg font-bold text-text">Thao tác nhanh</h3>
           <p className="mt-1 text-sm text-text-muted">Đi tới đúng khu vực CRUD để tạo hoặc cập nhật nội dung.</p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
             {quickActions.map((action) => {
@@ -303,11 +298,11 @@ export default function AdminDashboard() {
                 <Link
                   key={action.title}
                   to={action.to}
-                  className="group rounded-xl border p-4 transition-all hover:-translate-y-0.5 hover:border-primary hover:bg-primary-light"
+                  className="group rounded-control border p-4 transition-all hover:-translate-y-0.5 hover:border-primary hover:bg-primary-light"
                   style={{ borderColor: 'var(--color-border)' }}
                 >
                   <div className="flex items-start gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-bg-muted text-primary group-hover:bg-bg-card">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-bg-muted text-primary group-hover:bg-bg-card">
                       <Icon size={18} />
                     </span>
                     <span>

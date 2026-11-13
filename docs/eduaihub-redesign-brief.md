@@ -53,70 +53,57 @@ The current UI is clean and usable, but it feels:
 The redesign should not simply make the website “modern”.
 The goal is to create a stronger visual identity.
 
-## Desired Creative Direction
+## Design philosophy — V2.1 (authoritative)
 
-The new EduAI-Hub UI should feel like:
+**EDITORIAL LEARNING EXPERIENCE — MODERN NOTEBOOK EDITION**
 
-A bold, editorial, human-centered, slightly experimental AI learning platform for Vietnamese students.
+**Distinctive — Readable — Functional.** Minimalism must not erase the product's identity. This section supersedes older broad suggestions for decoration throughout the site.
 
-The design should combine:
+### Protected signature components
 
-* editorial web design
-* modern education branding
-* expressive typography
-* subtle futuristic details
-* student-centered storytelling
-* warm human learning energy
-* clean but unconventional layouts
+1. **Floating Capsule Navigation:** warm paper container, subtle border/shadow, grouped tabs, distinctive active state, layered blue/orange logo. Full desktop navigation only when enough room (currently 1280px). Capsule radius may exceed functional card radius.
+2. **Layered Paper Hero:** editorial headline “Học cách hỏi, để biết cách học.” alongside readable paper/notebook layers and a blue learning note. Text remains in document flow; decorative layers cannot obscure it.
+3. **Three AI Notebooks:** blue/orange/green notebooks for the three assistants, with paper edges, spine, meaningful icon, use case, example and one action each. No forced decorative stagger, clipped focus, excessive height, or static image replacing controls.
 
-## Brand Feeling
+These signatures may be refined for accessibility, responsive layout and visual quality. Do not replace them with generic cards or flat navigation merely to simplify the design.
 
-The final UI should feel:
+### V2.3 current product structure (supersedes V2.2 placement)
 
-* smart
-* youthful
-* creative
-* inspiring
-* helpful
-* slightly rebellious
-* memorable
-* polished
-* human
-* not robotic
-* not corporate
-* not template-like
+Application navigation is a **left** desktop grid column: 240px expanded, 72px rail. Keep public signatures, auth routing and dashboard intact. Chat history opens by default from1024px, left of chat; Study Prompt context remains a right dock, expanded by default. Retain push/slide, state, native sheets and all existing tools/data.
 
-## Visual Direction
+Guides is a single four-stage explorer (3/3/4/2 lessons). URL stage selection and old hashes work with keyboard and Back/Forward. Stage-only changes preserve the document reading position; ordinary route/anchor/POP behavior remains. Remove the public curriculum map, retaining the `/textbooks` resources route, catalogue, grade/subject filters, real PDFs and published sources. One guide01 product description is renamed accordingly; academic material is protected.
 
-Use:
+The website guidance assistant is an **independent fixed bottom-right widget**, never inside or offset by sidebar width. This explicitly replaces the earlier bottom-left placement. Use a56px circular brand-blue launcher and340px non-modal window,16px radius exception. Only static, honest guidance and real React Router links in this release; no API/service implementation. Hide below1024px, in chat/admin, with modal or form editing; no automatic popup on route changes. Avoid covering controls, keep safe-area margins, Escape/return focus and a scrollable low-height window. Hero artwork gains selection suppression only; text/links elsewhere and assistive-technology access stay intact.
 
-* default light mode
-* optional dark mode toggle
-* expressive typography
-* asymmetrical section layouts
-* layered cards and overlapping elements
-* soft organic shapes
-* offset frames
-* visual rhythm
-* warm off-white backgrounds
-* stronger contrast
-* tasteful motion
-* non-generic AI visuals
-* human learning moments
-* subtle paper/sticker/notebook/highlight details
+See [V2.3 verification](UIUX_V23_VERIFICATION.md) for measurements and limits. The V2.2 extension below is historical and its placement rules are superseded.
 
-Avoid:
+### V2.2 product modes (historical extension)
 
-* generic blue-purple AI SaaS style
-* robotic visuals
-* glowing brains
-* circuit board graphics
-* hologram clichés
-* identical card grids
-* boring rectangular sections
-* cold corporate dashboards
-* over-polished industrial AI aesthetics
-* changing backend logic
+Preserve the protected signatures in the **Public experience**. Guests keep the landing page at `/`. After session resolution, authenticated `/` uses a replace navigation to `/dashboard`; learning deep links remain accessible. Keep the existing Google OAuth callback at `/dashboard`. A per-tab sessionStorage return destination preserves the intended same-origin learning URL, including query/hash, and is consumed once. It is frontend navigation state, not server-side browsing history.
+
+The **authenticated workspace** replaces the public top navbar with a right sidebar: 240px at 1280px and wider, 72px at 768–1279px or when collapsed. Below 768px, use a compact logo/avatar header and the existing five-destination bottom navigation, with Dashboard as its first destination. Guests use logo/login and the public home tab. Remove the mobile hamburger when the bottom navigation is present.
+
+Dashboard leads with starting lesson 01, compact assistant shortcuts, up to three existing saved prompts, transparent profile-based recommendations, then resources. Never infer completed lessons, mastery, streaks or progress. Keep the existing profile page and three-step completion form; open completion explicitly from Profile instead of blocking all authenticated pages.
+
+Chat is a focus surface for both modes: no public navbar, footer or bottom navigation. Authenticated desktop starts with a 72px right rail, expandable at wide desktop. From 1024px, history is an optional 220px left dock and functional context a 280px right dock, inside the application navigation. Study Prompt context starts expanded. Opening/closing changes grid columns and slides the panel, never covers desktop chat or uses fade alone. Below 1024px, use native modal sheets sliding from the corresponding edges, with explicit focus and return focus. Keep one mounted subtree and all context fields. Use the visual viewport, a compact header, a scrolling message pane and a bounded composer. Preserve chat business logic, storage, conversation IDs, prompt saves and Coze contracts. Physical mobile keyboard behavior still requires device QA.
+
+Guides only gains a blue introductory surface and four controlled stage accents. Its twelve compact reading rows, route aliases and academic content remain intact. No global redesign, new dependencies, backend, schema or OAuth mechanism changes belong to this extension.
+
+The V2.2 correction uses `1b0c374` as the direct Public brand reference, with screenshots at the same 1440/390px widths. Preserve the capsule on mobile too, restore tab icons/offset active shadow and add the requested blue outline. Restore separate vague/improved prompt sheets, the three-question checklist and a blue statement over a backing sheet, plus paper label, blue highlight, orange marker and dotted hero surface. Correct V1's overlapping text with flow/grid rather than returning to absolute placement of text. Keep the condensed sections below the hero unchanged. Workspace right navigation occupies a real grid column; the public capsule never replaces it.
+
+### Surface roles
+
+- **Signature UI:** navigation, homepage hero, AI Tools notebooks and small brand marks may be expressive. Paper layering and intentional depth belong here.
+- **Functional UI:** forms, prompt controls, profile, dashboard/admin and mobile navigation stay compact, consistent and task focused. Buttons 4px, cards/inputs 6px, ordinary menus 8px; avatar/status circles retain meaning.
+- **Reading UI:** Guides and lesson details retain V2 compact rows, optimized reading width, typography, table of contents, anchors and preserved academic content. No return to tall cards or repeated boxed sections.
+
+### Responsive and interaction guardrails
+
+Below 768px, provide labeled five-destination bottom navigation, safe-area padding and resources access to both Kho Prompt and Bản đồ chương trình. Hide it inside chatbot routes, including aliases, to protect the composer. Intermediate widths use a compact top header, not crowded desktop tabs.
+
+Profile uses overview + three editing groups: Thông tin cơ bản / Cách học với AI / Mục tiêu học tập. Multi-choice fields disclose searchable native checkbox lists, preserve unknown stored values and impose no arbitrary limit. The completion dialog uses three steps with one scroll pane and a footer in normal flex layout. Keep drafts across steps and retain the existing save payload.
+
+Preserve all V2 improvements: contrast in both themes, keyboard navigation, route scroll restoration, compact learning layout, content sources, and academic examples. Do not add heavy motion, glass effects, unrelated sections or backend/auth/data changes.
 
 ## Color Direction
 

@@ -125,12 +125,12 @@ function DifficultyBadge({ difficulty }: { difficulty: PromptDifficulty | null }
     difficulty === 'basic'
       ? { bg: 'var(--color-secondary-light)', color: 'var(--color-secondary)' }
       : difficulty === 'intermediate'
-        ? { bg: 'var(--color-primary-light)', color: 'var(--color-primary)' }
+        ? { bg: 'var(--color-primary-light)', color: 'var(--color-primary-text)' }
         : { bg: 'var(--color-accent-light)', color: 'var(--color-accent)' };
 
   return (
     <span
-      className="inline-flex rounded-full px-2.5 py-1 text-xs font-bold"
+      className="inline-flex rounded-control px-2.5 py-1 text-xs font-bold"
       style={{ backgroundColor: accent.bg, color: accent.color }}
     >
       {difficultyLabels[difficulty]}
@@ -143,7 +143,7 @@ function FeaturedBadge({ featured }: { featured: boolean }) {
 
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold"
+      className="inline-flex items-center gap-1.5 rounded-control border px-2.5 py-1 text-xs font-bold"
       style={{
         backgroundColor: 'var(--color-accent-light)',
         borderColor: 'color-mix(in srgb, var(--color-accent) 28%, transparent)',
@@ -370,17 +370,12 @@ export default function AdminPrompts() {
   return (
     <div className="space-y-6">
       <section
-        className="relative overflow-hidden rounded-2xl border bg-bg-card p-6 shadow-card sm:p-8"
+        className="relative overflow-hidden rounded-card border bg-bg-card p-6 sm:p-8"
         style={{ borderColor: 'var(--color-border-strong)' }}
       >
-        <div
-          className="absolute -right-12 -top-12 h-32 w-32 rounded-full"
-          style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 14%, transparent)' }}
-        />
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
-            <span className="section-label">Prompt mẫu</span>
-            <h2 className="mt-4 font-display text-3xl font-extrabold leading-tight text-text sm:text-4xl">
+            <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-text sm:text-4xl">
               Quản lý prompt mẫu
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-text-muted sm:text-base">
@@ -399,7 +394,7 @@ export default function AdminPrompts() {
 
       {(feedback || error) && (
         <div
-          className="rounded-xl border px-4 py-3 text-sm font-semibold"
+          className="rounded-card border px-4 py-3 text-sm font-semibold"
           style={{
             backgroundColor: feedback ? 'var(--color-secondary-light)' : 'var(--color-accent-light)',
             borderColor: feedback
@@ -412,7 +407,7 @@ export default function AdminPrompts() {
         </div>
       )}
 
-      <section className="rounded-2xl border bg-bg-card p-4 shadow-card" style={{ borderColor: 'var(--color-border)' }}>
+      <section className="rounded-card border bg-bg-card p-4" style={{ borderColor: 'var(--color-border)' }}>
         <div className="grid gap-3 xl:grid-cols-[1fr_auto_auto_auto_auto_auto] xl:items-center">
           <label className="relative block">
             <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-light" />
@@ -484,10 +479,10 @@ export default function AdminPrompts() {
       </section>
 
       {formOpen && (
-        <section className="rounded-2xl border bg-bg-card p-5 shadow-card" style={{ borderColor: 'var(--color-border-strong)' }}>
+        <section className="rounded-card border bg-bg-card p-5" style={{ borderColor: 'var(--color-border-strong)' }}>
           <div className="mb-5 flex items-start justify-between gap-3">
             <div>
-              <h3 className="font-display text-xl font-extrabold text-text">
+              <h3 className="font-display text-xl font-bold text-text">
                 {editingTemplate ? 'Sửa prompt mẫu' : 'Tạo prompt mẫu'}
               </h3>
               <p className="mt-1 text-sm text-text-muted">
@@ -497,7 +492,7 @@ export default function AdminPrompts() {
             <button
               type="button"
               onClick={() => closeForm()}
-              className="flex h-9 w-9 items-center justify-center rounded-full border text-text-muted hover:bg-bg-muted"
+              className="flex h-9 w-9 items-center justify-center rounded-control border text-text-muted hover:bg-bg-muted"
               style={{ borderColor: 'var(--color-border)' }}
               aria-label="Hủy"
             >
@@ -614,7 +609,7 @@ export default function AdminPrompts() {
                 <option value="archived">Đã lưu trữ</option>
               </select>
             </label>
-            <label className="flex items-center gap-3 rounded-xl border px-4 py-3" style={{ borderColor: 'var(--color-border)' }}>
+            <label className="flex items-center gap-3 rounded-card border px-4 py-3" style={{ borderColor: 'var(--color-border)' }}>
               <input
                 type="checkbox"
                 checked={form.featured}
@@ -632,7 +627,7 @@ export default function AdminPrompts() {
                 {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
                 {editingTemplate ? 'Lưu thay đổi' : 'Tạo prompt mẫu'}
               </button>
-              <button type="button" onClick={() => closeForm()} disabled={saving} className="btn-outline rounded-full">
+              <button type="button" onClick={() => closeForm()} disabled={saving} className="btn-outline rounded-control">
                 Hủy
               </button>
             </div>
@@ -640,10 +635,10 @@ export default function AdminPrompts() {
         </section>
       )}
 
-      <section className="rounded-2xl border bg-bg-card shadow-card" style={{ borderColor: 'var(--color-border)' }}>
+      <section className="rounded-card border bg-bg-card" style={{ borderColor: 'var(--color-border)' }}>
         <div className="flex items-center justify-between gap-3 border-b px-5 py-4" style={{ borderColor: 'var(--color-border)' }}>
           <div>
-            <h3 className="font-display text-lg font-extrabold text-text">Danh sách prompt mẫu</h3>
+            <h3 className="font-display text-lg font-bold text-text">Danh sách prompt mẫu</h3>
             <p className="text-sm text-text-muted">{filteredTemplates.length} prompt mẫu đang hiển thị</p>
           </div>
           <MessageSquareText size={18} className="text-text-light" />
@@ -656,10 +651,10 @@ export default function AdminPrompts() {
           </div>
         ) : templates.length === 0 ? (
           <div className="px-5 py-16 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-light text-accent">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-card bg-accent-light text-accent">
               <MessageSquareText size={24} />
             </div>
-            <h3 className="mt-4 font-display text-xl font-extrabold text-text">Chưa có prompt mẫu nào</h3>
+            <h3 className="mt-4 font-display text-xl font-bold text-text">Chưa có prompt mẫu nào</h3>
             <p className="mx-auto mt-2 max-w-md text-sm text-text-muted">
               Tạo prompt mẫu đầu tiên để giúp học sinh hỏi AI rõ ràng, có bối cảnh và có trách nhiệm.
             </p>
@@ -726,7 +721,7 @@ export default function AdminPrompts() {
                           <button
                             type="button"
                             onClick={() => openEditForm(template)}
-                            className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                            className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                           >
                             <Edit3 size={13} />
                             Sửa
@@ -734,7 +729,7 @@ export default function AdminPrompts() {
                           <button
                             type="button"
                             onClick={() => copyPrompt(template)}
-                            className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                            className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                           >
                             {copiedId === template.id ? <Check size={13} /> : <Copy size={13} />}
                             Sao chép prompt
@@ -744,7 +739,7 @@ export default function AdminPrompts() {
                               type="button"
                               onClick={() => updateTemplateStatus(template, 'draft')}
                               disabled={busy}
-                              className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                              className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                             >
                               {busy ? <Loader2 size={13} className="animate-spin" /> : <X size={13} />}
                               Gỡ xuất bản
@@ -754,7 +749,7 @@ export default function AdminPrompts() {
                               type="button"
                               onClick={() => updateTemplateStatus(template, 'published')}
                               disabled={busy}
-                              className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                              className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                             >
                               {busy ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}
                               Xuất bản
@@ -764,7 +759,7 @@ export default function AdminPrompts() {
                             type="button"
                             onClick={() => updateTemplateStatus(template, 'archived')}
                             disabled={busy || template.status === 'archived'}
-                            className="btn-ghost gap-1 rounded-full px-3 py-1.5"
+                            className="btn-ghost gap-1 rounded-control px-3 py-1.5"
                           >
                             <Archive size={13} />
                             Lưu trữ
@@ -773,7 +768,7 @@ export default function AdminPrompts() {
                             type="button"
                             onClick={() => deleteTemplate(template)}
                             disabled={busy}
-                            className="btn-ghost gap-1 rounded-full px-3 py-1.5 text-accent hover:text-accent"
+                            className="btn-ghost gap-1 rounded-control px-3 py-1.5 text-accent hover:text-accent"
                           >
                             {busy ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
                             Xóa

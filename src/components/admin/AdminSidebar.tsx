@@ -1,3 +1,4 @@
+import Modal from '../Modal';
 import { NavLink } from 'react-router-dom';
 import {
   BookMarked,
@@ -26,13 +27,12 @@ function SidebarContent({ onClose }: { onClose: () => void }) {
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b px-5 py-5" style={{ borderColor: 'var(--color-border)' }}>
         <div>
-          <p className="font-display text-lg font-extrabold leading-none text-text">Admin Center</p>
-          <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-text-light">EduAI-Hub</p>
+          <p className="font-display text-lg font-bold leading-none text-text">Admin Center</p>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="flex h-9 w-9 items-center justify-center rounded-full border text-text-muted lg:hidden"
+          className="flex h-11 w-11 items-center justify-center rounded-control border text-text-muted lg:hidden"
           style={{ borderColor: 'var(--color-border)' }}
           aria-label="Đóng menu quản trị"
         >
@@ -50,9 +50,9 @@ function SidebarContent({ onClose }: { onClose: () => void }) {
               end={item.end}
               onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold transition-all ${
+                `flex items-center gap-3 rounded-nav px-3 py-3 text-sm font-bold transition-all ${
                   isActive
-                    ? 'bg-primary text-white shadow-[4px_4px_0_color-mix(in_srgb,var(--color-accent)_30%,transparent)]'
+                    ? 'bg-primary text-on-primary'
                     : 'text-text-muted hover:bg-bg-muted hover:text-text'
                 }`
               }
@@ -65,7 +65,7 @@ function SidebarContent({ onClose }: { onClose: () => void }) {
       </nav>
 
       <div className="border-t p-4" style={{ borderColor: 'var(--color-border)' }}>
-        <div className="rounded-xl border p-3" style={{ backgroundColor: 'var(--color-bg-muted)', borderColor: 'var(--color-border)' }}>
+        <div className="rounded-card border p-3" style={{ backgroundColor: 'var(--color-bg-muted)', borderColor: 'var(--color-border)' }}>
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-light">EduAI-Hub CMS</p>
           <p className="mt-1 text-sm font-bold text-text">Quản lý nội dung học AI</p>
           <p className="mt-1 text-xs leading-relaxed text-text-muted">
@@ -87,22 +87,9 @@ export default function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps)
         <SidebarContent onClose={onClose} />
       </aside>
 
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/35"
-            onClick={onClose}
-            aria-label="Đóng lớp phủ menu"
-          />
-          <aside
-            className="relative h-full w-[min(86vw,20rem)] border-r shadow-card-hover"
-            style={{ backgroundColor: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}
-          >
-            <SidebarContent onClose={onClose} />
-          </aside>
-        </div>
-      )}
+      <Modal isOpen={mobileOpen} onClose={onClose} size="md" showCloseButton={false} label="Điều hướng quản trị">
+        <SidebarContent onClose={onClose} />
+      </Modal>
     </>
   );
 }
